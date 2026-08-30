@@ -38,16 +38,17 @@ import '../providers/auth_provider.dart';
 import '../../shared/constants/app_constants.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final notifier = ref.watch(_routerNotifierProvider.notifier);
+  final notifier = _AuthChangeNotifier(ref);
 
   return GoRouter(
     initialLocation: AppRoutes.splash,
     debugLogDiagnostics: false,
     refreshListenable: notifier,
     redirect: (context, state) {
-      final auth = ref.read(_routerNotifierProvider).valueOrNull;
-      // Use print instead of debugPrint to ensure it shows up in all logs
-      print('[Router] redirect — auth=$auth location=${state.matchedLocation}');
+      final authAsync = ref.read(authProvider);
+      final auth = authAsync.valueOrNull;
+
+      print('[Router] redirect — status=${auth?.status} location=${state.matchedLocation}');
 
       if (auth == null) return null; // Still loading
 
@@ -198,8 +199,11 @@ class _ShortlistTab extends StatelessWidget {
 /// When [authProvider] emits a new value the router re-runs its redirect.
 class _AuthChangeNotifier extends ChangeNotifier {
   _AuthChangeNotifier(Ref ref) {
-    ref.listen<AsyncValue<AuthState>>(authProvider, (_, __) {
-      notifyListeners();
+    ref.listen<AsyncValue<AuthState>>(authProvider, (previous, next) {
+      // Only notify when the auth status actually changes
+      if (previous?.valueOrNull?.status != next.valueOrNull?.status) {
+        notifyListeners();
+      }
     });
   }
 }
