@@ -63,13 +63,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         case AuthStatus.loading:
           return isSplash ? null : AppRoutes.splash;
         case AuthStatus.unauthenticated:
-          if (isSplash || !isOnAuthRoute) return AppRoutes.login;
-          return null;
+          if (isOnAuthRoute) return null;
+          return AppRoutes.login;
         case AuthStatus.onboardingRequired:
-          if (isSplash || (!isOnOnboardingRoute && !isOnAuthRoute)) {
-            return AppRoutes.onboardingBasic;
-          }
-          return null;
+          if (isOnOnboardingRoute) return null;
+          return AppRoutes.onboardingBasic;
         case AuthStatus.authenticated:
           if (isSplash || isOnAuthRoute || isOnOnboardingRoute) return AppRoutes.home;
           return null;
@@ -219,8 +217,10 @@ class _RouterNotifier extends AsyncNotifier<AuthState?> implements Listenable {
     // Watch authProvider — rebuilds whenever auth changes
     final authAsync = ref.watch(authProvider);
     final value = authAsync.valueOrNull;
-    // Notify GoRouter on every change
-    for (final l in _listeners) l();
+    // Schedule notification after the current build frame completes
+    Future.microtask(() {
+      for (final l in _listeners) l();
+    });
     return value;
   }
 
