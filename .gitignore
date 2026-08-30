@@ -1,0 +1,81 @@
+# ── Environment & Secrets ────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Python ───────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.so
+.Python
+venv/
+env/
+.venv/
+backend/venv/
+
+# ── pytest / coverage ────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+*.xml
+
+# ── Alembic ──────────────────────────────────────────────────────────────────
+# Keep migrations tracked, ignore compiled cache
+backend/migrations/versions/__pycache__/
+
+# ── Flutter / Dart ───────────────────────────────────────────────────────────
+# Build outputs
+viva_app/build/
+viva_app/.dart_tool/
+viva_app/.flutter-plugins
+viva_app/.flutter-plugins-dependencies
+viva_app/.packages
+viva_app/pubspec.lock
+
+# iOS
+viva_app/ios/Pods/
+viva_app/ios/.symlinks/
+viva_app/ios/Flutter/Flutter.framework
+viva_app/ios/Flutter/Flutter.podspec
+
+# Android
+viva_app/android/.gradle/
+viva_app/android/local.properties
+viva_app/android/key.properties
+viva_app/android/app/google-services.json
+viva_app/android/app/debug.keystore
+viva_app/android/app/release.keystore
+*.jks
+*.keystore
+
+# ── Gradle ───────────────────────────────────────────────────────────────────
+.gradle/
+local.properties
+
+# ── IDE ──────────────────────────────────────────────────────────────────────
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# ── OS ───────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Docker ───────────────────────────────────────────────────────────────────
+# Keep docker-compose and Dockerfiles tracked
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Kiro artifacts ───────────────────────────────────────────────────────────
+.artifacts/

@@ -1,0 +1,65 @@
+name: viva_app
+description: Viva — Premium Indian Matrimony App
+
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+  flutter: '>=3.22.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # State management
+  flutter_riverpod: ^2.5.1
+
+  # Navigation
+  go_router: ^14.2.0
+
+  # HTTP
+  dio: ^5.4.3
+
+  # Secure storage
+  flutter_secure_storage: ^9.2.2
+
+  # Image handling
+  image_picker: ^1.1.2
+  cached_network_image: ^3.4.1
+
+  # File picker (certificate upload)
+  file_picker: ^8.1.2
+
+  # Date/Time
+  intl: ^0.20.1
+
+  # UI components
+  shimmer: ^3.0.0
+  percent_indicator: ^4.2.3
+
+  # Storage & connectivity
+  shared_preferences: ^2.3.2
+  path_provider: ^2.1.4
+
+  # Fonts (loaded from Google Fonts at runtime — no font files needed)
+  google_fonts: ^6.2.1
+
+  # Utilities
+  uuid: ^4.5.1
+  url_launcher: ^6.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/lottie/
