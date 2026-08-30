@@ -92,9 +92,8 @@ async def download_biodata(
         except Exception:
             pdf_bytes = await generate_biodata_pdf(db, current_user.user_id)
 
-    from sqlalchemy import text as sqltext
     name_result = await db.execute(
-        sqltext("SELECT full_name FROM profiles WHERE user_id = :uid"),
+        text("SELECT full_name FROM profiles WHERE user_id = :uid"),
         {"uid": current_user.user_id},
     )
     name_row = name_result.fetchone()

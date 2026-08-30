@@ -13,7 +13,7 @@ from sqlalchemy import text
 
 from app.config import get_settings
 from app.database import get_supabase
-from app.utils import normalize_phone, PhoneValidationError, log_action
+from app.utils import normalize_phone, PhoneValidationError, log_action, safe_filename
 
 settings = get_settings()
 logger = structlog.get_logger()
@@ -204,7 +204,7 @@ async def upload_certificate(
 
     # Upload to PRIVATE storage bucket
     supabase = get_supabase()
-    safe_path = f"{user_id}/{_safe_doc_filename(filename)}"
+    safe_path = f"{user_id}/{safe_filename(filename)}"
 
     try:
         supabase.storage.from_(settings.storage_bucket_verification_docs).upload(
@@ -317,8 +317,3 @@ async def _ensure_verification_request(
             {"uid": user_id, "method": method, "doc_id": document_id, "ref_id": reference_id},
         )
 
-
-def _safe_doc_filename(filename: str) -> str:
-    import uuid as _uuid
-    ext = os.path.splitext(filename)[1].lower() or ".pdf"
-    return f"{_uuid.uuid4().hex}{ext}"

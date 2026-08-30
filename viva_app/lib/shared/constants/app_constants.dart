@@ -3,10 +3,10 @@ class AppConstants {
   AppConstants._();
 
   // API — override at build time via --dart-define=API_BASE_URL=https://your-api.com/api/v1
-  // Defaults to the production Render backend.
+  // Dev builds default to localhost; pass API_BASE_URL for staging/production.
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://vivamatrimony.onrender.com/api/v1',
+    defaultValue: 'http://localhost:8000/api/v1',
   );
   static const int connectTimeoutMs = 10000;
   static const int receiveTimeoutMs = 15000;
@@ -16,17 +16,6 @@ class AppConstants {
   static const String refreshTokenKey = 'viva_refresh_token';
   static const String userIdKey = 'viva_user_id';
   static const String onboardingCompletedKey = 'viva_onboarding_done';
-
-  // Onboarding steps
-  static const List<String> onboardingSteps = [
-    'Basic Info',
-    'About You',
-    'Education',
-    'Career',
-    'Family',
-    'Lifestyle',
-    'Preferences',
-  ];
 
   // Photo limits
   static const int maxPhotos = 10;

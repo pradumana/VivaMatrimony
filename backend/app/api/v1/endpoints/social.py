@@ -7,6 +7,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
 
 from app.database import get_db
 from app.middleware import get_current_user, AuthenticatedUser
@@ -235,7 +236,6 @@ async def get_notifications(
     current_user: AuthenticatedUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    from sqlalchemy import text
     condition = "AND is_read = FALSE" if unread_only else ""
     result = await db.execute(
         text(f"""
@@ -271,7 +271,6 @@ async def mark_notification_read(
     current_user: AuthenticatedUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    from sqlalchemy import text
     await db.execute(
         text("UPDATE notifications SET is_read = TRUE, read_at = NOW() WHERE id = :nid AND user_id = :uid"),
         {"nid": notification_id, "uid": current_user.user_id},

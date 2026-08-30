@@ -4,6 +4,7 @@ GET /search — filter profiles with pagination.
 GET /matches — recommended matches.
 GET /matches/{user_id} — compatibility score.
 """
+from datetime import date
 from typing import Optional, List
 from uuid import UUID
 
@@ -11,9 +12,11 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
-from app.database import get_db
+from app.config import get_settings
+from app.database import get_db, get_supabase
 from app.middleware import get_current_user, AuthenticatedUser, limiter
 from app.services.matching_service import get_recommended_matches, calculate_compatibility
+from app.utils import compute_age
 from fastapi import Request
 
 router = APIRouter(tags=["Search & Matching"])
@@ -159,18 +162,13 @@ async def search_profiles(
     )
     rows = result.fetchall()
 
-    from app.database import get_supabase
-    from app.config import get_settings
-    from datetime import date
     supabase = get_supabase()
     cfg = get_settings()
 
     profiles = []
     for row in rows:
         dob = row.date_of_birth
-        age = date.today().year - dob.year - (
-            (date.today().month, date.today().day) < (dob.month, dob.day)
-        )
+        age = compute_age(dob) if dob else None
         photo_url = None
         if row.photo_path:
             try:

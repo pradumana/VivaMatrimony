@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -56,8 +58,49 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
   Future<AuthState> build() async => _checkSession();
 
   Future<AuthState> _checkSession() async {
-    debugPrint('[Auth] Bypassing session check for debugging...');
-    return const AuthState.unauthenticated();
+    final storage = ref.read(secureStorageProvider);
+    final token = await storage.getAccessToken();
+    if (token == null || token.isEmpty) {
+      return const AuthState.unauthenticated();
+    }
+
+    // Decode JWT expiry without verifying signature (client-side pre-check only).
+    // The server still validates the signature on every request.
+    try {
+      final parts = token.split('.');
+      if (parts.length == 3) {
+        // Base64url decode the payload
+        var payload = parts[1];
+        // Pad to multiple of 4
+        payload += '=' * ((4 - payload.length % 4) % 4);
+        final decoded = String.fromCharCodes(
+          base64Url.decode(payload),
+        );
+        final json = jsonDecode(decoded) as Map<String, dynamic>;
+        final exp = json['exp'] as int?;
+        if (exp != null) {
+          final expiry = DateTime.fromMillisecondsSinceEpoch(exp * 1000, isUtc: true);
+          if (expiry.isBefore(DateTime.now().toUtc())) {
+            // Token expired — clear and require re-login
+            await storage.clearSession();
+            return const AuthState.unauthenticated();
+          }
+        }
+      }
+    } catch (_) {
+      // Malformed token — clear and re-authenticate
+      await storage.clearSession();
+      return const AuthState.unauthenticated();
+    }
+
+    final userId = await storage.getUserId();
+    final onboardingDone = await storage.isOnboardingCompleted();
+
+    return AuthState(
+      status: onboardingDone ? AuthStatus.authenticated : AuthStatus.onboardingRequired,
+      userId: userId,
+      onboardingCompleted: onboardingDone,
+    );
   }
 
   Future<void> onLoginSuccess({

@@ -55,7 +55,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       final authAsync = ref.read(authProvider);
       final auth = authAsync.valueOrNull;
 
-      print('[Router] redirect — status=${auth?.status} location=${state.matchedLocation}');
+      debugPrint('[Router] redirect — status=${auth?.status} location=${state.matchedLocation}');
 
       if (auth == null) return null; // Still loading
 
@@ -123,12 +123,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       ShellRoute(
         builder: (context, state, child) => MainShellScreen(child: child),
         routes: [
-          GoRoute(path: AppRoutes.home, builder: (_, __) => const _HomeTab()),
-          GoRoute(path: AppRoutes.search, builder: (_, __) => const _SearchTab()),
-          GoRoute(path: AppRoutes.interests, builder: (_, __) => const _InterestsTab()),
-          GoRoute(path: AppRoutes.connections, builder: (_, __) => const _ConversationsTab()),
-          GoRoute(path: AppRoutes.myProfile, builder: (_, __) => const _ProfileTab()),
-          GoRoute(path: AppRoutes.shortlist, builder: (_, __) => const _ShortlistTab()),
+          GoRoute(path: AppRoutes.home, builder: (_, __) => const HomeScreen()),
+          GoRoute(path: AppRoutes.search, builder: (_, __) => const SearchScreen()),
+          GoRoute(path: AppRoutes.interests, builder: (_, __) => const InterestsScreen()),
+          GoRoute(path: AppRoutes.connections, builder: (_, __) => const ConversationsScreen()),
+          GoRoute(path: AppRoutes.myProfile, builder: (_, __) => const MyProfileScreen()),
+          GoRoute(path: AppRoutes.shortlist, builder: (_, __) => const ShortlistScreen()),
         ],
       ),
 
@@ -173,34 +173,6 @@ final routerProvider = Provider<GoRouter>((ref) {
     ),
   );
 });
-
-// These tab classes pass routing control to MainShellScreen
-// which renders the correct screen based on selected tab index.
-// The GoRouter shell handles state, not these wrappers.
-class _HomeTab extends StatelessWidget {
-  const _HomeTab();
-  @override Widget build(BuildContext context) => const HomeScreen();
-}
-class _SearchTab extends StatelessWidget {
-  const _SearchTab();
-  @override Widget build(BuildContext context) => const SearchScreen();
-}
-class _InterestsTab extends StatelessWidget {
-  const _InterestsTab();
-  @override Widget build(BuildContext context) => const InterestsScreen();
-}
-class _ConversationsTab extends StatelessWidget {
-  const _ConversationsTab();
-  @override Widget build(BuildContext context) => const ConversationsScreen();
-}
-class _ProfileTab extends StatelessWidget {
-  const _ProfileTab();
-  @override Widget build(BuildContext context) => const MyProfileScreen();
-}
-class _ShortlistTab extends StatelessWidget {
-  const _ShortlistTab();
-  @override Widget build(BuildContext context) => const ShortlistScreen();
-}
 
 /// Bridges Riverpod auth state changes to GoRouter's [refreshListenable].
 class _AuthChangeNotifier extends ChangeNotifier {

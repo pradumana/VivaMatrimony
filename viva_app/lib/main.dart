@@ -8,19 +8,19 @@ import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 
 void main() async {
-  print('VIVA: App main() started');
+  debugPrint('VIVA: App main() started');
   WidgetsFlutterBinding.ensureInitialized();
-  print('VIVA: WidgetsBinding initialized');
+  debugPrint('VIVA: WidgetsBinding initialized');
 
   // Catch Flutter framework errors
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
-    print('VIVA: Flutter error: ${details.exception}');
+    debugPrint('VIVA: Flutter error: ${details.exception}');
   };
 
   // Catch async errors outside the Flutter framework
   PlatformDispatcher.instance.onError = (error, stack) {
-    print('VIVA: Platform error: $error');
+    debugPrint('VIVA: Platform error: $error');
     return true;
   };
 
@@ -31,11 +31,10 @@ void main() async {
       DeviceOrientation.portraitDown,
     ]);
   } catch (e) {
-    print('VIVA: SystemChrome error: $e');
+    debugPrint('VIVA: SystemChrome error: $e');
   }
 
   runApp(const ProviderScope(child: VivaApp()));
-  print('VIVA: runApp called');
 }
 
 class VivaApp extends ConsumerWidget {

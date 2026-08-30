@@ -131,27 +131,3 @@ async def get_current_user(
         account_status=row.account_status,
         onboarding_completed=row.onboarding_completed,
     )
-
-
-async def get_current_active_user(
-    current_user: AuthenticatedUser = Depends(get_current_user),
-) -> AuthenticatedUser:
-    """Dependency that additionally requires account_status == 'active'."""
-    if current_user.account_status != "active":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Account is not active. Please complete verification.",
-        )
-    return current_user
-
-
-async def get_current_onboarded_user(
-    current_user: AuthenticatedUser = Depends(get_current_active_user),
-) -> AuthenticatedUser:
-    """Dependency that requires onboarding to be completed."""
-    if not current_user.onboarding_completed:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Please complete your profile first.",
-        )
-    return current_user
