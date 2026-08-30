@@ -17,6 +17,7 @@ from sqlalchemy import text
 
 from app.config import get_settings
 from app.database import get_supabase
+from app.utils import compute_age, safe_filename as _safe_filename
 
 settings = get_settings()
 logger = structlog.get_logger()
@@ -26,8 +27,7 @@ ALLOWED_PHOTO_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 
 
 def _compute_age(dob: date) -> int:
-    today = date.today()
-    return today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+    return compute_age(dob)
 
 
 def _cm_to_display(cm: Optional[int]) -> Optional[str]:
@@ -609,8 +609,3 @@ async def delete_photo(db: AsyncSession, user_id: UUID, photo_id: UUID) -> dict:
     return {"success": True, "was_primary": was_primary}
 
 
-def _safe_filename(filename: str) -> str:
-    """Generate a safe, unique filename."""
-    import uuid as _uuid
-    ext = os.path.splitext(filename)[1].lower() or ".jpg"
-    return f"{_uuid.uuid4().hex}{ext}"

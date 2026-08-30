@@ -11,9 +11,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
 from app.database import get_db, get_supabase
-from app.middleware import get_current_admin, AdminUser
+from app.middleware import get_current_admin, AdminUser, limiter
 from app.utils import hash_password, verify_password, create_admin_access_token, log_action
 from app.config import get_settings
+from fastapi import Request
 
 settings = get_settings()
 router = APIRouter(prefix="/admin", tags=["Admin"])
@@ -29,7 +30,8 @@ class AdminLoginRequest(BaseModel):
 
 
 @router.post("/login")
-async def admin_login(body: AdminLoginRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("10/hour")
+async def admin_login(request: Request, body: AdminLoginRequest, db: AsyncSession = Depends(get_db)):
     """Admin login — returns admin JWT."""
     result = await db.execute(
         text("""

@@ -7,24 +7,20 @@ import '../../../../core/providers/auth_provider.dart';
 class OnboardingState {
   final bool isLoading;
   final String? error;
-  final Map<String, dynamic> data;
 
   const OnboardingState({
     this.isLoading = false,
     this.error,
-    this.data = const {},
   });
 
   OnboardingState copyWith({
     bool? isLoading,
     String? error,
-    Map<String, dynamic>? data,
     bool clearError = false,
   }) =>
       OnboardingState(
         isLoading: isLoading ?? this.isLoading,
         error: clearError ? null : (error ?? this.error),
-        data: data ?? this.data,
       );
 }
 

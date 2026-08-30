@@ -1,3 +1,3 @@
-from .connection import Base, engine, get_db, get_supabase, AsyncSessionLocal
+from .connection import engine, get_db, get_supabase, AsyncSessionLocal
 
-__all__ = ["Base", "engine", "get_db", "get_supabase", "AsyncSessionLocal"]
+__all__ = ["engine", "get_db", "get_supabase", "AsyncSessionLocal"]

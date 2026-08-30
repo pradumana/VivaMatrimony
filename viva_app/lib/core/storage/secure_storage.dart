@@ -9,13 +9,6 @@ class SecureStorage {
 
   const SecureStorage(this._storage);
 
-  static const FlutterSecureStorage _instance = FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: false),
-    iOptions: IOSOptions(
-      accessibility: KeychainAccessibility.first_unlock_this_device,
-    ),
-  );
-
   // ── Token management ─────────────────────────────────────────────────────
 
   Future<void> saveTokens({
@@ -69,8 +62,11 @@ class SecureStorage {
 final secureStorageProvider = Provider<SecureStorage>(
   (ref) => const SecureStorage(FlutterSecureStorage(
     aOptions: AndroidOptions(
-      // encryptedSharedPreferences causes Android Keystore init to hang on
-      // first launch on many devices. Disabled for reliability.
+      // ponytail: encryptedSharedPreferences disabled — Android Keystore init
+      // hangs on first launch on many devices with older AndroidX Security.
+      // Tokens are stored in unencrypted SharedPreferences on Android (readable
+      // on rooted devices). Upgrade path: test with AndroidX Security 1.1.0+
+      // and re-enable once confirmed stable on target device matrix.
       encryptedSharedPreferences: false,
     ),
   )),

@@ -2,6 +2,7 @@
 Audit logging utility.
 All sensitive actions (ban, verify, delete, approve certificate) are logged.
 """
+import json
 from typing import Any, Optional
 from uuid import UUID
 
@@ -25,7 +26,6 @@ async def log_action(
     Fires-and-forgets — does not raise on failure to avoid disrupting main flow.
     """
     try:
-        import json
         await db.execute(
             text("""
                 INSERT INTO audit_logs (
@@ -49,6 +49,7 @@ async def log_action(
                 "user_agent": user_agent,
             },
         )
+        await db.commit()
     except Exception:
         # Audit logging must never crash the main request
         import structlog

@@ -11,11 +11,16 @@ Scoring weights:
   Preferences align:  15%
   Family:             10%
 """
+from datetime import date
 from typing import Optional
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
+
+from app.config import get_settings
+from app.database import get_supabase
+from app.utils import compute_age
 
 
 WEIGHTS = {
@@ -188,19 +193,13 @@ async def get_recommended_matches(
     )
     rows = result.fetchall()
 
-    from app.database import get_supabase
-    from app.config import get_settings
     supabase = get_supabase()
     cfg = get_settings()
 
     matches = []
     for row in rows:
-        # Calculate age
-        from datetime import date
         dob = row.date_of_birth
-        age = date.today().year - dob.year - (
-            (date.today().month, date.today().day) < (dob.month, dob.day)
-        )
+        age = compute_age(dob) if dob else None
 
         # Get photo URL
         photo_url = None
@@ -412,11 +411,8 @@ async def _fetch_user_data(db: AsyncSession, user_id: UUID) -> Optional[dict]:
     if not row:
         return None
 
-    from datetime import date
     dob = row.date_of_birth
-    age = date.today().year - dob.year - (
-        (date.today().month, date.today().day) < (dob.month, dob.day)
-    )
+    age = compute_age(dob) if dob else None
 
     return {
         "age": age,

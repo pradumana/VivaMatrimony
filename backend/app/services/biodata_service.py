@@ -16,7 +16,7 @@ from sqlalchemy import text
 
 from app.config import get_settings
 from app.database import get_supabase
-from app.services.profile_service import get_profile, _compute_age
+from app.services.profile_service import get_profile
 
 settings = get_settings()
 logger = structlog.get_logger()

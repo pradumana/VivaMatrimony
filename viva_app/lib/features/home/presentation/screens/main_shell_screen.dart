@@ -3,22 +3,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/constants/app_constants.dart';
-import '../../../home/presentation/screens/home_screen.dart';
-import '../../../search/presentation/screens/search_screen.dart';
-import '../../../interests/presentation/screens/interests_screen.dart';
-import '../../../messaging/presentation/screens/conversations_screen.dart';
-import '../../../profile/presentation/screens/my_profile_screen.dart';
 
-class MainShellScreen extends StatefulWidget {
+class MainShellScreen extends StatelessWidget {
   final Widget child;
   const MainShellScreen({super.key, required this.child});
-
-  @override
-  State<MainShellScreen> createState() => _MainShellScreenState();
-}
-
-class _MainShellScreenState extends State<MainShellScreen> {
-  int _selectedIndex = 0;
 
   static const _routes = [
     AppRoutes.home,
@@ -28,27 +16,23 @@ class _MainShellScreenState extends State<MainShellScreen> {
     AppRoutes.myProfile,
   ];
 
-  static const _screens = [
-    HomeScreen(),
-    SearchScreen(),
-    InterestsScreen(),
-    ConversationsScreen(),
-    MyProfileScreen(),
-  ];
-
-  void _onTabTap(int index) {
-    if (_selectedIndex == index) return;
-    setState(() => _selectedIndex = index);
-    context.go(_routes[index]);
+  int _selectedIndex(BuildContext context) {
+    final location = GoRouterState.of(context).matchedLocation;
+    final idx = _routes.indexOf(location);
+    return idx < 0 ? 0 : idx;
   }
+
+  void _onTabTap(BuildContext context, int index) =>
+      context.go(_routes[index]);
 
   @override
   Widget build(BuildContext context) {
+    final selectedIndex = _selectedIndex(context);
     return Scaffold(
-      body: _screens[_selectedIndex],
+      body: child,
       bottomNavigationBar: _VivaBottomNav(
-        selectedIndex: _selectedIndex,
-        onTap: _onTabTap,
+        selectedIndex: selectedIndex,
+        onTap: (i) => _onTabTap(context, i),
       ),
     );
   }

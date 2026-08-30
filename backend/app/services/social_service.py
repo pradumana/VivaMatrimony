@@ -2,13 +2,14 @@
 Social Service — Interests, Shortlist, Messaging, Block, Report.
 """
 import structlog
+from datetime import date
 from typing import Optional
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
-from app.utils import log_action
+from app.utils import log_action, compute_age
 
 logger = structlog.get_logger()
 
@@ -299,11 +300,8 @@ async def get_interests_received(db: AsyncSession, user_id: UUID, limit: int = 2
 
 
 def _format_interest_row(row) -> dict:
-    from datetime import date
     dob = row.date_of_birth
-    age = date.today().year - dob.year - (
-        (date.today().month, date.today().day) < (dob.month, dob.day)
-    ) if dob else None
+    age = compute_age(dob) if dob else None
 
     other_id = getattr(row, "receiver_id", None) or getattr(row, "sender_id", None)
     return {
@@ -375,12 +373,9 @@ async def get_shortlist(db: AsyncSession, user_id: UUID, limit: int = 20, offset
     )
     rows = result.fetchall()
     items = []
-    from datetime import date
     for row in rows:
         dob = row.date_of_birth
-        age = date.today().year - dob.year - (
-            (date.today().month, date.today().day) < (dob.month, dob.day)
-        ) if dob else None
+        age = compute_age(dob) if dob else None
         items.append({
             "user_id": str(row.target_user_id),
             "full_name": row.full_name,
@@ -517,8 +512,3 @@ async def _notify_interest_accepted(db: AsyncSession, accepter_id: UUID, sender_
             "eid": interest_id,
         },
     )
-
-
-async def _notify_new_message(db, sender_id, receiver_id, conv_id):
-    # Retained as no-op stub — messaging is now handled on WhatsApp
-    pass

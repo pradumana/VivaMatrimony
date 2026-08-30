@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, s
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database import get_db, get_supabase
+from app.database import get_db
 from app.middleware import get_current_user, AuthenticatedUser
 from app.services.verification_service import (
     VerificationError,

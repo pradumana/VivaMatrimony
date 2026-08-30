@@ -19,7 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
 from app.database import get_db
-from app.middleware import get_current_user, get_current_active_user, AuthenticatedUser
+from app.middleware import get_current_user, AuthenticatedUser
 from app.schemas.profile import (
     ProfileCreateRequest, ProfileUpdateRequest, ProfileResponse, FullProfileResponse,
     LocationRequest, LocationResponse,
@@ -177,7 +177,15 @@ async def set_primary_photo(
 # Location
 # ---------------------------------------------------------------------------
 
+_UPSERT_ALLOWED_TABLES = frozenset({
+    "current_locations", "native_places", "education",
+    "employment", "family_details", "lifestyle",
+})
+
+
 async def _upsert_location(db: AsyncSession, user_id: UUID, data: dict, table: str):
+    if table not in _UPSERT_ALLOWED_TABLES:
+        raise ValueError(f"Invalid table: {table}")
     existing = await db.execute(
         text(f"SELECT id FROM {table} WHERE user_id = :uid"), {"uid": user_id}
     )

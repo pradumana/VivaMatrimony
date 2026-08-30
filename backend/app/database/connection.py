@@ -11,7 +11,6 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
-from sqlalchemy.orm import DeclarativeBase
 from supabase import create_client, Client
 
 from app.config import get_settings
@@ -51,18 +50,11 @@ AsyncSessionLocal = async_sessionmaker(
     autoflush=False,
 )
 
-
-class Base(DeclarativeBase):
-    """Base class for SQLAlchemy ORM models."""
-    pass
-
-
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """FastAPI dependency: yields a DB session, closes after request."""
     async with AsyncSessionLocal() as session:
         try:
             yield session
-            await session.commit()
         except Exception:
             await session.rollback()
             raise

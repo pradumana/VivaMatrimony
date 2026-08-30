@@ -110,7 +110,6 @@ class Settings(BaseSettings):
     # Admin
     # -------------------------------------------------------------------------
     admin_email: str = "admin@viva.app"
-    admin_default_password: str = "CHANGE_ME"
 
     # -------------------------------------------------------------------------
     # PDF
@@ -127,7 +126,6 @@ class Settings(BaseSettings):
     # Security
     # -------------------------------------------------------------------------
     bcrypt_rounds: int = 12
-    secure_cookies: bool = False
 
     # -------------------------------------------------------------------------
     # Notifications (FCM)
