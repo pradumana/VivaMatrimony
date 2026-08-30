@@ -6,7 +6,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
 
 import '../../../../core/network/api_client.dart';
-import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/constants/app_constants.dart';
 import '../../../../shared/widgets/viva_button.dart';
@@ -93,7 +92,13 @@ class _State extends ConsumerState<OnboardingPhotosScreen> {
     }
 
     await ref.read(onboardingProvider.notifier).completeOnboarding();
-    if (mounted) context.go(AppRoutes.verificationSelect);
+    if (mounted) {
+      // Navigate first while still in onboardingRequired state so the router
+      // doesn't redirect /verification/select to /home prematurely.
+      context.go(AppRoutes.verificationSelect);
+      // Now flip auth state — router will allow verification routes.
+      ref.read(onboardingProvider.notifier).markAuthenticatedAfterOnboarding();
+    }
   }
 
   @override

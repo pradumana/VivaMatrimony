@@ -6,7 +6,6 @@ import 'package:dio/dio.dart';
 
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../shared/constants/app_constants.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../../../../shared/widgets/verified_badge.dart';
 import '../../../../shared/widgets/viva_button.dart';
@@ -61,10 +60,11 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
   int? get compatScore => widget.data['compatibility_score'] as int?;
 
   Future<void> _sendInterest() async {
+    final name = profile['full_name'] as String? ?? '';
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('Send Interest to ${profile['full_name']}?'),
+        title: Text('Send Interest${name.isNotEmpty ? ' to $name' : ''}?'),
         content: const Text('They will receive a notification and can accept or decline.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
@@ -80,7 +80,10 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
       setState(() => _interestSent = true);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Interest sent to ${profile['full_name']}!'), backgroundColor: AppTheme.success),
+          SnackBar(
+            content: Text(name.isNotEmpty ? 'Interest sent to $name!' : 'Interest sent!'),
+            backgroundColor: AppTheme.success,
+          ),
         );
       }
     } on DioException catch (e) {
@@ -101,7 +104,16 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
         await client.post('/shortlist/${widget.userId}');
       }
       setState(() => _shortlisted = !_shortlisted);
-    } catch (_) {}
+    } on DioException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(ApiException.fromDioError(e).message),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -256,8 +268,19 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
               title: const Text('Block User'),
               onTap: () async {
                 Navigator.pop(context);
-                await ref.read(apiClientProvider).post('/users/${widget.userId}/block');
-                if (mounted) context.pop();
+                try {
+                  await ref.read(apiClientProvider).post('/users/${widget.userId}/block');
+                  if (mounted) context.pop();
+                } on DioException catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(ApiException.fromDioError(e).message),
+                        backgroundColor: AppTheme.error,
+                      ),
+                    );
+                  }
+                }
               },
             ),
           ],

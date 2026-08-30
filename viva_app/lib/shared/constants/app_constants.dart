@@ -6,10 +6,11 @@ class AppConstants {
   // Dev builds default to localhost; pass API_BASE_URL for staging/production.
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://localhost:8000/api/v1',
+    defaultValue: 'https://vivamatrimony.onrender.com/api/v1',
   );
-  static const int connectTimeoutMs = 10000;
-  static const int receiveTimeoutMs = 15000;
+  // Timeouts — connect is generous to handle Render free-tier cold start (~30s)
+  static const int connectTimeoutMs = 35000;
+  static const int receiveTimeoutMs = 30000;
 
   // Storage keys
   static const String accessTokenKey = 'viva_access_token';
@@ -41,6 +42,19 @@ class AppConstants {
 
   // India country code
   static const String indiaCode = '+91';
+
+  // Onboarding step labels (matches AppRoutes onboarding order)
+  static const List<String> onboardingSteps = [
+    'Basic Info',
+    'About You',
+    'Education',
+    'Career',
+    'Family',
+    'Lifestyle',
+    'Native Place',
+    'Preferences',
+    'Photos',
+  ];
 
   // App info
   static const String appName = 'Viva';

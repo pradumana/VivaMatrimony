@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../network/api_client.dart';
@@ -55,7 +54,12 @@ class AuthState {
 
 class AuthNotifier extends AsyncNotifier<AuthState> {
   @override
-  Future<AuthState> build() async => _checkSession();
+  Future<AuthState> build() async {
+    // Wire the force-logout callback into the API client so the interceptor
+    // can update auth state when the refresh token is expired/invalid.
+    ref.read(apiClientProvider).onForceLogout = forceLogout;
+    return _checkSession();
+  }
 
   Future<AuthState> _checkSession() async {
     final storage = ref.read(secureStorageProvider);
@@ -81,9 +85,29 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
         if (exp != null) {
           final expiry = DateTime.fromMillisecondsSinceEpoch(exp * 1000, isUtc: true);
           if (expiry.isBefore(DateTime.now().toUtc())) {
-            // Token expired — clear and require re-login
-            await storage.clearSession();
-            return const AuthState.unauthenticated();
+            // Access token expired — try a silent refresh before giving up.
+            final refreshToken = await storage.getRefreshToken();
+            if (refreshToken != null) {
+              try {
+                final client = ref.read(apiClientProvider);
+                final resp = await client.post('/auth/refresh',
+                    data: {'refresh_token': refreshToken});
+                final newAccess = resp.data['access_token'] as String;
+                final newRefresh = resp.data['refresh_token'] as String;
+                await storage.saveTokens(
+                  accessToken: newAccess,
+                  refreshToken: newRefresh,
+                  userId: (await storage.getUserId()) ?? '',
+                );
+                // Fall through — session is now valid with the new token.
+              } catch (_) {
+                await storage.clearSession();
+                return const AuthState.unauthenticated();
+              }
+            } else {
+              await storage.clearSession();
+              return const AuthState.unauthenticated();
+            }
           }
         }
       }
@@ -148,6 +172,13 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     }
     final storage = ref.read(secureStorageProvider);
     await storage.clearSession();
+    state = const AsyncValue.data(AuthState.unauthenticated());
+  }
+
+  /// Called by the API interceptor when the refresh token is invalid/expired.
+  /// Skips the network logout call since we know tokens are gone.
+  void forceLogout() {
+    ref.read(secureStorageProvider).clearSession().ignore();
     state = const AsyncValue.data(AuthState.unauthenticated());
   }
 }

@@ -42,7 +42,12 @@ final routerProvider = Provider<GoRouter>((ref) {
 
   // Listen to auth changes and notify GoRouter to re-run redirect
   ref.listen<AsyncValue<AuthState>>(authProvider, (previous, next) {
-    if (previous?.valueOrNull?.status != next.valueOrNull?.status) {
+    // Notify on status change OR when transitioning to/from an error state
+    final prevStatus = previous?.valueOrNull?.status;
+    final nextStatus = next.valueOrNull?.status;
+    final wasError = previous is AsyncError;
+    final isError = next is AsyncError;
+    if (prevStatus != nextStatus || wasError != isError) {
       notifier.notify();
     }
   });
@@ -56,6 +61,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       final auth = authAsync.valueOrNull;
 
       debugPrint('[Router] redirect — status=${auth?.status} location=${state.matchedLocation}');
+
+      // On AsyncError (e.g. storage failure on cold launch), treat as unauthenticated
+      // so the app never gets stuck on the splash screen forever.
+      if (authAsync is AsyncError) return AppRoutes.login;
 
       if (auth == null) return null; // Still loading
 
@@ -77,7 +86,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           if (isOnOnboardingRoute) return null;
           return AppRoutes.onboardingBasic;
         case AuthStatus.authenticated:
-          if (isSplash || isOnAuthRoute || isOnOnboardingRoute) return AppRoutes.home;
+          if (isSplash || isOnAuthRoute) return AppRoutes.home;
+          // Allow authenticated users to access verification screens
+          if (isOnOnboardingRoute && !state.matchedLocation.startsWith('/verification')) {
+            return AppRoutes.home;
+          }
           return null;
       }
     },

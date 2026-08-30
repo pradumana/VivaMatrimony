@@ -82,8 +82,15 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
   Future<bool> completeOnboarding() => _save(() async {
         final client = ref.read(apiClientProvider);
         await client.post('/profile/complete-onboarding');
-        await ref.read(authProvider.notifier).onOnboardingCompleted();
+        // Note: local auth state is updated via markAuthenticatedAfterOnboarding()
+        // AFTER navigation, to avoid the router redirecting /verification away.
       });
+
+  /// Call this after navigating away from the onboarding flow so the router
+  /// does not redirect /verification/select back to /home prematurely.
+  void markAuthenticatedAfterOnboarding() {
+    ref.read(authProvider.notifier).onOnboardingCompleted();
+  }
 
   Future<bool> _save(Future<void> Function() action) async {
     state = state.copyWith(isLoading: true, clearError: true);

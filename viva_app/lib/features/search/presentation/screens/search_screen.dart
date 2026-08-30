@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -18,6 +19,7 @@ class SearchScreen extends ConsumerStatefulWidget {
 
 class _State extends ConsumerState<SearchScreen> {
   final _searchCtrl = TextEditingController();
+  Timer? _debounce;
 
   // Filters
   int? _minAge, _maxAge;
@@ -42,6 +44,7 @@ class _State extends ConsumerState<SearchScreen> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchCtrl.dispose();
     super.dispose();
   }
@@ -57,6 +60,7 @@ class _State extends ConsumerState<SearchScreen> {
       final params = <String, dynamic>{
         'page': _page,
         'page_size': AppConstants.defaultPageSize,
+        if (_searchCtrl.text.trim().isNotEmpty) 'q': _searchCtrl.text.trim(),
         if (_minAge != null) 'min_age': _minAge,
         if (_maxAge != null) 'max_age': _maxAge,
         if (_state != null) 'state': _state,
@@ -139,7 +143,10 @@ class _State extends ConsumerState<SearchScreen> {
                     : null,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
-              onChanged: (_) { if (_searchCtrl.text.length != 1) _search(); },
+              onChanged: (_) {
+                _debounce?.cancel();
+                _debounce = Timer(const Duration(milliseconds: 400), _search);
+              },
               onSubmitted: (_) => _search(),
             ),
           ),

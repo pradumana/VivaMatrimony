@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/constants/app_constants.dart';
 import '../../../../shared/widgets/viva_button.dart';
+import '../../../../shared/widgets/viva_logo.dart';
 import '../providers/auth_screen_provider.dart';
 
 class OtpScreen extends ConsumerStatefulWidget {
@@ -63,11 +64,16 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     } else if (value.isEmpty && index > 0) {
       _focusNodes[index - 1].requestFocus();
     }
-    if (_otpComplete) _verify();
+    // Only auto-submit when all digits are freshly filled; don't re-trigger
+    // while a request is already in flight or an error is being corrected.
+    final state = ref.read(authScreenProvider);
+    if (_otpComplete && !state.isLoading && state.error == null) _verify();
   }
 
   Future<void> _verify() async {
     if (!_otpComplete) return;
+    // Guard against concurrent taps / auto-submit race
+    if (ref.read(authScreenProvider).isLoading) return;
     await ref.read(authScreenProvider.notifier).verifyOtp(
           phone: widget.phone,
           otp: _otp,
@@ -110,17 +116,8 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
             children: [
               const SizedBox(height: 32),
 
-              // Icon
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryContainer,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.message_outlined,
-                    color: AppTheme.primary, size: 30),
-              ),
+              // Logo
+              const VivaLogo(size: 64),
               const SizedBox(height: 20),
 
               const Text(

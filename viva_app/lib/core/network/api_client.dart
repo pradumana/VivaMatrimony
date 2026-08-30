@@ -8,9 +8,11 @@ import '../../shared/constants/app_constants.dart';
 class ApiClient {
   late final Dio _dio;
   final FlutterSecureStorage _storage;
+  late final _AuthInterceptor _authInterceptor;
 
-  ApiClient({FlutterSecureStorage? storage})
+  ApiClient({FlutterSecureStorage? storage, void Function()? onForceLogout})
       : _storage = storage ?? const FlutterSecureStorage() {
+    _authInterceptor = _AuthInterceptor(_storage, onForceLogout: onForceLogout);
     _dio = Dio(
       BaseOptions(
         baseUrl: AppConstants.baseUrl,
@@ -24,14 +26,19 @@ class ApiClient {
     );
 
     _dio.interceptors.addAll([
-      _AuthInterceptor(_storage, _dio),
+      _authInterceptor,
       LogInterceptor(
         requestBody: false,
         responseBody: false,
         error: true,
       ),
     ]);
+    // Wire the Dio instance into the interceptor after construction.
+    _authInterceptor._dio = _dio;
   }
+
+  // Allows wiring a force-logout callback after construction (used by authProvider).
+  set onForceLogout(void Function() cb) => _authInterceptor._onForceLogout = cb;
 
   Dio get dio => _dio;
 
@@ -82,10 +89,15 @@ class ApiClient {
 
 class _AuthInterceptor extends Interceptor {
   final FlutterSecureStorage _storage;
-  final Dio _dio;
+  late Dio _dio;
+  void Function()? _onForceLogout;
   bool _isRefreshing = false;
+  // Pending completers waiting for the in-flight refresh to finish.
+  final List<({RequestOptions options, ErrorInterceptorHandler handler})>
+      _pendingRequests = [];
 
-  _AuthInterceptor(this._storage, this._dio);
+  _AuthInterceptor(this._storage, {void Function()? onForceLogout})
+      : _onForceLogout = onForceLogout;
 
   @override
   void onRequest(
@@ -101,39 +113,82 @@ class _AuthInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    if (err.response?.statusCode == 401 && !_isRefreshing) {
-      _isRefreshing = true;
-      try {
-        final refreshToken = await _storage.read(key: AppConstants.refreshTokenKey);
-        if (refreshToken == null) {
-          _isRefreshing = false;
-          return handler.next(err);
-        }
+    if (err.response?.statusCode != 401) {
+      return handler.next(err);
+    }
 
-        final refreshResponse = await _dio.post(
-          '/auth/refresh',
-          data: {'refresh_token': refreshToken},
-        );
+    // If already refreshing, queue this request and wait.
+    if (_isRefreshing) {
+      _pendingRequests.add((options: err.requestOptions, handler: handler));
+      return;
+    }
 
-        final newAccessToken = refreshResponse.data['access_token'] as String;
-        final newRefreshToken = refreshResponse.data['refresh_token'] as String;
-
-        await _storage.write(key: AppConstants.accessTokenKey, value: newAccessToken);
-        await _storage.write(key: AppConstants.refreshTokenKey, value: newRefreshToken);
-
-        // Retry original request
-        err.requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
-        final retryResponse = await _dio.fetch(err.requestOptions);
+    _isRefreshing = true;
+    try {
+      final refreshToken = await _storage.read(key: AppConstants.refreshTokenKey);
+      if (refreshToken == null) {
         _isRefreshing = false;
-        return handler.resolve(retryResponse);
-      } catch (_) {
-        _isRefreshing = false;
-        // Clear tokens — user must log in again
-        await _storage.deleteAll();
+        _failPending(err);
         return handler.next(err);
       }
+
+      final refreshResponse = await _dio.post(
+        '/auth/refresh',
+        data: {'refresh_token': refreshToken},
+      );
+
+      final newAccessToken = refreshResponse.data['access_token'] as String;
+      final newRefreshToken = refreshResponse.data['refresh_token'] as String;
+
+      await _storage.write(key: AppConstants.accessTokenKey, value: newAccessToken);
+      await _storage.write(key: AppConstants.refreshTokenKey, value: newRefreshToken);
+
+      // Retry the original request.
+      err.requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
+      final retryResponse = await _dio.fetch(err.requestOptions);
+      _isRefreshing = false;
+      // Resolve all queued requests with the new token.
+      await _retryPending(newAccessToken);
+      return handler.resolve(retryResponse);
+    } catch (_) {
+      _isRefreshing = false;
+      // Refresh failed — clear only tokens (not onboarding flag) and force logout.
+      await Future.wait([
+        _storage.delete(key: AppConstants.accessTokenKey),
+        _storage.delete(key: AppConstants.refreshTokenKey),
+        _storage.delete(key: AppConstants.userIdKey),
+      ]);
+      _failPending(err);
+      _onForceLogout?.call();
+      return handler.next(err);
     }
-    handler.next(err);
+  }
+
+  Future<void> _retryPending(String newToken) async {
+    final pending = List.of(_pendingRequests);
+    _pendingRequests.clear();
+    for (final p in pending) {
+      try {
+        p.options.headers['Authorization'] = 'Bearer $newToken';
+        final response = await _dio.fetch(p.options);
+        p.handler.resolve(response);
+      } catch (e) {
+        p.handler.next(e is DioException ? e : DioException(requestOptions: p.options));
+      }
+    }
+  }
+
+  void _failPending(DioException err) {
+    final pending = List.of(_pendingRequests);
+    _pendingRequests.clear();
+    for (final p in pending) {
+      p.handler.next(DioException(
+        requestOptions: p.options,
+        response: err.response,
+        type: err.type,
+        error: err.error,
+      ));
+    }
   }
 }
 
@@ -162,7 +217,7 @@ class ApiException implements Exception {
         DioExceptionType.connectionTimeout ||
         DioExceptionType.sendTimeout ||
         DioExceptionType.receiveTimeout =>
-          'Connection timed out. Please check your internet and try again.',
+          'Server is taking too long to respond. Please try again.',
         DioExceptionType.connectionError =>
           'No internet connection. Please check your network.',
         _ => switch (statusCode) {
