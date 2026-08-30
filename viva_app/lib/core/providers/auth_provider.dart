@@ -115,9 +115,7 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
       refreshToken: refreshToken,
       userId: userId,
     );
-    if (onboardingCompleted) {
-      await storage.setOnboardingCompleted(true);
-    }
+    await storage.setOnboardingCompleted(onboardingCompleted);
 
     state = AsyncValue.data(AuthState(
       status: onboardingCompleted

@@ -80,6 +80,8 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
       });
 
   Future<bool> completeOnboarding() => _save(() async {
+        final client = ref.read(apiClientProvider);
+        await client.post('/profile/complete-onboarding');
         await ref.read(authProvider.notifier).onOnboardingCompleted();
       });
 

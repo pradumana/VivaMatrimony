@@ -101,6 +101,19 @@ async def update_profile(
     return result
 
 
+@router.post("/complete-onboarding", status_code=status.HTTP_204_NO_CONTENT)
+async def complete_onboarding(
+    current_user: AuthenticatedUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Mark onboarding as completed for the current user."""
+    await db.execute(
+        text("UPDATE users SET onboarding_completed = TRUE WHERE id = :user_id"),
+        {"user_id": current_user.user_id},
+    )
+    await db.commit()
+
+
 # ---------------------------------------------------------------------------
 # Photos
 # ---------------------------------------------------------------------------
