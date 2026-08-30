@@ -2,11 +2,11 @@
 class AppConstants {
   AppConstants._();
 
-  // API — set via --dart-define=API_BASE_URL=https://your-api.com/api/v1
-  // Defaults to local emulator address for development.
+  // API — override at build time via --dart-define=API_BASE_URL=https://your-api.com/api/v1
+  // Defaults to the production Render backend.
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://192.168.31.122:8000/api/v1',
+    defaultValue: 'https://vivamatrimony.onrender.com/api/v1',
   );
   static const int connectTimeoutMs = 10000;
   static const int receiveTimeoutMs = 15000;
