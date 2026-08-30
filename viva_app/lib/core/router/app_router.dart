@@ -38,7 +38,14 @@ import '../providers/auth_provider.dart';
 import '../../shared/constants/app_constants.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final notifier = _AuthChangeNotifier(ref);
+  final notifier = _AuthChangeNotifier();
+
+  // Listen to auth changes and notify GoRouter to re-run redirect
+  ref.listen<AsyncValue<AuthState>>(authProvider, (previous, next) {
+    if (previous?.valueOrNull?.status != next.valueOrNull?.status) {
+      notifier.notify();
+    }
+  });
 
   return GoRouter(
     initialLocation: AppRoutes.splash,
@@ -196,41 +203,6 @@ class _ShortlistTab extends StatelessWidget {
 }
 
 /// Bridges Riverpod auth state changes to GoRouter's [refreshListenable].
-/// When [authProvider] emits a new value the router re-runs its redirect.
 class _AuthChangeNotifier extends ChangeNotifier {
-  _AuthChangeNotifier(Ref ref) {
-    ref.listen<AsyncValue<AuthState>>(authProvider, (previous, next) {
-      // Only notify when the auth status actually changes
-      if (previous?.valueOrNull?.status != next.valueOrNull?.status) {
-        notifyListeners();
-      }
-    });
-  }
-}
-
-/// Exposes the resolved [AuthState] (or null while loading) and notifies
-/// GoRouter whenever auth changes so redirects are re-evaluated.
-final _routerNotifierProvider =
-    AsyncNotifierProvider<_RouterNotifier, AuthState?>(_RouterNotifier.new);
-
-class _RouterNotifier extends AsyncNotifier<AuthState?> implements Listenable {
-  final List<VoidCallback> _listeners = [];
-
-  @override
-  Future<AuthState?> build() async {
-    // Watch authProvider — rebuilds whenever auth changes
-    final authAsync = ref.watch(authProvider);
-    final value = authAsync.valueOrNull;
-    // Schedule notification after the current build frame completes
-    Future.microtask(() {
-      for (final l in _listeners) l();
-    });
-    return value;
-  }
-
-  @override
-  void addListener(VoidCallback listener) => _listeners.add(listener);
-
-  @override
-  void removeListener(VoidCallback listener) => _listeners.remove(listener);
+  void notify() => notifyListeners();
 }
