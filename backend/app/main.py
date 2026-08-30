@@ -69,6 +69,20 @@ def create_app() -> FastAPI:
     app.include_router(api_router)
 
     # ---------------------------------------------------------------------------
+    # Root
+    # ---------------------------------------------------------------------------
+    @app.get("/", tags=["Root"])
+    async def root():
+        return {
+            "app": settings.app_name,
+            "version": settings.app_version,
+            "status": "running",
+            "docs": "/docs" if not settings.is_production else "disabled in production",
+            "health": "/health",
+            "api": "/api/v1",
+        }
+
+    # ---------------------------------------------------------------------------
     # Health check
     # ---------------------------------------------------------------------------
     @app.get("/health", tags=["Health"])
