@@ -32,7 +32,7 @@ class _State extends ConsumerState<OnboardingLifestyleScreen> {
       'hobbies': _hobbies.toList(),
       'interests': _interests.toList(),
     });
-    if (ok && mounted) context.push(AppRoutes.onboardingNativePlace);
+    if (ok && mounted) context.go(AppRoutes.onboardingNativePlace);
   }
 
   @override

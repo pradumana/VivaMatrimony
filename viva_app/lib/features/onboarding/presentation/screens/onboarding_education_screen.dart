@@ -36,7 +36,7 @@ class _State extends ConsumerState<OnboardingEducationScreen> {
       'college_university': _collegeController.text.trim().isEmpty ? null : _collegeController.text.trim(),
       'graduation_year': _gradYear,
     });
-    if (ok && mounted) context.push(AppRoutes.onboardingCareer);
+    if (ok && mounted) context.go(AppRoutes.onboardingCareer);
   }
 
   @override

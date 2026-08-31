@@ -55,7 +55,7 @@ class _State extends ConsumerState<OnboardingNativePlaceScreen> {
     // Current location handled separately
     final apiClient = ref.read(onboardingProvider.notifier);
     // We call profile/location via the profile endpoint
-    if (mounted) context.push(AppRoutes.onboardingPreferences);
+    if (mounted) context.go(AppRoutes.onboardingPreferences);
   }
 
   @override

@@ -27,7 +27,7 @@ class _State extends ConsumerState<OnboardingBioScreen> {
     final ok = await ref
         .read(onboardingProvider.notifier)
         .saveBio(_controller.text.trim());
-    if (ok && mounted) context.push(AppRoutes.onboardingEducation);
+    if (ok && mounted) context.go(AppRoutes.onboardingEducation);
   }
 
   @override

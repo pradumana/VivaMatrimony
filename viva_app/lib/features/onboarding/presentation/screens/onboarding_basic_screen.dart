@@ -93,7 +93,7 @@ class _OnboardingBasicScreenState
       'mother_tongue': _motherTongue,
     });
 
-    if (ok && mounted) context.push(AppRoutes.onboardingBio);
+    if (ok && mounted) context.go(AppRoutes.onboardingBio);
   }
 
   @override

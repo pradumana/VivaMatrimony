@@ -50,7 +50,7 @@ class _State extends ConsumerState<OnboardingCareerScreen> {
       'show_income': _showIncome,
       'show_company': _showCompany,
     });
-    if (ok && mounted) context.push(AppRoutes.onboardingFamily);
+    if (ok && mounted) context.go(AppRoutes.onboardingFamily);
   }
 
   @override

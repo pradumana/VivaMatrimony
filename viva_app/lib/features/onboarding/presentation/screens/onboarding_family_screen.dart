@@ -47,7 +47,7 @@ class _State extends ConsumerState<OnboardingFamilyScreen> {
       'family_values': _familyValues,
       'family_location': _familyLocCtrl.text.trim().isEmpty ? null : _familyLocCtrl.text.trim(),
     });
-    if (ok && mounted) context.push(AppRoutes.onboardingLifestyle);
+    if (ok && mounted) context.go(AppRoutes.onboardingLifestyle);
   }
 
   @override

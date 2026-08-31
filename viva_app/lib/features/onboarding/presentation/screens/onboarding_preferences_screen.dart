@@ -33,7 +33,7 @@ class _State extends ConsumerState<OnboardingPreferencesScreen> {
       'income_importance': _incomeImportance,
       'open_to_relocation': _openToRelocation,
     });
-    if (ok && mounted) context.push(AppRoutes.onboardingPhotos);
+    if (ok && mounted) context.go(AppRoutes.onboardingPhotos);
   }
 
   @override
