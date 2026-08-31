@@ -12,7 +12,8 @@ import '../../../../shared/widgets/viva_button.dart';
 import '../providers/onboarding_provider.dart';
 
 class OnboardingPhotosScreen extends ConsumerStatefulWidget {
-  const OnboardingPhotosScreen({super.key});
+  final bool isEditing;
+  const OnboardingPhotosScreen({super.key, this.isEditing = false});
   @override
   ConsumerState<OnboardingPhotosScreen> createState() => _State();
 }
@@ -97,6 +98,12 @@ class _State extends ConsumerState<OnboardingPhotosScreen> {
   }
 
   Future<void> _done() async {
+    if (widget.isEditing) {
+      // In edit mode just pop back — no need to complete onboarding again
+      if (mounted) context.pop();
+      return;
+    }
+
     if (_photos.isEmpty) {
       final confirm = await showDialog<bool>(
         context: context,
@@ -114,10 +121,7 @@ class _State extends ConsumerState<OnboardingPhotosScreen> {
 
     await ref.read(onboardingProvider.notifier).completeOnboarding();
     if (mounted) {
-      // Navigate first while still in onboardingRequired state so the router
-      // doesn't redirect /verification/select to /home prematurely.
       context.go(AppRoutes.verificationSelect);
-      // Flip auth state after a microtask so navigation settles first.
       await Future.microtask(() {});
       if (mounted) ref.read(onboardingProvider.notifier).markAuthenticatedAfterOnboarding();
     }
@@ -180,7 +184,7 @@ class _State extends ConsumerState<OnboardingPhotosScreen> {
 
               const SizedBox(height: 16),
               VivaButton(
-                label: _photos.isEmpty ? 'Skip for now' : 'Done — Continue to Verification',
+                label: widget.isEditing ? 'Done' : (_photos.isEmpty ? 'Skip for now' : 'Done — Continue to Verification'),
                 onPressed: _done,
               ),
             ],

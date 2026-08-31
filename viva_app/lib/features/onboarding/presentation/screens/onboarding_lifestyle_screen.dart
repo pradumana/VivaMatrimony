@@ -9,7 +9,8 @@ import '../providers/onboarding_provider.dart';
 import '../widgets/onboarding_scaffold.dart';
 
 class OnboardingLifestyleScreen extends ConsumerStatefulWidget {
-  const OnboardingLifestyleScreen({super.key});
+  final bool isEditing;
+  const OnboardingLifestyleScreen({super.key, this.isEditing = false});
   @override
   ConsumerState<OnboardingLifestyleScreen> createState() => _State();
 }
@@ -32,7 +33,10 @@ class _State extends ConsumerState<OnboardingLifestyleScreen> {
       'hobbies': _hobbies.toList(),
       'interests': _interests.toList(),
     });
-    if (ok && mounted) context.go(AppRoutes.onboardingNativePlace);
+    if (ok && mounted) {
+      if (widget.isEditing) context.pop();
+      else context.go(AppRoutes.onboardingNativePlace);
+    }
   }
 
   @override

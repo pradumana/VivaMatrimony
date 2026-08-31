@@ -9,7 +9,8 @@ import '../providers/onboarding_provider.dart';
 import '../widgets/onboarding_scaffold.dart';
 
 class OnboardingBioScreen extends ConsumerStatefulWidget {
-  const OnboardingBioScreen({super.key});
+  final bool isEditing;
+  const OnboardingBioScreen({super.key, this.isEditing = false});
   @override
   ConsumerState<OnboardingBioScreen> createState() => _State();
 }
@@ -27,7 +28,10 @@ class _State extends ConsumerState<OnboardingBioScreen> {
     final ok = await ref
         .read(onboardingProvider.notifier)
         .saveBio(_controller.text.trim());
-    if (ok && mounted) context.go(AppRoutes.onboardingEducation);
+    if (ok && mounted) {
+      if (widget.isEditing) context.pop();
+      else context.go(AppRoutes.onboardingEducation);
+    }
   }
 
   @override

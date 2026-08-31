@@ -74,6 +74,11 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
         await client.put('/profile/native-place', data: data);
       });
 
+  Future<bool> saveCurrentLocation(Map<String, dynamic> data) => _save(() async {
+        final client = ref.read(apiClientProvider);
+        await client.put('/profile/location', data: data);
+      });
+
   Future<bool> savePreferences(Map<String, dynamic> data) => _save(() async {
         final client = ref.read(apiClientProvider);
         await client.put('/preferences', data: data);

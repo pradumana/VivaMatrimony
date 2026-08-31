@@ -116,15 +116,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
 
       // Onboarding
-      GoRoute(path: AppRoutes.onboardingBasic, builder: (_, __) => const OnboardingBasicScreen()),
-      GoRoute(path: AppRoutes.onboardingBio, builder: (_, __) => const OnboardingBioScreen()),
-      GoRoute(path: AppRoutes.onboardingEducation, builder: (_, __) => const OnboardingEducationScreen()),
-      GoRoute(path: AppRoutes.onboardingCareer, builder: (_, __) => const OnboardingCareerScreen()),
-      GoRoute(path: AppRoutes.onboardingFamily, builder: (_, __) => const OnboardingFamilyScreen()),
-      GoRoute(path: AppRoutes.onboardingLifestyle, builder: (_, __) => const OnboardingLifestyleScreen()),
-      GoRoute(path: AppRoutes.onboardingNativePlace, builder: (_, __) => const OnboardingNativePlaceScreen()),
-      GoRoute(path: AppRoutes.onboardingPreferences, builder: (_, __) => const OnboardingPreferencesScreen()),
-      GoRoute(path: AppRoutes.onboardingPhotos, builder: (_, __) => const OnboardingPhotosScreen()),
+      GoRoute(path: AppRoutes.onboardingBasic, builder: (_, s) => OnboardingBasicScreen(isEditing: s.extra == true)),
+      GoRoute(path: AppRoutes.onboardingBio, builder: (_, s) => OnboardingBioScreen(isEditing: s.extra == true)),
+      GoRoute(path: AppRoutes.onboardingEducation, builder: (_, s) => OnboardingEducationScreen(isEditing: s.extra == true)),
+      GoRoute(path: AppRoutes.onboardingCareer, builder: (_, s) => OnboardingCareerScreen(isEditing: s.extra == true)),
+      GoRoute(path: AppRoutes.onboardingFamily, builder: (_, s) => OnboardingFamilyScreen(isEditing: s.extra == true)),
+      GoRoute(path: AppRoutes.onboardingLifestyle, builder: (_, s) => OnboardingLifestyleScreen(isEditing: s.extra == true)),
+      GoRoute(path: AppRoutes.onboardingNativePlace, builder: (_, s) => OnboardingNativePlaceScreen(isEditing: s.extra == true)),
+      GoRoute(path: AppRoutes.onboardingPreferences, builder: (_, s) => OnboardingPreferencesScreen(isEditing: s.extra == true)),
+      GoRoute(path: AppRoutes.onboardingPhotos, builder: (_, s) => OnboardingPhotosScreen(isEditing: s.extra == true)),
 
       // Verification
       GoRoute(path: AppRoutes.verificationSelect, builder: (_, __) => const VerificationSelectScreen()),

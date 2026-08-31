@@ -9,7 +9,8 @@ import '../providers/onboarding_provider.dart';
 import '../widgets/onboarding_scaffold.dart';
 
 class OnboardingFamilyScreen extends ConsumerStatefulWidget {
-  const OnboardingFamilyScreen({super.key});
+  final bool isEditing;
+  const OnboardingFamilyScreen({super.key, this.isEditing = false});
   @override
   ConsumerState<OnboardingFamilyScreen> createState() => _State();
 }
@@ -47,7 +48,10 @@ class _State extends ConsumerState<OnboardingFamilyScreen> {
       'family_values': _familyValues,
       'family_location': _familyLocCtrl.text.trim().isEmpty ? null : _familyLocCtrl.text.trim(),
     });
-    if (ok && mounted) context.go(AppRoutes.onboardingLifestyle);
+    if (ok && mounted) {
+      if (widget.isEditing) context.pop();
+      else context.go(AppRoutes.onboardingLifestyle);
+    }
   }
 
   @override

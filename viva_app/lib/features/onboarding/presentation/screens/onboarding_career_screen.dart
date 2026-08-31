@@ -9,7 +9,8 @@ import '../providers/onboarding_provider.dart';
 import '../widgets/onboarding_scaffold.dart';
 
 class OnboardingCareerScreen extends ConsumerStatefulWidget {
-  const OnboardingCareerScreen({super.key});
+  final bool isEditing;
+  const OnboardingCareerScreen({super.key, this.isEditing = false});
   @override
   ConsumerState<OnboardingCareerScreen> createState() => _State();
 }
@@ -50,7 +51,10 @@ class _State extends ConsumerState<OnboardingCareerScreen> {
       'show_income': _showIncome,
       'show_company': _showCompany,
     });
-    if (ok && mounted) context.go(AppRoutes.onboardingFamily);
+    if (ok && mounted) {
+      if (widget.isEditing) context.pop();
+      else context.go(AppRoutes.onboardingFamily);
+    }
   }
 
   @override

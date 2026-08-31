@@ -9,7 +9,8 @@ import '../providers/onboarding_provider.dart';
 import '../widgets/onboarding_scaffold.dart';
 
 class OnboardingPreferencesScreen extends ConsumerStatefulWidget {
-  const OnboardingPreferencesScreen({super.key});
+  final bool isEditing;
+  const OnboardingPreferencesScreen({super.key, this.isEditing = false});
   @override
   ConsumerState<OnboardingPreferencesScreen> createState() => _State();
 }
@@ -33,7 +34,10 @@ class _State extends ConsumerState<OnboardingPreferencesScreen> {
       'income_importance': _incomeImportance,
       'open_to_relocation': _openToRelocation,
     });
-    if (ok && mounted) context.go(AppRoutes.onboardingPhotos);
+    if (ok && mounted) {
+      if (widget.isEditing) context.pop();
+      else context.go(AppRoutes.onboardingPhotos);
+    }
   }
 
   @override

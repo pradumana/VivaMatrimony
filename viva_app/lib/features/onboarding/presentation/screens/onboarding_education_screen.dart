@@ -8,7 +8,8 @@ import '../providers/onboarding_provider.dart';
 import '../widgets/onboarding_scaffold.dart';
 
 class OnboardingEducationScreen extends ConsumerStatefulWidget {
-  const OnboardingEducationScreen({super.key});
+  final bool isEditing;
+  const OnboardingEducationScreen({super.key, this.isEditing = false});
   @override
   ConsumerState<OnboardingEducationScreen> createState() => _State();
 }
@@ -36,7 +37,10 @@ class _State extends ConsumerState<OnboardingEducationScreen> {
       'college_university': _collegeController.text.trim().isEmpty ? null : _collegeController.text.trim(),
       'graduation_year': _gradYear,
     });
-    if (ok && mounted) context.go(AppRoutes.onboardingCareer);
+    if (ok && mounted) {
+      if (widget.isEditing) context.pop();
+      else context.go(AppRoutes.onboardingCareer);
+    }
   }
 
   @override

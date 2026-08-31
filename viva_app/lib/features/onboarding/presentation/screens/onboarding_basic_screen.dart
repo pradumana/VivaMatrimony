@@ -10,7 +10,8 @@ import '../providers/onboarding_provider.dart';
 import '../widgets/onboarding_scaffold.dart';
 
 class OnboardingBasicScreen extends ConsumerStatefulWidget {
-  const OnboardingBasicScreen({super.key});
+  final bool isEditing;
+  const OnboardingBasicScreen({super.key, this.isEditing = false});
 
   @override
   ConsumerState<OnboardingBasicScreen> createState() =>
@@ -93,7 +94,10 @@ class _OnboardingBasicScreenState
       'mother_tongue': _motherTongue,
     });
 
-    if (ok && mounted) context.go(AppRoutes.onboardingBio);
+    if (ok && mounted) {
+      if (widget.isEditing) context.pop();
+      else context.go(AppRoutes.onboardingBio);
+    }
   }
 
   @override

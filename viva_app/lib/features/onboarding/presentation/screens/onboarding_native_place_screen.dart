@@ -9,7 +9,8 @@ import '../providers/onboarding_provider.dart';
 import '../widgets/onboarding_scaffold.dart';
 
 class OnboardingNativePlaceScreen extends ConsumerStatefulWidget {
-  const OnboardingNativePlaceScreen({super.key});
+  final bool isEditing;
+  const OnboardingNativePlaceScreen({super.key, this.isEditing = false});
   @override
   ConsumerState<OnboardingNativePlaceScreen> createState() => _State();
 }
@@ -43,19 +44,30 @@ class _State extends ConsumerState<OnboardingNativePlaceScreen> {
   }
 
   Future<void> _next() async {
-    // Save current location
-    final client = ref.read(onboardingProvider.notifier);
-    await client.saveNativePlace({
+    final notifier = ref.read(onboardingProvider.notifier);
+
+    // Save native place
+    await notifier.saveNativePlace({
       'state': _nativeState,
       'district': _nativeDistrictCtrl.text.trim().isEmpty ? null : _nativeDistrictCtrl.text.trim(),
       'city': _nativeCityCtrl.text.trim().isEmpty ? null : _nativeCityCtrl.text.trim(),
       'is_visible': _nativeVisible,
     });
 
-    // Current location handled separately
-    final apiClient = ref.read(onboardingProvider.notifier);
-    // We call profile/location via the profile endpoint
-    if (mounted) context.go(AppRoutes.onboardingPreferences);
+    // Save current location if any field is filled
+    if (_currState != null || _currCityCtrl.text.trim().isNotEmpty || _currDistrictCtrl.text.trim().isNotEmpty) {
+      await notifier.saveCurrentLocation({
+        'country': 'India',
+        'state': _currState,
+        'district': _currDistrictCtrl.text.trim().isEmpty ? null : _currDistrictCtrl.text.trim(),
+        'city': _currCityCtrl.text.trim().isEmpty ? null : _currCityCtrl.text.trim(),
+      });
+    }
+
+    if (mounted) {
+      if (widget.isEditing) context.pop();
+      else context.go(AppRoutes.onboardingPreferences);
+    }
   }
 
   @override

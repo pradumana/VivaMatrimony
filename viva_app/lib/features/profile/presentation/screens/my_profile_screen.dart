@@ -163,7 +163,7 @@ class _ProfileBody extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(children: [
-                  _QuickAction(icon: Icons.photo_library_outlined, label: 'Photos\n$photoCount added', onTap: () => context.push(AppRoutes.editProfile)),
+                  _QuickAction(icon: Icons.photo_library_outlined, label: 'Photos\n$photoCount added', onTap: () => context.push(AppRoutes.onboardingPhotos, extra: true)),
                   const SizedBox(width: 10),
                   _QuickAction(icon: Icons.picture_as_pdf_outlined, label: 'My\nBiodata', onTap: () => context.push(AppRoutes.biodata)),
                   const SizedBox(width: 10),
