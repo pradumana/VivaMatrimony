@@ -54,24 +54,27 @@ class _EditSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        leading: Container(
-          width: 42, height: 42,
-          decoration: BoxDecoration(color: AppTheme.primaryContainer, borderRadius: BorderRadius.circular(AppRadius.md)),
-          child: Icon(icon, size: 22, color: AppTheme.primary),
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(AppRadius.lg),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          border: Border.all(color: AppTheme.border),
         ),
-        title: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-        subtitle: Text(subtitle, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
-        trailing: const Icon(Icons.chevron_right_rounded, color: AppTheme.textSecondary),
-        onTap: onTap,
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          leading: Container(
+            width: 42, height: 42,
+            decoration: BoxDecoration(color: AppTheme.primaryContainer, borderRadius: BorderRadius.circular(AppRadius.md)),
+            child: Icon(icon, size: 22, color: AppTheme.primary),
+          ),
+          title: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+          subtitle: Text(subtitle, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+          trailing: const Icon(Icons.chevron_right_rounded, color: AppTheme.textSecondary),
+          onTap: onTap,
+        ),
       ),
     );
   }

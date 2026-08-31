@@ -117,8 +117,9 @@ class _State extends ConsumerState<OnboardingPhotosScreen> {
       // Navigate first while still in onboardingRequired state so the router
       // doesn't redirect /verification/select to /home prematurely.
       context.go(AppRoutes.verificationSelect);
-      // Now flip auth state — router will allow verification routes.
-      ref.read(onboardingProvider.notifier).markAuthenticatedAfterOnboarding();
+      // Flip auth state after a microtask so navigation settles first.
+      await Future.microtask(() {});
+      if (mounted) ref.read(onboardingProvider.notifier).markAuthenticatedAfterOnboarding();
     }
   }
 
