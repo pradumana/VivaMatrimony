@@ -47,7 +47,11 @@ class HelpScreen extends StatelessWidget {
               )),
               IconButton(
                 icon: const Icon(Icons.email_outlined, color: Colors.white),
-                onPressed: () => launchUrl(Uri.parse('mailto:${AppConstants.supportEmail}')),
+                onPressed: () async {
+                  final uri = Uri.parse('mailto:${AppConstants.supportEmail}');
+                  if (!await canLaunchUrl(uri)) return;
+                  launchUrl(uri);
+                },
               ),
             ]),
           ),

@@ -1,8 +1,10 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/network/api_client.dart';
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/constants/app_constants.dart';
@@ -17,9 +19,9 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         children: [
           const _SectionHeader('Account'),
+          // Privacy Settings covers profile visibility — no separate duplicate tile needed.
           _SettingsTile(icon: Icons.lock_outline, title: 'Privacy Settings', onTap: () => context.push(AppRoutes.privacy)),
           _SettingsTile(icon: Icons.notifications_outlined, title: 'Notification Preferences', onTap: () => _showComingSoon(context)),
-          _SettingsTile(icon: Icons.visibility_outlined, title: 'Profile Visibility', onTap: () => context.push(AppRoutes.privacy)),
 
           const _SectionHeader('Verification'),
           _SettingsTile(icon: Icons.verified_user_outlined, title: 'Verification Status', onTap: () => context.push(AppRoutes.verificationStatus)),
@@ -27,15 +29,16 @@ class SettingsScreen extends ConsumerWidget {
 
           const _SectionHeader('Support'),
           _SettingsTile(icon: Icons.help_outline, title: 'Help & Support', onTap: () => context.push(AppRoutes.helpSupport)),
-          _SettingsTile(icon: Icons.policy_outlined, title: 'Privacy Policy', onTap: () => _launchUrl(AppConstants.privacyPolicyUrl)),
-          _SettingsTile(icon: Icons.description_outlined, title: 'Terms & Conditions', onTap: () => _launchUrl(AppConstants.termsUrl)),
+          _SettingsTile(icon: Icons.policy_outlined, title: 'Privacy Policy', onTap: () => _launchUrl(context, AppConstants.privacyPolicyUrl)),
+          _SettingsTile(icon: Icons.description_outlined, title: 'Terms & Conditions', onTap: () => _launchUrl(context, AppConstants.termsUrl)),
           _SettingsTile(icon: Icons.info_outline, title: 'About Viva', onTap: () => _showAbout(context)),
 
           const _SectionHeader('Danger Zone'),
           _SettingsTile(icon: Icons.delete_outline, title: 'Delete Account', color: AppTheme.error, onTap: () => _confirmDelete(context, ref)),
 
           const SizedBox(height: 16),
-          Center(child: Text('Viva v${AppConstants.appVersion}', style: const TextStyle(fontSize: 11, color: AppTheme.textTertiary))),          const SizedBox(height: 32),
+          Center(child: Text('Viva v${AppConstants.appVersion}', style: const TextStyle(fontSize: 11, color: AppTheme.textTertiary))),
+          const SizedBox(height: 32),
         ],
       ),
     );
@@ -45,9 +48,18 @@ class SettingsScreen extends ConsumerWidget {
     ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('Coming soon in the next update!')));
   }
 
-  void _launchUrl(String url) async {
+  /// Opens [url] in the browser. Shows a SnackBar if no browser is available.
+  void _launchUrl(BuildContext ctx, String url) async {
     final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) launchUrl(uri);
+    if (await canLaunchUrl(uri)) {
+      launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (ctx.mounted) {
+        ScaffoldMessenger.of(ctx).showSnackBar(
+          const SnackBar(content: Text('Could not open the link. Please visit the website manually.')),
+        );
+      }
+    }
   }
 
   void _showAbout(BuildContext ctx) {
@@ -74,35 +86,68 @@ class SettingsScreen extends ConsumerWidget {
   void _confirmDelete(BuildContext ctx, WidgetRef ref) {
     showDialog(
       context: ctx,
-      builder: (_) => AlertDialog(
-        title: const Text('Delete Account', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.error)),
-        content: const Text(
-          'This will permanently delete your account, profile, photos, and all data. This cannot be undone.\n\nAre you absolutely sure?',
-          style: TextStyle(fontSize: 13, height: 1.5),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
-            onPressed: () async {
-              Navigator.pop(ctx);
-              // Call delete API then logout
-              try {
-                // DELETE /profile endpoint
-                await ref.read(authProvider.notifier).logout();
-              } catch (_) {
-                await ref.read(authProvider.notifier).logout();
-              }
-            },
-            child: const Text('Delete My Account'),
-          ),
-        ],
-      ),
+      builder: (_) => _DeleteAccountDialog(ref: ref),
     );
   }
 }
 
-// Version is defined in AppConstants
+class _DeleteAccountDialog extends ConsumerStatefulWidget {
+  final WidgetRef ref;
+  const _DeleteAccountDialog({required this.ref});
+
+  @override
+  ConsumerState<_DeleteAccountDialog> createState() => _DeleteAccountDialogState();
+}
+
+class _DeleteAccountDialogState extends ConsumerState<_DeleteAccountDialog> {
+  bool _loading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Delete Account', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.error)),
+      content: const Text(
+        'This will permanently delete your account, profile, photos, and all data. This cannot be undone.\n\nAre you absolutely sure?',
+        style: TextStyle(fontSize: 13, height: 1.5),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _loading ? null : () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
+          onPressed: _loading ? null : _deleteAccount,
+          child: _loading
+              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+              : const Text('Delete My Account'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _deleteAccount() async {
+    setState(() => _loading = true);
+    try {
+      await ref.read(apiClientProvider).delete('/profile');
+    } on DioException catch (e) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not delete account: ${ApiException.fromDioError(e).message}'),
+          backgroundColor: AppTheme.error,
+        ),
+      );
+      return;
+    }
+    // Account deleted on server — clear local session.
+    if (!mounted) return;
+    Navigator.pop(context);
+    await ref.read(authProvider.notifier).logout();
+  }
+}
 
 class _SectionHeader extends StatelessWidget {
   final String title;

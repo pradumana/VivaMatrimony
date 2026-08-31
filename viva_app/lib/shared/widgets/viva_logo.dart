@@ -34,7 +34,7 @@ class VivaLogo extends StatelessWidget {
       'assets/images/app_icon.png',
       width: size,
       height: size,
-      fit: BoxFit.contain,
+      fit: BoxFit.cover,
     );
   }
 }

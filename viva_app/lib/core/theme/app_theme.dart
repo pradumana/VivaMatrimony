@@ -9,9 +9,13 @@ class AppTheme {
   static const Color primaryDeep = Color(0xFF8B1A1A);    // Deep maroon
   static const Color primary = Color(0xFFC0392B);         // Rich red
   static const Color primaryLight = Color(0xFFE74C3C);    // Bright accent
+  // NOTE: primaryLight shares hex #E74C3C with `error` below. If the error
+  // color needs to change, update `error` only — do NOT change primaryLight.
   static const Color primaryContainer = Color(0xFFFDF0EC); // Warm rose background
 
   static const Color secondary = Color(0xFFD4A017);       // Golden accent
+  // NOTE: `secondary` and `verifiedGold` below share hex #D4A017 intentionally —
+  // verifiedGold is a semantic alias. Keep them in sync if the gold shade ever changes.
   static const Color secondaryContainer = Color(0xFFFFF9E6);
 
   static const Color tertiary = Color(0xFF5D4037);        // Warm brown
@@ -151,6 +155,9 @@ class AppTheme {
   );
 
   // ─── Light Theme ─────────────────────────────────────────────────────────
+  // NOTE: No dark theme is defined. The app always renders in light mode
+  // regardless of the device setting. To add dark mode, define a `darkTheme`
+  // getter here and pass it to MaterialApp.router alongside `theme`.
   static ThemeData get lightTheme {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: primary,
@@ -288,13 +295,14 @@ class AppTheme {
       ),
 
       // Bottom navigation
+      // WidgetStateProperty replaces the deprecated MaterialStateProperty (Flutter 3.19+).
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: Colors.white,
         elevation: 8,
         shadowColor: shadowColor,
         indicatorColor: primaryContainer,
-        labelTextStyle: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
             return const TextStyle(
               fontFamily: fontFamily,
               fontSize: 11, fontWeight: FontWeight.w600,
@@ -307,8 +315,8 @@ class AppTheme {
             color: textTertiary,
           );
         }),
-        iconTheme: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
             return const IconThemeData(color: primary, size: 22);
           }
           return const IconThemeData(color: textTertiary, size: 22);

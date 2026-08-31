@@ -66,15 +66,29 @@ class SecureStorage {
   }
 }
 
+// ── Android security note ────────────────────────────────────────────────────
+// ponytail: encryptedSharedPreferences=false — known ceiling: JWTs (access +
+// refresh), userId, and memberId are stored in unencrypted SharedPreferences on
+// Android, which is readable on a rooted device by any root-privileged process.
+// On non-rooted stock Android the data is sandboxed per-app and safe in practice.
+// iOS is unaffected — flutter_secure_storage always uses the iOS Keychain there.
+//
+// WHY it is off: AndroidX Security Keystore initialisation hangs on first launch
+// across a range of devices running older AndroidX Security versions, causing a
+// blank screen on cold start.
+//
+// UPGRADE PATH when ready:
+//   1. Bump androidx.security:security-crypto to 1.1.0+ in android/build.gradle.
+//   2. Flip encryptedSharedPreferences: true below.
+//   3. Handle the one-time migration: existing plaintext prefs are NOT migrated
+//      automatically — call clearSession() on the first launch after the upgrade
+//      so users re-authenticate cleanly rather than hitting a decrypt error.
+//   4. Smoke-test on low-end Android 6–8 devices before shipping.
+// ─────────────────────────────────────────────────────────────────────────────
 final secureStorageProvider = Provider<SecureStorage>(
   (ref) => const SecureStorage(FlutterSecureStorage(
     aOptions: AndroidOptions(
-      // ponytail: encryptedSharedPreferences disabled — Android Keystore init
-      // hangs on first launch on many devices with older AndroidX Security.
-      // Tokens are stored in unencrypted SharedPreferences on Android (readable
-      // on rooted devices). Upgrade path: test with AndroidX Security 1.1.0+
-      // and re-enable once confirmed stable on target device matrix.
-      encryptedSharedPreferences: false,
+      encryptedSharedPreferences: false, // see note above before enabling
     ),
   )),
 );

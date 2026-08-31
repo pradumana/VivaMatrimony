@@ -2,12 +2,15 @@
 class AppConstants {
   AppConstants._();
 
-  // API — override at build time via --dart-define=API_BASE_URL=https://your-api.com/api/v1
-  // Dev builds default to localhost; pass API_BASE_URL for staging/production.
-  static const String baseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'https://vivamatrimony.onrender.com/api/v1',
-  );
+  // API base URL — MUST be supplied at build time:
+  //   flutter build apk --dart-define=API_BASE_URL=https://your-api.com/api/v1
+  //
+  // Intentionally no default value: an empty baseUrl causes Dio to throw on the
+  // first request, which is loud and obvious in QA. Silently defaulting to the
+  // production URL in dev/CI builds is a worse failure mode.
+  //
+  // For local dev, pass: --dart-define=API_BASE_URL=http://10.0.2.2:8000/api/v1
+  static const String baseUrl = String.fromEnvironment('API_BASE_URL');
   // Timeouts — connect is generous to handle Render free-tier cold start (~30s)
   static const int connectTimeoutMs = 35000;
   static const int receiveTimeoutMs = 30000;

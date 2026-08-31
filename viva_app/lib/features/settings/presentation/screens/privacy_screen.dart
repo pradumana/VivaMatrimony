@@ -20,6 +20,8 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
   bool _showNativePlace = true;
   bool _loading = false;
   bool _saved = false;
+  // null = still loading; non-null message = load failed
+  String? _loadError;
 
   @override
   void initState() {
@@ -28,21 +30,32 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
   }
 
   Future<void> _loadSettings() async {
+    setState(() => _loadError = null);
     try {
       final client = ref.read(apiClientProvider);
       final r = await client.get('/profile');
       final data = r.data as Map<String, dynamic>;
       final profile = data['profile'] as Map<String, dynamic>? ?? {};
       final employment = data['employment'] as Map<String, dynamic>? ?? {};
-      final native = data['native_place'] as Map<String, dynamic>? ?? {};
+      // null key means native place was never set — treat as shown (server default)
+      final native = data['native_place'] as Map<String, dynamic>?;
+      if (!mounted) return;
       setState(() {
         _profileVisibility = profile['profile_visibility'] as String? ?? 'members_only';
         _photoVisibility = profile['photo_visibility'] as String? ?? 'members_only';
         _showIncome = employment['show_income'] as bool? ?? false;
         _showCompany = employment['show_company'] as bool? ?? true;
-        _showNativePlace = native.isNotEmpty;
+        // Key absent → native place never configured, default to showing it.
+        // Key present but empty map → explicitly hidden.
+        _showNativePlace = native == null || native.isNotEmpty;
       });
-    } catch (_) {}
+    } on DioException catch (e) {
+      if (!mounted) return;
+      setState(() => _loadError = ApiException.fromDioError(e).message);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loadError = 'Could not load settings. Please try again.');
+    }
   }
 
   Future<void> _save() async {
@@ -56,6 +69,9 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
       await client.put('/profile/employment', data: {
         'show_income': _showIncome,
         'show_company': _showCompany,
+      });
+      await client.put('/profile/native-place', data: {
+        'show_native_place': _showNativePlace,
       });
       setState(() { _loading = false; _saved = true; });
       Future.delayed(const Duration(seconds: 2), () { if (mounted) setState(() => _saved = false); });
@@ -73,6 +89,23 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          if (_loadError != null) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppTheme.error.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppTheme.error.withOpacity(0.3)),
+              ),
+              child: Row(children: [
+                const Icon(Icons.warning_amber_rounded, size: 18, color: AppTheme.error),
+                const SizedBox(width: 10),
+                Expanded(child: Text(_loadError!, style: const TextStyle(fontSize: 13, color: AppTheme.error))),
+                TextButton(onPressed: _loadSettings, child: const Text('Retry')),
+              ]),
+            ),
+            const SizedBox(height: 14),
+          ],
           _card('Profile Visibility', 'Who can see your profile', [
             _radio('Public (everyone)', 'public', _profileVisibility, (v) => setState(() => _profileVisibility = v!)),
             _radio('Members only (registered users)', 'members_only', _profileVisibility, (v) => setState(() => _profileVisibility = v!)),

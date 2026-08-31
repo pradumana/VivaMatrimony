@@ -100,10 +100,19 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
                     data: {'refresh_token': refreshToken});
                 final newAccess = resp.data['access_token'] as String;
                 final newRefresh = resp.data['refresh_token'] as String;
+                final existingUserId = await storage.getUserId();
+                // Guard: only persist tokens if we still have a userId.
+                // An empty/null userId here means the session was already
+                // partially cleared; treat as unauthenticated rather than
+                // storing tokens with no owner identity.
+                if (existingUserId == null || existingUserId.isEmpty) {
+                  await storage.clearSession();
+                  return const AuthState.unauthenticated();
+                }
                 await storage.saveTokens(
                   accessToken: newAccess,
                   refreshToken: newRefresh,
-                  userId: (await storage.getUserId()) ?? '',
+                  userId: existingUserId,
                 );
                 // Fall through — session is now valid with the new token.
               } catch (_) {
