@@ -16,6 +16,7 @@ class AppConstants {
   static const String accessTokenKey = 'viva_access_token';
   static const String refreshTokenKey = 'viva_refresh_token';
   static const String userIdKey = 'viva_user_id';
+  static const String memberIdKey = 'viva_member_id';
   static const String onboardingCompletedKey = 'viva_onboarding_done';
 
   // Photo limits
@@ -28,6 +29,7 @@ class AppConstants {
   // OTP
   static const int otpLength = 6;
   static const int otpResendCooldownSec = 60;
+  static const int otpValidityMin = 10;
 
   // Pagination
   static const int defaultPageSize = 20;
@@ -55,6 +57,13 @@ class AppConstants {
     'Preferences',
     'Photos',
   ];
+
+  // Document size limit (certificates, biodata uploads)
+  static const int maxCertSizeMB = 20;
+
+  // Verification SLA strings — update here if SLAs change
+  static const String verificationSlaDays = '1-2 business days';
+  static const String reportReviewHours = '24-48 hours';
 
   // App info
   static const String appName = 'Viva';

@@ -24,6 +24,7 @@ class UserModel {
 
 class ProfileSummary {
   final String userId;
+  final String? memberId;
   final String fullName;
   final int age;
   final String? location;
@@ -35,6 +36,7 @@ class ProfileSummary {
 
   const ProfileSummary({
     required this.userId,
+    this.memberId,
     required this.fullName,
     required this.age,
     this.location,
@@ -47,6 +49,7 @@ class ProfileSummary {
 
   factory ProfileSummary.fromJson(Map<String, dynamic> json) => ProfileSummary(
         userId: json['user_id'] as String,
+        memberId: json['member_id'] as String?,
         fullName: json['full_name'] as String,
         age: json['age'] as int,
         location: json['location'] as String?,

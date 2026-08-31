@@ -257,7 +257,7 @@ async def verify_otp_and_login(
     # 7. Get or create user
     user_result = await db.execute(
         text("""
-            SELECT id, account_status, onboarding_completed
+            SELECT id, account_status, onboarding_completed, member_id
             FROM users
             WHERE phone_normalized = :phone AND deleted_at IS NULL
         """),
@@ -273,7 +273,7 @@ async def verify_otp_and_login(
             text("""
                 INSERT INTO users (phone, phone_country_code, phone_normalized, account_status)
                 VALUES (:phone, :cc, :phone_normalized, 'pending_verification')
-                RETURNING id, account_status, onboarding_completed
+                RETURNING id, account_status, onboarding_completed, member_id
             """),
             {
                 "phone": phone_normalized,
@@ -333,6 +333,7 @@ async def verify_otp_and_login(
         "refresh_token": raw_refresh,
         "token_type": "Bearer",
         "user_id": str(user_id),
+        "member_id": user_row.member_id,
         "is_new_user": is_new_user,
         "onboarding_completed": user_row.onboarding_completed,
         "account_status": account_status,

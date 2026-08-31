@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -86,7 +87,9 @@ class AuthScreenNotifier extends Notifier<AuthScreenState> {
       final response = await client.post('/auth/verify-otp', data: {
         'phone': phone,
         'otp': otp,
-        'device_info': 'Flutter Android',
+        'device_info': defaultTargetPlatform == TargetPlatform.iOS
+            ? 'Flutter iOS'
+            : 'Flutter Android',
       });
 
       final data = response.data as Map<String, dynamic>;
@@ -98,6 +101,7 @@ class AuthScreenNotifier extends Notifier<AuthScreenState> {
                 data['onboarding_completed'] as bool? ?? false,
             accessToken: data['access_token'] as String,
             refreshToken: data['refresh_token'] as String,
+            memberId: data['member_id'] as String?,
           );
 
       state = state.copyWith(isLoading: false);

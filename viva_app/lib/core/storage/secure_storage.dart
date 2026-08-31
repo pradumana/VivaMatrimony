@@ -15,11 +15,14 @@ class SecureStorage {
     required String accessToken,
     required String refreshToken,
     required String userId,
+    String? memberId,
   }) async {
     await Future.wait([
       _storage.write(key: AppConstants.accessTokenKey, value: accessToken),
       _storage.write(key: AppConstants.refreshTokenKey, value: refreshToken),
       _storage.write(key: AppConstants.userIdKey, value: userId),
+      if (memberId != null)
+        _storage.write(key: AppConstants.memberIdKey, value: memberId),
     ]);
   }
 
@@ -32,6 +35,9 @@ class SecureStorage {
   Future<String?> getUserId() =>
       _storage.read(key: AppConstants.userIdKey);
 
+  Future<String?> getMemberId() =>
+      _storage.read(key: AppConstants.memberIdKey);
+
   Future<bool> hasValidSession() async {
     final token = await getAccessToken();
     return token != null && token.isNotEmpty;
@@ -42,6 +48,7 @@ class SecureStorage {
       _storage.delete(key: AppConstants.accessTokenKey),
       _storage.delete(key: AppConstants.refreshTokenKey),
       _storage.delete(key: AppConstants.userIdKey),
+      _storage.delete(key: AppConstants.memberIdKey),
     ]);
   }
 

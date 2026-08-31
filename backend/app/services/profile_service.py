@@ -89,7 +89,7 @@ async def get_profile(
     result = await db.execute(
         text("""
             SELECT p.*,
-                   u.account_status, u.verification_status, u.last_active_at,
+                   u.account_status, u.verification_status, u.last_active_at, u.member_id,
                    cl.country as cl_country, cl.state as cl_state, cl.district as cl_district, cl.city as cl_city,
                    np.country as np_country, np.state as np_state, np.district as np_district, np.city as np_city, np.is_visible as np_visible,
                    e.highest_qualification, e.degree, e.field_of_study, e.college_university, e.graduation_year, e.additional_qualifications,
@@ -277,6 +277,7 @@ async def get_profile(
 
     return {
         "profile": profile_data,
+        "member_id": row.member_id,
         "current_location": current_location,
         "native_place": native_place,
         "education": education,

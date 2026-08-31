@@ -16,12 +16,14 @@ enum AuthStatus {
 class AuthState {
   final AuthStatus status;
   final String? userId;
+  final String? memberId;
   final bool onboardingCompleted;
   final String? error;
 
   const AuthState({
     required this.status,
     this.userId,
+    this.memberId,
     this.onboardingCompleted = false,
     this.error,
   });
@@ -29,24 +31,28 @@ class AuthState {
   const AuthState.loading()
       : status = AuthStatus.loading,
         userId = null,
+        memberId = null,
         onboardingCompleted = false,
         error = null;
 
   const AuthState.unauthenticated()
       : status = AuthStatus.unauthenticated,
         userId = null,
+        memberId = null,
         onboardingCompleted = false,
         error = null;
 
   AuthState copyWith({
     AuthStatus? status,
     String? userId,
+    String? memberId,
     bool? onboardingCompleted,
     String? error,
   }) =>
       AuthState(
         status: status ?? this.status,
         userId: userId ?? this.userId,
+        memberId: memberId ?? this.memberId,
         onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
         error: error,
       );
@@ -118,11 +124,13 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     }
 
     final userId = await storage.getUserId();
+    final memberId = await storage.getMemberId();
     final onboardingDone = await storage.isOnboardingCompleted();
 
     return AuthState(
       status: onboardingDone ? AuthStatus.authenticated : AuthStatus.onboardingRequired,
       userId: userId,
+      memberId: memberId,
       onboardingCompleted: onboardingDone,
     );
   }
@@ -132,12 +140,14 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     required bool onboardingCompleted,
     required String accessToken,
     required String refreshToken,
+    String? memberId,
   }) async {
     final storage = ref.read(secureStorageProvider);
     await storage.saveTokens(
       accessToken: accessToken,
       refreshToken: refreshToken,
       userId: userId,
+      memberId: memberId,
     );
     await storage.setOnboardingCompleted(onboardingCompleted);
 
@@ -146,6 +156,7 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
           ? AuthStatus.authenticated
           : AuthStatus.onboardingRequired,
       userId: userId,
+      memberId: memberId,
       onboardingCompleted: onboardingCompleted,
     ));
   }

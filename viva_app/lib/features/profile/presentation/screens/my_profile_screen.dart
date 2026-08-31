@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:percent_indicator/percent_indicator.dart';
@@ -50,6 +51,7 @@ class _ProfileBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final name = profile['full_name'] as String? ?? 'Your Profile';
     final age = profile['age'] as int?;
+    final memberId = ref.watch(authProvider).valueOrNull?.memberId;
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -102,10 +104,10 @@ class _ProfileBody extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('$name${age != null ? ", $age" : ""}',
-                              style: const TextStyle(fontFamily: 'Poppins', fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white)),
+                              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white)),
                           if (location != null)
                             Text('${location!['city'] ?? ''} ${location!['state'] ?? ''}'.trim(),
-                                style: TextStyle(fontFamily: 'Poppins', fontSize: 13, color: Colors.white.withOpacity(0.85))),
+                                style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.85))),
                         ],
                       )),
                       if (isVerified) const VerifiedBadge(),
@@ -132,8 +134,8 @@ class _ProfileBody extends ConsumerWidget {
                   children: [
                     Row(children: [
                       Expanded(child: Text('Profile ${completion}% Complete',
-                          style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 14))),
-                      Text('$completion%', style: const TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.primary)),
+                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14))),
+                      Text('$completion%', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.primary)),
                     ]),
                     const SizedBox(height: 10),
                     LinearProgressIndicator(
@@ -143,10 +145,14 @@ class _ProfileBody extends ConsumerWidget {
                       minHeight: 8,
                       borderRadius: BorderRadius.circular(4),
                     ),
+                    if (memberId != null) ...[
+                      const SizedBox(height: 12),
+                      _MemberIdBadge(memberId: memberId),
+                    ],
                     if (completion < 100) ...[
                       const SizedBox(height: 10),
                       Text(_completionTip(completion),
-                          style: const TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppTheme.textSecondary)),
+                          style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
                       const SizedBox(height: 10),
                       VivaButton(label: 'Complete Profile', onPressed: () => context.push(AppRoutes.editProfile), height: 40),
                     ],
@@ -264,7 +270,7 @@ class _QuickAction extends StatelessWidget {
         child: Column(children: [
           Icon(icon, size: 24, color: c),
           const SizedBox(height: 6),
-          Text(label, textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Poppins', fontSize: 11, fontWeight: FontWeight.w500, color: c, height: 1.3)),
+          Text(label, textAlign: TextAlign.center, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c, height: 1.3)),
         ]),
       ),
     ));
@@ -290,13 +296,13 @@ class _ProfileSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontFamily: 'Poppins', fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.primary)),
+          Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.primary)),
           const SizedBox(height: 12),
           ...items.map((item) => Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Row(children: [
-              SizedBox(width: 110, child: Text(item.label, style: const TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppTheme.textSecondary))),
-              Expanded(child: Text(item.value, style: const TextStyle(fontFamily: 'Poppins', fontSize: 13, fontWeight: FontWeight.w500))),
+              SizedBox(width: 110, child: Text(item.label, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary))),
+              Expanded(child: Text(item.value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500))),
             ]),
           )),
         ],
@@ -309,6 +315,53 @@ class _InfoItem {
   final String label;
   final String value;
   const _InfoItem(this.label, this.value);
+}
+
+/// Displays the member ID with a copy-to-clipboard tap.
+class _MemberIdBadge extends StatelessWidget {
+  final String memberId;
+  const _MemberIdBadge({required this.memberId});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Clipboard.setData(ClipboardData(text: memberId));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Member ID copied to clipboard'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: AppTheme.primaryContainer,
+          borderRadius: BorderRadius.circular(AppRadius.full),
+          border: Border.all(color: AppTheme.primary.withOpacity(0.3)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.badge_outlined, size: 14, color: AppTheme.primary),
+            const SizedBox(width: 6),
+            Text(
+              memberId,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.primary,
+                letterSpacing: 1,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Icon(Icons.copy_outlined, size: 13, color: AppTheme.primary.withOpacity(0.6)),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 extension on String {

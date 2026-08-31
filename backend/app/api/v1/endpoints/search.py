@@ -26,6 +26,10 @@ router = APIRouter(tags=["Search & Matching"])
 @limiter.limit("30/minute")
 async def search_profiles(
     request: Request,
+    # Direct lookup
+    member_id: Optional[str] = Query(None),
+    # Free-text name search
+    q: Optional[str] = Query(None, max_length=100),
     # Age
     min_age: Optional[int] = Query(None, ge=18, le=80),
     max_age: Optional[int] = Query(None, ge=18, le=80),
@@ -60,6 +64,69 @@ async def search_profiles(
     """
     Search profiles with filters. Uses PostgreSQL full-text and indexed queries.
     """
+    # ── member_id direct lookup ──────────────────────────────────────────────
+    if member_id:
+        member_id_upper = member_id.strip().upper()
+        result = await db.execute(
+            text("""
+                SELECT u.id as user_id,
+                       p.full_name, p.date_of_birth, p.height_cm, p.religion, p.mother_tongue,
+                       p.marital_status, u.verification_status,
+                       cl.state, cl.city,
+                       ph.storage_path as photo_path, ph.thumbnail_path,
+                       e.highest_qualification, em.profession,
+                       u.last_active_at, u.member_id
+                FROM users u
+                JOIN profiles p ON p.user_id = u.id
+                LEFT JOIN current_locations cl ON cl.user_id = u.id
+                LEFT JOIN photos ph ON ph.user_id = u.id AND ph.is_primary = TRUE AND ph.deleted_at IS NULL
+                LEFT JOIN education e ON e.user_id = u.id
+                LEFT JOIN employment em ON em.user_id = u.id
+                WHERE u.member_id = :member_id
+                  AND u.deleted_at IS NULL
+                  AND u.account_status = 'active'
+                  AND u.id != :uid
+            """),
+            {"member_id": member_id_upper, "uid": current_user.user_id},
+        )
+        row = result.fetchone()
+        if not row:
+            return {"results": [], "total": 0, "page": 1, "page_size": 1, "total_pages": 0}
+
+        supabase = get_supabase()
+        cfg = get_settings()
+        photo_url = None
+        if row.photo_path:
+            try:
+                photo_url = supabase.storage.from_(cfg.storage_bucket_profile_photos).get_public_url(row.photo_path)
+            except Exception:
+                pass
+
+        from app.utils import compute_age
+        return {
+            "results": [{
+                "user_id": str(row.user_id),
+                "member_id": row.member_id,
+                "full_name": row.full_name,
+                "age": compute_age(row.date_of_birth) if row.date_of_birth else None,
+                "height_cm": row.height_cm,
+                "religion": row.religion,
+                "mother_tongue": row.mother_tongue,
+                "marital_status": row.marital_status,
+                "location": f"{row.city}, {row.state}" if row.city and row.state else (row.state or ""),
+                "highest_qualification": row.highest_qualification,
+                "profession": row.profession,
+                "is_verified": row.verification_status == "verified",
+                "primary_photo_url": photo_url,
+                "last_active_at": row.last_active_at,
+            }],
+            "total": 1,
+            "page": 1,
+            "page_size": 1,
+            "total_pages": 1,
+        }
+
+    # ── normal filter search ──────────────────────────────────────────────────
     offset = (page - 1) * page_size
 
     # Build query dynamically
@@ -119,6 +186,9 @@ async def search_profiles(
         conditions.append("u.verification_status = 'verified'")
     if has_photo:
         conditions.append("EXISTS (SELECT 1 FROM photos ph WHERE ph.user_id = u.id AND ph.deleted_at IS NULL)")
+    if q:
+        conditions.append("p.full_name ILIKE :q")
+        params["q"] = f"%{q.strip()}%"
 
     where_clause = " AND ".join(conditions)
 
@@ -145,7 +215,7 @@ async def search_profiles(
                    cl.state, cl.city,
                    ph.storage_path as photo_path, ph.thumbnail_path,
                    e.highest_qualification, em.profession,
-                   u.last_active_at
+                   u.last_active_at, u.member_id
             FROM users u
             JOIN profiles p ON p.user_id = u.id
             LEFT JOIN current_locations cl ON cl.user_id = u.id
@@ -178,6 +248,7 @@ async def search_profiles(
 
         profiles.append({
             "user_id": str(row.user_id),
+            "member_id": row.member_id,
             "full_name": row.full_name,
             "age": age,
             "height_cm": row.height_cm,

@@ -47,6 +47,7 @@ class VerifyOTPResponse(BaseModel):
     refresh_token: str
     token_type: str = "Bearer"
     user_id: str
+    member_id: Optional[str] = None
     is_new_user: bool
     onboarding_completed: bool
     account_status: str

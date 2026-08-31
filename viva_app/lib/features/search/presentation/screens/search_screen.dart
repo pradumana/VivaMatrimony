@@ -60,15 +60,22 @@ class _State extends ConsumerState<SearchScreen> {
       final params = <String, dynamic>{
         'page': _page,
         'page_size': AppConstants.defaultPageSize,
-        if (_searchCtrl.text.trim().isNotEmpty) 'q': _searchCtrl.text.trim(),
-        if (_minAge != null) 'min_age': _minAge,
-        if (_maxAge != null) 'max_age': _maxAge,
-        if (_state != null) 'state': _state,
-        if (_religion != null) 'religion': _religion,
-        if (_diet != null) 'diet': _diet,
-        if (_verifiedOnly) 'verified_only': true,
-        if (_hasPhoto) 'has_photo': true,
       };
+
+      final query = _searchCtrl.text.trim();
+      // Member ID lookup (VIVA-prefixed) bypasses all other filters
+      if (query.toUpperCase().startsWith('VIVA')) {
+        params['member_id'] = query.toUpperCase();
+      } else {
+        if (query.isNotEmpty) params['q'] = query;
+        if (_minAge != null) params['min_age'] = _minAge;
+        if (_maxAge != null) params['max_age'] = _maxAge;
+        if (_state != null) params['state'] = _state;
+        if (_religion != null) params['religion'] = _religion;
+        if (_diet != null) params['diet'] = _diet;
+        if (_verifiedOnly) params['verified_only'] = true;
+        if (_hasPhoto) params['has_photo'] = true;
+      }
 
       final response = await client.get('/search', queryParameters: params);
       final data = response.data as Map<String, dynamic>;
@@ -136,7 +143,7 @@ class _State extends ConsumerState<SearchScreen> {
             child: TextField(
               controller: _searchCtrl,
               decoration: InputDecoration(
-                hintText: 'Search by name, location...',
+                hintText: 'Search by name or Member ID (e.g. VIVA001234)',
                 prefixIcon: const Icon(Icons.search, size: 20),
                 suffixIcon: _searchCtrl.text.isNotEmpty
                     ? IconButton(icon: const Icon(Icons.clear, size: 18), onPressed: () { _searchCtrl.clear(); _search(); })
@@ -144,12 +151,34 @@ class _State extends ConsumerState<SearchScreen> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
               onChanged: (_) {
+                setState(() {}); // Rebuild immediately for member ID indicator
                 _debounce?.cancel();
                 _debounce = Timer(const Duration(milliseconds: 400), _search);
               },
               onSubmitted: (_) => _search(),
             ),
           ),
+
+          // Member ID mode indicator
+          if (_searchCtrl.text.trim().toUpperCase().startsWith('VIVA') &&
+              _searchCtrl.text.trim().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+              child: Row(
+                children: [
+                  Icon(Icons.badge_outlined, size: 13, color: AppTheme.primary),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Searching by Member ID',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppTheme.primary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
           // Active filters chips
           if (_minAge != null || _state != null || _religion != null || _verifiedOnly || _hasPhoto)
@@ -173,7 +202,7 @@ class _State extends ConsumerState<SearchScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text('$_total results found', style: const TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppTheme.textSecondary)),
+                child: Text('$_total results found', style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
               ),
             ),
 
@@ -244,7 +273,7 @@ class _FilterChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label, style: const TextStyle(fontFamily: 'Poppins', fontSize: 12, fontWeight: FontWeight.w500, color: AppTheme.primary)),
+          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppTheme.primary)),
           const SizedBox(width: 4),
           GestureDetector(onTap: onRemove, child: const Icon(Icons.close, size: 14, color: AppTheme.primary)),
         ],
@@ -295,7 +324,7 @@ class _FilterSheetState extends State<_FilterSheet> {
           children: [
             Row(
               children: [
-                const Text('Filters', style: TextStyle(fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.w700)),
+                const Text('Filters', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
                 const Spacer(),
                 TextButton(
                   onPressed: () { setState(() { _minAge = 18; _maxAge = 60; _state = null; _religion = null; _diet = null; _verifiedOnly = false; _hasPhoto = false; }); },
@@ -304,7 +333,7 @@ class _FilterSheetState extends State<_FilterSheet> {
               ],
             ),
             const SizedBox(height: 16),
-            Text('Age: $_minAge – $_maxAge years', style: const TextStyle(fontFamily: 'Poppins', fontSize: 13, fontWeight: FontWeight.w600)),
+            Text('Age: $_minAge – $_maxAge years', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
             RangeSlider(
               values: RangeValues(_minAge.toDouble(), _maxAge.toDouble()),
               min: 18, max: 70,
@@ -319,8 +348,8 @@ class _FilterSheetState extends State<_FilterSheet> {
             const SizedBox(height: 12),
             _sheetDropdown('Diet', _diet, ['Any', 'vegetarian', 'non_vegetarian', 'eggetarian', 'vegan', 'jain'], (v) => setState(() => _diet = v == 'Any' ? null : v)),
             const SizedBox(height: 12),
-            SwitchListTile(title: const Text('Verified profiles only', style: TextStyle(fontFamily: 'Poppins', fontSize: 13)), value: _verifiedOnly, onChanged: (v) => setState(() => _verifiedOnly = v), activeColor: AppTheme.primary),
-            SwitchListTile(title: const Text('Profiles with photo only', style: TextStyle(fontFamily: 'Poppins', fontSize: 13)), value: _hasPhoto, onChanged: (v) => setState(() => _hasPhoto = v), activeColor: AppTheme.primary),
+            SwitchListTile(title: const Text('Verified profiles only', style: TextStyle(fontSize: 13)), value: _verifiedOnly, onChanged: (v) => setState(() => _verifiedOnly = v), activeColor: AppTheme.primary),
+            SwitchListTile(title: const Text('Profiles with photo only', style: TextStyle(fontSize: 13)), value: _hasPhoto, onChanged: (v) => setState(() => _hasPhoto = v), activeColor: AppTheme.primary),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {

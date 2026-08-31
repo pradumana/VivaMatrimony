@@ -58,6 +58,7 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
   Map<String, dynamic>? get nativePlace => widget.data['native_place'] as Map<String, dynamic>?;
   String? get photoUrl => widget.data['primary_photo_url'] as String?;
   int? get compatScore => widget.data['compatibility_score'] as int?;
+  String? get memberId => widget.data['member_id'] as String?;
 
   Future<void> _sendInterest() async {
     final name = profile['full_name'] as String? ?? '';
@@ -160,20 +161,39 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                 // Name & badges
                 Row(
                   children: [
-                    Expanded(child: Text('$name, $age', style: const TextStyle(fontFamily: 'Poppins', fontSize: 24, fontWeight: FontWeight.w700))),
+                    Expanded(child: Text('$name, $age', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700))),
                     if (isVerified) const VerifiedBadge(),
                   ],
                 ),
                 const SizedBox(height: 4),
+                if (memberId != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      children: [
+                        Icon(Icons.badge_outlined, size: 13, color: AppTheme.textSecondary),
+                        const SizedBox(width: 4),
+                        Text(
+                          memberId!,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textSecondary,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 if (location != null)
                   Row(children: [
                     const Icon(Icons.location_on_outlined, size: 14, color: AppTheme.textSecondary),
                     const SizedBox(width: 4),
-                    Text('${location!['city'] ?? ''} ${location!['state'] ?? ''}'.trim(), style: const TextStyle(fontFamily: 'Poppins', fontSize: 13, color: AppTheme.textSecondary)),
+                    Text('${location!['city'] ?? ''} ${location!['state'] ?? ''}'.trim(), style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
                   ]),
                 if (employment?['profession'] != null || education?['highest_qualification'] != null) ...[
                   const SizedBox(height: 4),
-                  Text([employment?['profession'], education?['degree']].where((e) => e != null).join(' • '), style: const TextStyle(fontFamily: 'Poppins', fontSize: 13, color: AppTheme.textSecondary)),
+                  Text([employment?['profession'], education?['degree']].where((e) => e != null).join(' • '), style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
                 ],
 
                 // Compatibility
@@ -204,7 +224,7 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
         SliverList(
           delegate: SliverChildListDelegate([
             if (profile['about_me'] != null)
-              _Section(title: 'About Me', child: Text(profile['about_me'] as String, style: const TextStyle(fontFamily: 'Poppins', fontSize: 14, color: AppTheme.textPrimary, height: 1.6))),
+              _Section(title: 'About Me', child: Text(profile['about_me'] as String, style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary, height: 1.6))),
 
             _Section(title: 'Personal Details', child: _Grid([
               _Field('Age', '$age years'),
@@ -304,9 +324,9 @@ class _CompatibilityBar extends StatelessWidget {
         children: [
           Icon(Icons.favorite, size: 16, color: color),
           const SizedBox(width: 8),
-          Text('$score% Compatible', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, fontWeight: FontWeight.w600, color: color)),
+          Text('$score% Compatible', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: color)),
           const Spacer(),
-          Text('Based on preferences', style: TextStyle(fontFamily: 'Poppins', fontSize: 11, color: color.withOpacity(0.7))),
+          Text('Based on preferences', style: TextStyle(fontSize: 11, color: color.withOpacity(0.7))),
         ],
       ),
     );
@@ -327,7 +347,7 @@ class _Section extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.primary)),
+          Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.primary)),
           const SizedBox(height: 12),
           child,
         ],
@@ -359,9 +379,9 @@ class _Field extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontFamily: 'Poppins', fontSize: 10, color: AppTheme.textTertiary, fontWeight: FontWeight.w500, letterSpacing: 0.5)),
+        Text(label, style: const TextStyle(fontSize: 10, color: AppTheme.textTertiary, fontWeight: FontWeight.w500, letterSpacing: 0.5)),
         const SizedBox(height: 2),
-        Text(value, style: const TextStyle(fontFamily: 'Poppins', fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.textPrimary)),
+        Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.textPrimary)),
       ],
     );
   }
