@@ -11,9 +11,9 @@ class AppConstants {
     'API_BASE_URL',
     defaultValue: 'https://vivamatrimony.onrender.com/api/v1',
   );
-  // Timeouts — connect is generous to handle Render free-tier cold start (~30s)
-  static const int connectTimeoutMs = 35000;
-  static const int receiveTimeoutMs = 30000;
+  // Timeouts — both generous to handle Render free-tier cold start (~30-50s)
+  static const int connectTimeoutMs = 60000;
+  static const int receiveTimeoutMs = 60000;
 
   // Storage keys
   static const String accessTokenKey = 'viva_access_token';
