@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:percent_indicator/percent_indicator.dart';
 
 import '../../../../core/network/api_client.dart';
 import '../../../../core/providers/auth_provider.dart';

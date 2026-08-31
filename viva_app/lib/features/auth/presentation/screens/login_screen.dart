@@ -109,7 +109,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   const SizedBox(height: 6),
                   const Text(
-                    'We\\'ll send a one-time code to your WhatsApp � works for new and existing members.',
+                    'We\'ll send a one-time code via WhatsApp. Works for new and existing members.',
                     style: TextStyle(
                                 fontSize: 13,
                       color: AppTheme.textSecondary,
@@ -209,18 +209,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                               children: [
                                 const TextSpan(text: 'I agree to the '),
-                                TextSpan(
+                                const TextSpan(
                                   text: 'Terms & Conditions',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: AppTheme.primary,
                                     fontWeight: FontWeight.w600,
                                     decoration: TextDecoration.underline,
                                   ),
                                 ),
                                 const TextSpan(text: ' and '),
-                                TextSpan(
+                                const TextSpan(
                                   text: 'Privacy Policy',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: AppTheme.primary,
                                     fontWeight: FontWeight.w600,
                                     decoration: TextDecoration.underline,
@@ -250,10 +250,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppTheme.error.withOpacity(0.08),
+                        color: AppTheme.error.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(AppRadius.md),
                         border: Border.all(
-                          color: AppTheme.error.withOpacity(0.3),
+                          color: AppTheme.error.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Row(
@@ -278,14 +278,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(height: 40),
 
                   // WhatsApp note
-                  Center(
+                  const Center(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.lock_outline_rounded,
                             size: 14, color: AppTheme.textTertiary),
-                        const SizedBox(width: 6),
-                        const Text(
+                        SizedBox(width: 6),
+                        Text(
                           'Your number is safe and private',
                           style: TextStyle(
                                             fontSize: 11,
