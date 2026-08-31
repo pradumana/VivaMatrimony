@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:dio/dio.dart';
 
@@ -46,27 +46,21 @@ class _BiodataScreenState extends ConsumerState<BiodataScreen> {
     setState(() { _downloading = true; _error = null; });
     try {
       final client = ref.read(apiClientProvider);
-      // Download PDF bytes
       final response = await client.dio.get<Uint8List>(
         '/biodata/pdf',
         options: Options(responseType: ResponseType.bytes),
       );
 
-      // Save to device
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/viva_biodata.pdf');
       await file.writeAsBytes(response.data!);
       setState(() { _downloading = false; _savedPath = file.path; });
 
-      // Open PDF using url_launcher
-      final uri = Uri.file(file.path);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri);
-      }
+      await OpenFilex.open(file.path);
     } on DioException catch (e) {
       setState(() { _downloading = false; _error = ApiException.fromDioError(e).message; });
     } catch (e) {
-      setState(() { _downloading = false; _error = 'We couldn\'t generate your biodata. Please try again.'; });
+      setState(() { _downloading = false; _error = 'Could not open PDF: $e'; });
     }
   }
 
