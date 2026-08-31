@@ -146,6 +146,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
 
       // Detail routes (no shell)
+      GoRoute(path: AppRoutes.editProfile, builder: (_, __) => const EditProfileScreen()),
       GoRoute(
         path: '/profile/:userId',
         builder: (context, state) {
@@ -153,8 +154,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           return ProfileDetailScreen(userId: userId);
         },
       ),
-      GoRoute(path: AppRoutes.biodata, builder: (_, __) => const BiodataScreen()),
-      GoRoute(path: AppRoutes.editProfile, builder: (_, __) => const EditProfileScreen()),
       GoRoute(path: AppRoutes.notifications, builder: (_, __) => const NotificationsScreen()),
       GoRoute(path: AppRoutes.settings, builder: (_, __) => const SettingsScreen()),
       GoRoute(path: AppRoutes.privacy, builder: (_, __) => const PrivacyScreen()),
