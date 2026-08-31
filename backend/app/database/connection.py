@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
+from sqlalchemy.pool import NullPool
 from supabase import create_client, Client
 
 from app.config import get_settings
@@ -30,16 +31,19 @@ def _build_async_url(url: str) -> str:
     return url
 
 
+# NullPool + statement_cache_size=0: required for Supabase/PgBouncer in
+# transaction pooling mode. NullPool avoids SQLAlchemy holding connections
+# between requests (PgBouncer owns the pool); statement_cache_size=0
+# disables asyncpg prepared statements which don't survive across bouncer
+# connections.
+# ponytail: NullPool means one DB round-trip to acquire a connection per
+# request. Upgrade path: switch DATABASE_URL to Supabase's direct connection
+# string (db.[ref].supabase.co:5432) and restore QueuePool with pool_size=5.
 engine: AsyncEngine = create_async_engine(
     _build_async_url(settings.database_url),
     echo=settings.app_debug,
-    pool_size=10,
-    max_overflow=20,
-    pool_pre_ping=True,
-    pool_recycle=3600,
-    # Required for Supabase pooler (PgBouncer transaction mode)
-    # Disables prepared statements which are not supported by PgBouncer
-    connect_args={"statement_cache_size": 0},
+    poolclass=NullPool,
+    connect_args={"statement_cache_size": 0, "prepared_statement_cache_size": 0},
 )
 
 AsyncSessionLocal = async_sessionmaker(
