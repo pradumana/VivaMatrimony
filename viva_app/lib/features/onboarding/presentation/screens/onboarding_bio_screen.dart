@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/constants/app_constants.dart';
 import '../../../../shared/widgets/viva_text_field.dart';
 import '../providers/onboarding_provider.dart';
@@ -53,8 +54,8 @@ class _State extends ConsumerState<OnboardingBioScreen> {
           const SizedBox(height: 12),
           // Prompts
           const Text('Need inspiration? Try:', style: TextStyle(
-            fontFamily: 'Poppins', fontSize: 12,
-            color: Color(0xFF9E9E9E),
+            fontSize: 12,
+            color: AppTheme.textTertiary,
           )),
           const SizedBox(height: 8),
           for (final prompt in [
@@ -68,15 +69,15 @@ class _State extends ConsumerState<OnboardingBioScreen> {
                 margin: const EdgeInsets.only(bottom: 6),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFDF8F6),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFFEDE0DB)),
+                  color: AppTheme.background,
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                  border: Border.all(color: AppTheme.divider),
                 ),
                 child: Text(
                   '"$prompt"',
                   style: const TextStyle(
-                    fontFamily: 'Poppins', fontSize: 12,
-                    color: Color(0xFF8B1A1A),
+                    fontSize: 12,
+                    color: AppTheme.primaryDeep,
                     fontStyle: FontStyle.italic,
                   ),
                 ),

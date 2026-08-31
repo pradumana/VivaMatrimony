@@ -58,7 +58,7 @@ class HomeScreen extends ConsumerWidget {
                   variant: VivaLogoVariant.gradient,
                 ),
                 const SizedBox(width: 8),
-                const Text('Viva', style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+                const Text('Viva', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
               ],
             ),
             actions: [
@@ -83,10 +83,10 @@ class HomeScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('Hello, ${name?.split(' ').first ?? 'there'} 👋',
-                          style: const TextStyle(fontFamily: 'Poppins', fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
                         const SizedBox(height: 4),
                         Text(AppConstants.appTagline,
-                          style: const TextStyle(fontFamily: 'Poppins', fontSize: 13, color: AppTheme.textSecondary, fontStyle: FontStyle.italic)),
+                          style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary, fontStyle: FontStyle.italic)),
                       ],
                     ),
                   ),
@@ -107,11 +107,11 @@ class HomeScreen extends ConsumerWidget {
                         children: [
                           const Icon(Icons.search, color: AppTheme.textSecondary, size: 20),
                           const SizedBox(width: 10),
-                          const Expanded(child: Text('Search matches by name, location...', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, color: AppTheme.textTertiary))),
+                          const Expanded(child: Text('Search matches by name, location...', style: TextStyle(fontSize: 13, color: AppTheme.textTertiary))),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(gradient: AppTheme.primaryGradient, borderRadius: BorderRadius.circular(AppRadius.full)),
-                            child: const Text('Search', style: TextStyle(fontFamily: 'Poppins', fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white)),
+                            child: const Text('Search', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white)),
                           ),
                         ],
                       ),
@@ -119,9 +119,9 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 28),
 
-                  const Text('Recommended For You', style: TextStyle(fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+                  const Text('Recommended For You', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
                   const SizedBox(height: 4),
-                  const Text('Based on your preferences', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppTheme.textSecondary)),
+                  const Text('Based on your preferences', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
                   const SizedBox(height: 4),
                 ],
               ),

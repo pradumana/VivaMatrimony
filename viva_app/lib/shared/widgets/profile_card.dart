@@ -73,7 +73,6 @@ class ProfileCard extends StatelessWidget {
                         child: Text(
                           '$name, $age',
                           style: const TextStyle(
-                            fontFamily: 'Poppins',
                             fontSize: 17, fontWeight: FontWeight.w700,
                             color: AppTheme.textPrimary,
                           ),
@@ -91,7 +90,6 @@ class ProfileCard extends StatelessWidget {
                       Text(
                         location,
                         style: const TextStyle(
-                          fontFamily: 'Poppins',
                           fontSize: 12, color: AppTheme.textSecondary,
                         ),
                       ),
@@ -103,7 +101,6 @@ class ProfileCard extends StatelessWidget {
                       [if (profession != null) profession, if (qualification != null) qualification]
                           .join(' • '),
                       style: const TextStyle(
-                        fontFamily: 'Poppins',
                         fontSize: 12, color: AppTheme.textSecondary,
                       ),
                       maxLines: 1,
@@ -173,7 +170,6 @@ class ProfileCard extends StatelessWidget {
           Text(
             'No Photo',
             style: TextStyle(
-              fontFamily: 'Poppins',
               fontSize: 12, color: AppTheme.textTertiary,
             ),
           ),
@@ -204,7 +200,6 @@ class ProfileCard extends StatelessWidget {
           Text(
             '$score% Compatible',
             style: TextStyle(
-              fontFamily: 'Poppins',
               fontSize: 11, fontWeight: FontWeight.w600,
               color: color,
             ),
@@ -245,7 +240,6 @@ class _ActionButton extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontFamily: 'Poppins',
                 fontSize: 12, fontWeight: FontWeight.w600,
                 color: color,
               ),

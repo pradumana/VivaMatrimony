@@ -110,7 +110,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pagePadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -123,7 +123,6 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
               const Text(
                 'Enter verification code',
                 style: TextStyle(
-                  fontFamily: 'Poppins',
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.textPrimary,
@@ -133,7 +132,6 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
               RichText(
                 text: TextSpan(
                   style: const TextStyle(
-                    fontFamily: 'Poppins',
                     fontSize: 13,
                     color: AppTheme.textSecondary,
                     height: 1.5,
@@ -176,7 +174,6 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                       child: Text(
                         state.error!,
                         style: const TextStyle(
-                          fontFamily: 'Poppins',
                           fontSize: 12,
                           color: AppTheme.error,
                         ),
@@ -202,7 +199,6 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                     ? Text(
                         'Resend code in ${_secondsLeft}s',
                         style: const TextStyle(
-                          fontFamily: 'Poppins',
                           fontSize: 13,
                           color: AppTheme.textSecondary,
                         ),
@@ -217,9 +213,8 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
               const SizedBox(height: 16),
               Center(
                 child: Text(
-                  'OTP valid for ${AppConstants.otpResendCooldownSec ~/ 60 == 0 ? '' : '${AppConstants.otpResendCooldownSec ~/ 60}m '}10 minutes',
+                  'OTP valid for ${AppConstants.otpValidityMin} minutes',
                   style: const TextStyle(
-                    fontFamily: 'Poppins',
                     fontSize: 11,
                     color: AppTheme.textTertiary,
                   ),
@@ -259,7 +254,6 @@ class _OtpBox extends StatelessWidget {
         maxLength: 1,
         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         style: const TextStyle(
-          fontFamily: 'Poppins',
           fontSize: 22,
           fontWeight: FontWeight.w700,
           color: AppTheme.textPrimary,

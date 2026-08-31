@@ -35,7 +35,7 @@ class SettingsScreen extends ConsumerWidget {
           _SettingsTile(icon: Icons.delete_outline, title: 'Delete Account', color: AppTheme.error, onTap: () => _confirmDelete(context, ref)),
 
           const SizedBox(height: 16),
-          Center(child: Text('Viva v${AppConstants.appVersion}', style: const TextStyle(fontFamily: 'Poppins', fontSize: 11, color: AppTheme.textTertiary))),          const SizedBox(height: 32),
+          Center(child: Text('Viva v${AppConstants.appVersion}', style: const TextStyle(fontSize: 11, color: AppTheme.textTertiary))),          const SizedBox(height: 32),
         ],
       ),
     );
@@ -54,16 +54,16 @@ class SettingsScreen extends ConsumerWidget {
     showDialog(
       context: ctx,
       builder: (_) => AlertDialog(
-        title: const Text('About Viva', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
+        title: const Text('About Viva', style: TextStyle(fontWeight: FontWeight.w700)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('"${AppConstants.appTagline}"', style: const TextStyle(fontFamily: 'Poppins', fontStyle: FontStyle.italic, color: AppTheme.primary)),
+            Text('"${AppConstants.appTagline}"', style: const TextStyle(fontStyle: FontStyle.italic, color: AppTheme.primary)),
             const SizedBox(height: 12),
-            const Text('A premium Indian matrimony platform built on trust, transparency and tradition.', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, height: 1.5)),
+            const Text('A premium Indian matrimony platform built on trust, transparency and tradition.', style: TextStyle(fontSize: 13, height: 1.5)),
             const SizedBox(height: 8),
-            Text('Version ${AppConstants.appVersion}', style: const TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppTheme.textSecondary)),
+            Text('Version ${AppConstants.appVersion}', style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
           ],
         ),
         actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close'))],
@@ -75,10 +75,10 @@ class SettingsScreen extends ConsumerWidget {
     showDialog(
       context: ctx,
       builder: (_) => AlertDialog(
-        title: const Text('Delete Account', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700, color: AppTheme.error)),
+        title: const Text('Delete Account', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.error)),
         content: const Text(
           'This will permanently delete your account, profile, photos, and all data. This cannot be undone.\n\nAre you absolutely sure?',
-          style: TextStyle(fontFamily: 'Poppins', fontSize: 13, height: 1.5),
+          style: TextStyle(fontSize: 13, height: 1.5),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
@@ -112,7 +112,7 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 6),
-      child: Text(title.toUpperCase(), style: const TextStyle(fontFamily: 'Poppins', fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.textTertiary, letterSpacing: 1)),
+      child: Text(title.toUpperCase(), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.textTertiary, letterSpacing: 1)),
     );
   }
 }
@@ -130,7 +130,7 @@ class _SettingsTile extends StatelessWidget {
     final c = color ?? AppTheme.textPrimary;
     return ListTile(
       leading: Icon(icon, size: 22, color: c),
-      title: Text(title, style: TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w500, color: c)),
+      title: Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: c)),
       trailing: const Icon(Icons.chevron_right_rounded, size: 20, color: AppTheme.textTertiary),
       onTap: onTap,
     );

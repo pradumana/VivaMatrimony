@@ -214,7 +214,6 @@ class _ConnectionTileState extends ConsumerState<_ConnectionTile> {
           Text(
             '${c.fullName}${c.age != null ? ", ${c.age}" : ""}',
             style: const TextStyle(
-              fontFamily: 'Poppins',
               fontWeight: FontWeight.w600,
               fontSize: 14,
             ),
@@ -230,7 +229,6 @@ class _ConnectionTileState extends ConsumerState<_ConnectionTile> {
             Text(
               c.location!,
               style: const TextStyle(
-                fontFamily: 'Poppins',
                 fontSize: 12,
                 color: AppTheme.textSecondary,
               ),
@@ -244,7 +242,6 @@ class _ConnectionTileState extends ConsumerState<_ConnectionTile> {
             Text(
               'Mutually connected',
               style: const TextStyle(
-                fontFamily: 'Poppins',
                 fontSize: 10,
                 color: AppTheme.success,
                 fontWeight: FontWeight.w500,
@@ -281,8 +278,7 @@ class _WhatsAppButton extends StatelessWidget {
         padding:
             const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
         decoration: BoxDecoration(
-          // WhatsApp green
-          color: const Color(0xFF25D366),
+          color: AppTheme.whatsAppGreen,
           borderRadius: BorderRadius.circular(AppRadius.md),
         ),
         child: const Row(
@@ -293,7 +289,6 @@ class _WhatsAppButton extends StatelessWidget {
             Text(
               'WhatsApp',
               style: TextStyle(
-                fontFamily: 'Poppins',
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 color: Colors.white,

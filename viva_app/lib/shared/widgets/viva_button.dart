@@ -76,7 +76,6 @@ class VivaButton extends StatelessWidget {
                         Text(
                           label,
                           style: const TextStyle(
-                            fontFamily: 'Poppins',
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
@@ -118,7 +117,6 @@ class VivaTextButton extends StatelessWidget {
       label: Text(
         label,
         style: TextStyle(
-          fontFamily: 'Poppins',
           color: color ?? AppTheme.primary,
           fontWeight: FontWeight.w600,
           fontSize: 14,

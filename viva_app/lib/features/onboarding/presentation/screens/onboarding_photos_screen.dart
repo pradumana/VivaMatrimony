@@ -118,9 +118,9 @@ class _State extends ConsumerState<OnboardingPhotosScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Add your photos', style: TextStyle(fontFamily: 'Poppins', fontSize: 22, fontWeight: FontWeight.w700)),
+              const Text('Add your photos', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
               const SizedBox(height: 6),
-              const Text('Upload up to 10 photos. Your first photo will be your primary profile photo.', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, color: AppTheme.textSecondary, height: 1.5)),
+              const Text('Upload up to 10 photos. Your first photo will be your primary profile photo.', style: TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.5)),
               const SizedBox(height: 24),
 
               // Photo grid
@@ -151,7 +151,7 @@ class _State extends ConsumerState<OnboardingPhotosScreen> {
 
               if (_error != null) ...[
                 const SizedBox(height: 8),
-                Text(_error!, style: const TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppTheme.error)),
+                Text(_error!, style: const TextStyle(fontSize: 12, color: AppTheme.error)),
               ],
 
               const SizedBox(height: 16),
@@ -189,7 +189,7 @@ class _AddPhotoCell extends StatelessWidget {
                 children: [
                   Icon(Icons.add_a_photo_outlined, size: 28, color: AppTheme.primary),
                   SizedBox(height: 6),
-                  Text('Add Photo', style: TextStyle(fontFamily: 'Poppins', fontSize: 11, color: AppTheme.primary, fontWeight: FontWeight.w500)),
+                  Text('Add Photo', style: TextStyle(fontSize: 11, color: AppTheme.primary, fontWeight: FontWeight.w500)),
                 ],
               ),
       ),
@@ -223,7 +223,7 @@ class _PhotoCell extends StatelessWidget {
                 color: AppTheme.verifiedBadge.withOpacity(0.9),
                 borderRadius: BorderRadius.circular(AppRadius.full),
               ),
-              child: const Text('Primary', style: TextStyle(fontFamily: 'Poppins', fontSize: 9, color: Colors.white, fontWeight: FontWeight.w600)),
+              child: const Text('Primary', style: TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.w600)),
             ),
           ),
         Positioned(

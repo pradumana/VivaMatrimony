@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../shared/constants/app_constants.dart';
 import '../../../../shared/widgets/viva_button.dart';
 
 class ReportScreen extends ConsumerStatefulWidget {
@@ -87,11 +88,11 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
                 child: const Row(children: [
                   Icon(Icons.info_outline, size: 18, color: AppTheme.warning),
                   SizedBox(width: 10),
-                  Expanded(child: Text('All reports are reviewed by our team. False reports may result in account action.', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, height: 1.4, color: AppTheme.textSecondary))),
+                  Expanded(child: Text('All reports are reviewed by our team. False reports may result in account action.', style: TextStyle(fontSize: 12, height: 1.4, color: AppTheme.textSecondary))),
                 ]),
               ),
               const SizedBox(height: 24),
-              const Text('Select reason', style: TextStyle(fontFamily: 'Poppins', fontSize: 15, fontWeight: FontWeight.w600)),
+              const Text('Select reason', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
               const SizedBox(height: 12),
 
               Expanded(
@@ -100,13 +101,13 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
                     value: r.$1,
                     groupValue: _selectedReason,
                     onChanged: (v) => setState(() => _selectedReason = v),
-                    title: Text(r.$2, style: const TextStyle(fontFamily: 'Poppins', fontSize: 14)),
+                    title: Text(r.$2, style: const TextStyle(fontSize: 14)),
                     activeColor: AppTheme.primary,
                     contentPadding: EdgeInsets.zero,
                     dense: true,
                   )),
                   const SizedBox(height: 16),
-                  const Text('Additional details (optional)', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, fontWeight: FontWeight.w500)),
+                  const Text('Additional details (optional)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: _descController,
@@ -137,13 +138,13 @@ class _SuccessView extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Container(width: 80, height: 80, decoration: const BoxDecoration(color: Color(0xFFE8F8EF), shape: BoxShape.circle),
+            Container(width: 80, height: 80, decoration: const BoxDecoration(color: AppTheme.successSurface, shape: BoxShape.circle),
               child: const Icon(Icons.check_circle_outline, size: 44, color: AppTheme.success)),
             const SizedBox(height: 20),
-            const Text('Report Submitted', style: TextStyle(fontFamily: 'Poppins', fontSize: 22, fontWeight: FontWeight.w700)),
+            const Text('Report Submitted', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
-            const Text('Thank you. Our team will review your report within 24-48 hours and take appropriate action.', textAlign: TextAlign.center,
-              style: TextStyle(fontFamily: 'Poppins', fontSize: 13, color: AppTheme.textSecondary, height: 1.5)),
+            Text('Thank you. Our team will review your report within ${AppConstants.reportReviewHours} and take appropriate action.', textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.5)),
             const SizedBox(height: 32),
             VivaButton(label: 'Go Back', onPressed: onDone),
           ]),

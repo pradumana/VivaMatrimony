@@ -107,7 +107,6 @@ class _NavItem extends StatelessWidget {
                 size: 22, color: isSelected ? AppTheme.primary : AppTheme.textTertiary),
             const SizedBox(height: 2),
             Text(label, style: TextStyle(
-              fontFamily: 'Poppins',
               fontSize: 10,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
               color: isSelected ? AppTheme.primary : AppTheme.textTertiary,

@@ -32,7 +32,6 @@ class VerifiedBadge extends StatelessWidget {
           Text(
             'Verified',
             style: TextStyle(
-              fontFamily: 'Poppins',
               fontSize: small ? 9 : 10,
               fontWeight: FontWeight.w600,
               color: AppTheme.verifiedBadge,

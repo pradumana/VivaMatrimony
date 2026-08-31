@@ -69,9 +69,9 @@ class _State extends ConsumerState<VerificationCertificateScreen> {
           child: _uploaded ? _SuccessView(onDone: () => context.go(AppRoutes.verificationStatus)) : Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Upload Caste Certificate', style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w700)),
+              const Text('Upload Caste Certificate', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
               const SizedBox(height: 8),
-              const Text('Your certificate is stored securely and reviewed only by our admin team. It is never shared publicly.', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, color: AppTheme.textSecondary, height: 1.5)),
+              const Text('Your certificate is stored securely and reviewed only by our admin team. It is never shared publicly.', style: TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.5)),
               const SizedBox(height: 24),
 
               // Security note
@@ -86,14 +86,14 @@ class _State extends ConsumerState<VerificationCertificateScreen> {
                   children: [
                     Icon(Icons.lock_outline, size: 20, color: AppTheme.success),
                     SizedBox(width: 10),
-                    Expanded(child: Text('Your document is stored in a private, encrypted vault. Only authorized admins can view it.', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppTheme.success, height: 1.4))),
+                    Expanded(child: Text('Your document is stored in a private, encrypted vault. Only authorized admins can view it.', style: TextStyle(fontSize: 12, color: AppTheme.success, height: 1.4))),
                   ],
                 ),
               ),
               const SizedBox(height: 24),
 
               // Accepted formats
-              const Text('Accepted formats: PDF, JPG, PNG (max 20MB)', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppTheme.textSecondary)),
+              Text('Accepted formats: PDF, JPG, PNG (max ${AppConstants.maxCertSizeMB}MB)', style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
               const SizedBox(height: 16),
 
               // File picker
@@ -118,8 +118,8 @@ class _State extends ConsumerState<VerificationCertificateScreen> {
                       Expanded(child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(_pickedFile!.name, style: const TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w600)),
-                          Text('${(_pickedFile!.size / 1024).toStringAsFixed(0)} KB', style: const TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppTheme.textSecondary)),
+                          Text(_pickedFile!.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                          Text('${(_pickedFile!.size / 1024).toStringAsFixed(0)} KB', style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
                         ],
                       )),
                       IconButton(icon: const Icon(Icons.close, size: 20), onPressed: () => setState(() => _pickedFile = null)),
@@ -128,9 +128,9 @@ class _State extends ConsumerState<VerificationCertificateScreen> {
                     children: [
                       Icon(Icons.cloud_upload_outlined, size: 44, color: AppTheme.primary),
                       SizedBox(height: 10),
-                      Text('Tap to choose file', style: TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.primary)),
+                      Text('Tap to choose file', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.primary)),
                       SizedBox(height: 4),
-                      Text('PDF, JPG, PNG supported', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppTheme.textSecondary)),
+                      Text('PDF, JPG, PNG supported', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
                     ],
                   ),
                 ),
@@ -140,12 +140,12 @@ class _State extends ConsumerState<VerificationCertificateScreen> {
                 const SizedBox(height: 16),
                 LinearProgressIndicator(value: _progress, backgroundColor: AppTheme.border, valueColor: const AlwaysStoppedAnimation(AppTheme.primary), borderRadius: BorderRadius.circular(4)),
                 const SizedBox(height: 8),
-                Text('Uploading... ${(_progress * 100).toInt()}%', style: const TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppTheme.textSecondary)),
+                Text('Uploading... ${(_progress * 100).toInt()}%', style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
               ],
 
               if (_error != null) ...[
                 const SizedBox(height: 12),
-                Text(_error!, style: const TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppTheme.error)),
+                Text(_error!, style: const TextStyle(fontSize: 12, color: AppTheme.error)),
               ],
 
               const Spacer(),
@@ -169,14 +169,14 @@ class _SuccessView extends StatelessWidget {
       children: [
         Container(
           width: 80, height: 80,
-          decoration: const BoxDecoration(color: Color(0xFFE8F8EF), shape: BoxShape.circle),
+          decoration: const BoxDecoration(color: AppTheme.successSurface, shape: BoxShape.circle),
           child: const Icon(Icons.check_circle_outline, size: 44, color: AppTheme.success),
         ),
         const SizedBox(height: 20),
-        const Text('Certificate Uploaded!', style: TextStyle(fontFamily: 'Poppins', fontSize: 22, fontWeight: FontWeight.w700)),
+        const Text('Certificate Uploaded!', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
         const SizedBox(height: 8),
-        const Text('Your certificate is under review.\nVerification typically takes 1-2 business days.', textAlign: TextAlign.center,
-          style: TextStyle(fontFamily: 'Poppins', fontSize: 13, color: AppTheme.textSecondary, height: 1.5)),
+        Text('Your certificate is under review.\nVerification typically takes ${AppConstants.verificationSlaDays}.', textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.5)),
         const SizedBox(height: 32),
         VivaButton(label: 'Continue to Home', onPressed: onDone),
       ],

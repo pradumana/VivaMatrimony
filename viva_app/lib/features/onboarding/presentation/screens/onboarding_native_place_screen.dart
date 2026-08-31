@@ -107,7 +107,7 @@ class _State extends ConsumerState<OnboardingNativePlaceScreen> {
               ),
               const SizedBox(width: 8),
               const Text('Show native place on profile', style: TextStyle(
-                fontFamily: 'Poppins', fontSize: 13, color: AppTheme.textSecondary,
+                fontSize: 13, color: AppTheme.textSecondary,
               )),
             ],
           ),
@@ -118,7 +118,7 @@ class _State extends ConsumerState<OnboardingNativePlaceScreen> {
 
   Widget _sectionHeader(String text) {
     return Text(text, style: const TextStyle(
-      fontFamily: 'Poppins', fontSize: 15,
+      fontSize: 15,
       fontWeight: FontWeight.w600, color: AppTheme.textPrimary,
     ));
   }

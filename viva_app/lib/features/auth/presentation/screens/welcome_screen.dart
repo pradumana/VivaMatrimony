@@ -29,7 +29,6 @@ class WelcomeScreen extends StatelessWidget {
                   'Welcome to\nViva!',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontFamily: 'Poppins',
                     fontSize: 36,
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
@@ -41,7 +40,6 @@ class WelcomeScreen extends StatelessWidget {
                   AppConstants.appTagline,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontFamily: 'Poppins',
                     fontSize: 16,
                     color: Colors.white.withOpacity(0.9),
                     fontStyle: FontStyle.italic,
@@ -85,7 +83,6 @@ class WelcomeScreen extends StatelessWidget {
                     child: const Text(
                       'Create My Profile',
                       style: TextStyle(
-                        fontFamily: 'Poppins',
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                       ),
@@ -125,7 +122,6 @@ class _StepItem extends StatelessWidget {
           child: Text(
             text,
             style: TextStyle(
-              fontFamily: 'Poppins',
               fontSize: 14,
               color: Colors.white.withOpacity(0.95),
               height: 1.4,

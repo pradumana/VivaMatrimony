@@ -39,6 +39,15 @@ class AppTheme {
   static const Color verifiedGold = Color(0xFFD4A017);
   static const Color verifiedBadge = Color(0xFF27AE60);
 
+  /// Light tint used behind success icons (check circles, upload success, etc.)
+  static const Color successSurface = Color(0xFFE8F8EF);
+
+  /// WhatsApp brand green — used for WhatsApp CTAs only.
+  static const Color whatsAppGreen = Color(0xFF25D366);
+
+  /// Standard box-shadow colour across cards and nav bar.
+  static const Color shadowColor = Color(0x1A000000);
+
   // ─── Gradients ────────────────────────────────────────────────────────────
   static const LinearGradient primaryGradient = LinearGradient(
     colors: [primaryDeep, primary],
@@ -175,7 +184,7 @@ class AppTheme {
         foregroundColor: textPrimary,
         elevation: 0,
         scrolledUnderElevation: 1,
-        shadowColor: Color(0x1A000000),
+        shadowColor: shadowColor,
         centerTitle: true,
         titleTextStyle: TextStyle(
           fontFamily: fontFamily,
@@ -282,7 +291,7 @@ class AppTheme {
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: Colors.white,
         elevation: 8,
-        shadowColor: const Color(0x1A000000),
+        shadowColor: shadowColor,
         indicatorColor: primaryContainer,
         labelTextStyle: MaterialStateProperty.resolveWith((states) {
           if (states.contains(MaterialState.selected)) {
@@ -347,6 +356,8 @@ class AppSpacing {
   static const double lg = 24;
   static const double xl = 32;
   static const double xxl = 48;
+  /// Horizontal screen edge padding used across auth + onboarding screens.
+  static const double pagePadding = 28;
 }
 
 /// App-specific radius constants.

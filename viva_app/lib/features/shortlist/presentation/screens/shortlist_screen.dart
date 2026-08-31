@@ -124,7 +124,7 @@ class _ShortlistTile extends StatelessWidget {
           child: Row(children: [
             Text(
               '${item.fullName}${item.age != null ? ', ${item.age}' : ''}',
-              style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 14),
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
             ),
             const SizedBox(width: 6),
             if (item.isVerified) const VerifiedBadge(small: true),
@@ -134,14 +134,14 @@ class _ShortlistTile extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (item.location != null)
-              Text(item.location!, style: const TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppTheme.textSecondary)),
+              Text(item.location!, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
             // Private notes — only visible to owner
             if (item.privateNotes != null && item.privateNotes!.isNotEmpty) ...[
               const SizedBox(height: 4),
               Row(children: [
                 const Icon(Icons.lock_outline, size: 11, color: AppTheme.textTertiary),
                 const SizedBox(width: 4),
-                Expanded(child: Text(item.privateNotes!, style: const TextStyle(fontFamily: 'Poppins', fontSize: 11, color: AppTheme.textTertiary, fontStyle: FontStyle.italic), overflow: TextOverflow.ellipsis)),
+                Expanded(child: Text(item.privateNotes!, style: const TextStyle(fontSize: 11, color: AppTheme.textTertiary, fontStyle: FontStyle.italic), overflow: TextOverflow.ellipsis)),
               ]),
             ],
           ],
@@ -168,7 +168,7 @@ class _ShortlistTile extends StatelessWidget {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Private Note', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600)),
+        title: const Text('Private Note', style: TextStyle(fontWeight: FontWeight.w600)),
         content: TextField(
           controller: ctrl,
           maxLines: 3,

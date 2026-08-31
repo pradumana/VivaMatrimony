@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/constants/app_constants.dart';
 import '../../../../shared/widgets/viva_button.dart';
+import '../../../../shared/widgets/viva_logo.dart';
 
 /// Shared scaffold for all onboarding steps.
 /// Shows step indicator, title, content and nav buttons.
@@ -48,13 +49,15 @@ class OnboardingScaffold extends StatelessWidget {
                 icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
                 onPressed: onBack,
               )
-            : const SizedBox.shrink(),
+            : const Padding(
+                padding: EdgeInsets.only(left: 12),
+                child: VivaLogo(size: 32),
+              ),
         title: Column(
           children: [
             Text(
               _stepLabel,
               style: const TextStyle(
-                fontFamily: 'Poppins',
                 fontSize: 11,
                 color: AppTheme.textSecondary,
                 fontWeight: FontWeight.w500,
@@ -81,7 +84,6 @@ class OnboardingScaffold extends StatelessWidget {
             child: const Text(
               'Skip',
               style: TextStyle(
-                fontFamily: 'Poppins',
                 fontSize: 13,
                 color: AppTheme.textSecondary,
               ),
@@ -101,7 +103,6 @@ class OnboardingScaffold extends StatelessWidget {
                     Text(
                       title,
                       style: const TextStyle(
-                        fontFamily: 'Poppins',
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
                         color: AppTheme.textPrimary,
@@ -111,7 +112,6 @@ class OnboardingScaffold extends StatelessWidget {
                     Text(
                       subtitle,
                       style: const TextStyle(
-                        fontFamily: 'Poppins',
                         fontSize: 13,
                         color: AppTheme.textSecondary,
                         height: 1.5,
@@ -143,7 +143,6 @@ class OnboardingScaffold extends StatelessWidget {
                         child: Text(
                           error!,
                           style: const TextStyle(
-                            fontFamily: 'Poppins',
                             fontSize: 12,
                             color: AppTheme.error,
                           ),

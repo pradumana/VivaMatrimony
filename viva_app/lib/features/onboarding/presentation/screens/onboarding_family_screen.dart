@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/constants/app_constants.dart';
 import '../../../../shared/widgets/viva_text_field.dart';
 import '../providers/onboarding_provider.dart';
@@ -127,19 +128,19 @@ class _CounterField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Color(0xFF6B6B6B))),
+        Text(label, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
         const SizedBox(height: 6),
         Container(
           decoration: BoxDecoration(
-            border: Border.all(color: const Color(0xFFE8D5CE), width: 1.5),
-            borderRadius: BorderRadius.circular(12),
-            color: const Color(0xFFFAF7F5),
+            border: Border.all(color: AppTheme.border, width: 1.5),
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            color: AppTheme.background,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconButton(onPressed: () => onChanged(value - 1), icon: const Icon(Icons.remove, size: 18)),
-              Text('$value', style: const TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600)),
+              Text('$value', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
               IconButton(onPressed: () => onChanged(value + 1), icon: const Icon(Icons.add, size: 18)),
             ],
           ),

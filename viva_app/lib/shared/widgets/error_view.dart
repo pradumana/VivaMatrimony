@@ -37,7 +37,6 @@ class ErrorView extends StatelessWidget {
             message ?? 'Something went wrong. Please try again.',
             textAlign: TextAlign.center,
             style: const TextStyle(
-              fontFamily: 'Poppins',
               fontSize: 14, color: AppTheme.textSecondary, height: 1.5,
             ),
           ),
@@ -92,7 +91,6 @@ class EmptyStateView extends StatelessWidget {
             title,
             textAlign: TextAlign.center,
             style: const TextStyle(
-              fontFamily: 'Poppins',
               fontSize: 17, fontWeight: FontWeight.w600,
               color: AppTheme.textPrimary,
             ),
@@ -103,7 +101,6 @@ class EmptyStateView extends StatelessWidget {
               subtitle!,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                fontFamily: 'Poppins',
                 fontSize: 13, color: AppTheme.textSecondary, height: 1.5,
               ),
             ),
@@ -139,7 +136,6 @@ class LoadingView extends StatelessWidget {
             Text(
               message!,
               style: const TextStyle(
-                fontFamily: 'Poppins',
                 fontSize: 13, color: AppTheme.textSecondary,
               ),
             ),

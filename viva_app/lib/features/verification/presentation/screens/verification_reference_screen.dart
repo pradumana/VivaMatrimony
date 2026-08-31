@@ -59,16 +59,16 @@ class _State extends ConsumerState<VerificationReferenceScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Enter Reference\'s WhatsApp Number', style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w700)),
+                const Text('Enter Reference\'s WhatsApp Number', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
                 const SizedBox(height: 8),
-                const Text('The reference must be an existing registered Viva member.', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, color: AppTheme.textSecondary, height: 1.5)),
+                const Text('The reference must be an existing registered Viva member.', style: TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.5)),
                 const SizedBox(height: 28),
                 TextFormField(
                   controller: _phoneCtrl,
                   keyboardType: TextInputType.phone,
                   inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9+\s]'))],
-                  style: const TextStyle(fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.w500, letterSpacing: 2),
-                  decoration: const InputDecoration(labelText: 'Reference\'s Mobile Number', hintText: '+91 98765 43210', prefixIcon: Icon(Icons.phone_outlined)),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500, letterSpacing: 2),
+                  decoration: InputDecoration(labelText: 'Reference\'s Mobile Number', hintText: '${AppConstants.indiaCode} 98765 43210', prefixIcon: Icon(Icons.phone_outlined)),
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) return 'Please enter the mobile number';
                     if (v.replaceAll(RegExp(r'\D'), '').length < 7) return 'Enter a valid mobile number';
@@ -83,7 +83,7 @@ class _State extends ConsumerState<VerificationReferenceScreen> {
                     child: Row(children: [
                       const Icon(Icons.error_outline, size: 16, color: AppTheme.error),
                       const SizedBox(width: 8),
-                      Expanded(child: Text(_error!, style: const TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppTheme.error))),
+                      Expanded(child: Text(_error!, style: const TextStyle(fontSize: 12, color: AppTheme.error))),
                     ]),
                   ),
                 ],
@@ -110,14 +110,14 @@ class _SuccessView extends StatelessWidget {
       children: [
         Container(
           width: 80, height: 80,
-          decoration: const BoxDecoration(color: Color(0xFFE8F8EF), shape: BoxShape.circle),
+          decoration: const BoxDecoration(color: AppTheme.successSurface, shape: BoxShape.circle),
           child: const Icon(Icons.check_circle_outline, size: 44, color: AppTheme.success),
         ),
         const SizedBox(height: 20),
-        const Text('Reference Added!', style: TextStyle(fontFamily: 'Poppins', fontSize: 22, fontWeight: FontWeight.w700)),
+        const Text('Reference Added!', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
         const SizedBox(height: 8),
         Text('$name has been added as your reference.\nYour profile is pending verification.', textAlign: TextAlign.center,
-          style: const TextStyle(fontFamily: 'Poppins', fontSize: 13, color: AppTheme.textSecondary, height: 1.5)),
+          style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.5)),
         const SizedBox(height: 32),
         VivaButton(label: 'Continue to Home', onPressed: onDone),
       ],

@@ -40,8 +40,8 @@ class _State extends State<VerificationSelectScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Verified Profile', style: TextStyle(fontFamily: 'Poppins', fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white)),
-                          Text('Build trust with potential matches', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.white.withOpacity(0.85))),
+                          const Text('Verified Profile', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white)),
+                          Text('Build trust with potential matches', style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.85))),
                         ],
                       ),
                     ),
@@ -49,9 +49,9 @@ class _State extends State<VerificationSelectScreen> {
                 ),
               ),
               const SizedBox(height: 28),
-              const Text('Choose one verification method:', style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600)),
+              const Text('Choose one verification method:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
               const SizedBox(height: 6),
-              const Text('You only need to complete ONE option below.', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppTheme.textSecondary)),
+              const Text('You only need to complete ONE option below.', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
               const SizedBox(height: 20),
 
               // Option A
@@ -72,7 +72,7 @@ class _State extends State<VerificationSelectScreen> {
                   const Expanded(child: Divider()),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Text('OR', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppTheme.textTertiary, fontWeight: FontWeight.w500)),
+                    child: Text('OR', style: TextStyle(fontSize: 12, color: AppTheme.textTertiary, fontWeight: FontWeight.w500)),
                   ),
                   const Expanded(child: Divider()),
                 ],
@@ -84,7 +84,7 @@ class _State extends State<VerificationSelectScreen> {
                 isSelected: _selected == 'certificate',
                 icon: Icons.upload_file_outlined,
                 label: 'Option B — Caste Certificate',
-                description: 'Upload your caste/community certificate. Reviewed securely by our admin team (1-2 business days).',
+                description: 'Upload your caste/community certificate. Reviewed securely by our admin team (${AppConstants.verificationSlaDays}).',
                 tag: '1-2 days',
                 tagColor: AppTheme.warning,
                 onTap: () => setState(() => _selected = 'certificate'),
@@ -103,7 +103,7 @@ class _State extends State<VerificationSelectScreen> {
               Center(
                 child: TextButton(
                   onPressed: () => context.go(AppRoutes.home),
-                  child: const Text('Skip for now (verify later)', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, color: AppTheme.textSecondary)),
+                  child: const Text('Skip for now (verify later)', style: TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
                 ),
               ),
             ],
@@ -156,16 +156,16 @@ class _OptionCard extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Expanded(child: Text(label, style: TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w600, color: isSelected ? AppTheme.primary : AppTheme.textPrimary))),
+                      Expanded(child: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: isSelected ? AppTheme.primary : AppTheme.textPrimary))),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(color: tagColor.withOpacity(0.12), borderRadius: BorderRadius.circular(AppRadius.full)),
-                        child: Text(tag, style: TextStyle(fontFamily: 'Poppins', fontSize: 10, fontWeight: FontWeight.w600, color: tagColor)),
+                        child: Text(tag, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: tagColor)),
                       ),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(description, style: const TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppTheme.textSecondary, height: 1.4)),
+                  Text(description, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, height: 1.4)),
                 ],
               ),
             ),

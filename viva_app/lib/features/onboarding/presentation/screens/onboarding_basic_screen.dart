@@ -125,7 +125,7 @@ class _OnboardingBasicScreenState
             const Align(
               alignment: Alignment.centerLeft,
               child: Text('Gender', style: TextStyle(
-                fontFamily: 'Poppins', fontSize: 13,
+                fontSize: 13,
                 color: AppTheme.textSecondary, fontWeight: FontWeight.w500,
               )),
             ),
@@ -164,7 +164,7 @@ class _OnboardingBasicScreenState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text('Date of Birth', style: TextStyle(
-                            fontFamily: 'Poppins', fontSize: 12,
+                            fontSize: 12,
                             color: AppTheme.textSecondary,
                           )),
                           Text(
@@ -172,7 +172,6 @@ class _OnboardingBasicScreenState
                                 ? '$_dobDisplay  •  ${_age!} years'
                                 : 'Tap to select',
                             style: TextStyle(
-                              fontFamily: 'Poppins',
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
                               color: _dob != null
@@ -280,7 +279,6 @@ class _GenderChip extends StatelessWidget {
             label,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontFamily: 'Poppins',
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: isSelected ? AppTheme.primary : AppTheme.textSecondary,

@@ -86,7 +86,7 @@ class _State extends ConsumerState<OnboardingLifestyleScreen> {
             onChanged: (v) => setState(() => _drinking = v),
           ),
           const SizedBox(height: 20),
-          const Text('Hobbies', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+          const Text('Hobbies', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
           const SizedBox(height: 10),
           Wrap(
             spacing: 8, runSpacing: 8,
@@ -97,7 +97,7 @@ class _State extends ConsumerState<OnboardingLifestyleScreen> {
             )).toList(),
           ),
           const SizedBox(height: 20),
-          const Text('Interests', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+          const Text('Interests', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
           const SizedBox(height: 10),
           Wrap(
             spacing: 8, runSpacing: 8,
@@ -134,7 +134,7 @@ class _SelectChip extends StatelessWidget {
           ),
         ),
         child: Text(label, style: TextStyle(
-          fontFamily: 'Poppins', fontSize: 12, fontWeight: FontWeight.w500,
+          fontSize: 12, fontWeight: FontWeight.w500,
           color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
         )),
       ),

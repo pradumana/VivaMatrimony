@@ -113,8 +113,8 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w600)),
-          Text(subtitle, style: const TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppTheme.textSecondary)),
+          Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+          Text(subtitle, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
           const SizedBox(height: 12),
           ...children,
         ],
@@ -124,7 +124,7 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
 
   Widget _radio(String label, String value, String groupValue, ValueChanged<String?> onChanged) {
     return RadioListTile<String>(
-      title: Text(label, style: const TextStyle(fontFamily: 'Poppins', fontSize: 13)),
+      title: Text(label, style: const TextStyle(fontSize: 13)),
       value: value,
       groupValue: groupValue,
       onChanged: onChanged,
@@ -136,7 +136,7 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
 
   Widget _switch(String label, bool value, ValueChanged<bool> onChanged) {
     return SwitchListTile(
-      title: Text(label, style: const TextStyle(fontFamily: 'Poppins', fontSize: 13)),
+      title: Text(label, style: const TextStyle(fontSize: 13)),
       value: value,
       onChanged: onChanged,
       activeColor: AppTheme.primary,

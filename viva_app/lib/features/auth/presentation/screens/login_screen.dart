@@ -59,7 +59,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pagePadding),
             child: Form(
               key: _formKey,
               child: Column(
@@ -79,8 +79,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         const Text(
                           'Welcome to Viva',
                           style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 26,
+                                            fontSize: 26,
                             fontWeight: FontWeight.w700,
                             color: AppTheme.textPrimary,
                           ),
@@ -89,8 +88,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         Text(
                           AppConstants.appTagline,
                           style: const TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 13,
+                                            fontSize: 13,
                             color: AppTheme.textSecondary,
                             fontStyle: FontStyle.italic,
                           ),
@@ -102,20 +100,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(height: 48),
 
                   const Text(
-                    'Enter your WhatsApp number',
+                    'Sign in or create your account',
                     style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 16,
+                                fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 6),
                   const Text(
-                    'We\'ll send a verification code to your WhatsApp',
+                    'We\\'ll send a one-time code to your WhatsApp � works for new and existing members.',
                     style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 13,
+                                fontSize: 13,
                       color: AppTheme.textSecondary,
                     ),
                   ),
@@ -131,8 +127,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       FilteringTextInputFormatter.allow(RegExp(r'[0-9+\s\-]')),
                     ],
                     style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 18,
+                                fontSize: 18,
                       fontWeight: FontWeight.w500,
                       color: AppTheme.textPrimary,
                       letterSpacing: 2,
@@ -140,8 +135,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     decoration: InputDecoration(
                       hintText: '9876 543210',
                       hintStyle: const TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 18,
+                                    fontSize: 18,
                         color: AppTheme.textTertiary,
                         letterSpacing: 2,
                       ),
@@ -155,9 +149,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 style: TextStyle(fontSize: 20)),
                             const SizedBox(width: 6),
                             Text(
-                              '+91',
+                              AppConstants.indiaCode,
                               style: const TextStyle(
-                                fontFamily: 'Poppins',
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                                 color: AppTheme.textPrimary,
@@ -210,8 +203,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           child: RichText(
                             text: TextSpan(
                               style: const TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 12,
+                                                    fontSize: 12,
                                 color: AppTheme.textSecondary,
                                 height: 1.5,
                               ),
@@ -273,8 +265,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             child: Text(
                               state.error!,
                               style: const TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 12,
+                                                    fontSize: 12,
                                 color: AppTheme.error,
                               ),
                             ),
@@ -297,8 +288,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         const Text(
                           'Your number is safe and private',
                           style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 11,
+                                            fontSize: 11,
                             color: AppTheme.textTertiary,
                           ),
                         ),

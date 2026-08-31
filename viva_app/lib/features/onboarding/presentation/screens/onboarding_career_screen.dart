@@ -122,7 +122,7 @@ class _State extends ConsumerState<OnboardingCareerScreen> {
               ),
               const SizedBox(width: 8),
               const Text('Show income on profile', style: TextStyle(
-                fontFamily: 'Poppins', fontSize: 13, color: AppTheme.textSecondary,
+                fontSize: 13, color: AppTheme.textSecondary,
               )),
             ],
           ),

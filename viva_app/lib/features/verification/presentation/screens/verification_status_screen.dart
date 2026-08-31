@@ -47,7 +47,7 @@ class _StatusBody extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              gradient: status.isVerified ? const LinearGradient(colors: [Color(0xFF27AE60), Color(0xFF2ECC71)]) : AppTheme.primaryGradient,
+              gradient: status.isVerified ? const LinearGradient(colors: [AppTheme.success, Color(0xFF2ECC71)]) : AppTheme.primaryGradient,
               borderRadius: BorderRadius.circular(AppRadius.xl),
             ),
             child: Column(
@@ -59,13 +59,13 @@ class _StatusBody extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   status.isVerified ? '✓ Verified Profile' : _statusTitle(status),
-                  style: const TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white),
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   _statusSubtitle(status),
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontFamily: 'Poppins', fontSize: 13, color: Colors.white.withOpacity(0.9), height: 1.4),
+                  style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.9), height: 1.4),
                 ),
               ],
             ),
@@ -91,9 +91,9 @@ class _StatusBody extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Rejection Reason:', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.error)),
+                  const Text('Rejection Reason:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.error)),
                   const SizedBox(height: 4),
-                  Text(status.certificateRejectionReason!, style: const TextStyle(fontFamily: 'Poppins', fontSize: 13, color: AppTheme.textSecondary)),
+                  Text(status.certificateRejectionReason!, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
                   const SizedBox(height: 12),
                   VivaButton(label: 'Upload New Certificate', onPressed: () => context.push(AppRoutes.verificationCertificate), height: 42),
                 ],
@@ -119,7 +119,7 @@ class _StatusBody extends StatelessWidget {
 
   String _statusSubtitle(VerificationStatus s) {
     if (s.isVerified) return 'Your profile is verified. Matches can trust your identity.';
-    if (s.isPending) return 'Our team is reviewing your verification request.\nThis usually takes 1-2 business days.';
+    if (s.isPending) return 'Our team is reviewing your verification request.\nThis usually takes ${AppConstants.verificationSlaDays}.';
     if (s.requestStatus == 'rejected') return 'Your verification was rejected. Please see the reason below and try again.';
     return 'Complete verification to unlock all features and build trust with matches.';
   }
@@ -136,9 +136,9 @@ class _DetailRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Text(label, style: const TextStyle(fontFamily: 'Poppins', fontSize: 13, color: AppTheme.textSecondary)),
+          Text(label, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
           const Spacer(),
-          Text(value, style: const TextStyle(fontFamily: 'Poppins', fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+          Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
         ],
       ),
     );

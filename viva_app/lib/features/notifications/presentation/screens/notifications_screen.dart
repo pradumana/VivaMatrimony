@@ -37,7 +37,7 @@ class NotificationsScreen extends ConsumerWidget {
                 ref.invalidate(_notificationsProvider);
               } catch (_) {}
             },
-            child: const Text('Mark all read', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppTheme.primary)),
+            child: const Text('Mark all read', style: TextStyle(fontSize: 12, color: AppTheme.primary)),
           ),
         ],
       ),
@@ -109,7 +109,6 @@ class _NotificationTile extends StatelessWidget {
       title: Text(
         item.title,
         style: TextStyle(
-          fontFamily: 'Poppins',
           fontSize: 13,
           fontWeight: item.isRead ? FontWeight.w400 : FontWeight.w600,
           color: AppTheme.textPrimary,
@@ -118,9 +117,9 @@ class _NotificationTile extends StatelessWidget {
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(item.body, style: const TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppTheme.textSecondary, height: 1.4)),
+          Text(item.body, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, height: 1.4)),
           const SizedBox(height: 2),
-          Text(_timeAgo(item.createdAt), style: const TextStyle(fontFamily: 'Poppins', fontSize: 10, color: AppTheme.textTertiary)),
+          Text(_timeAgo(item.createdAt), style: const TextStyle(fontSize: 10, color: AppTheme.textTertiary)),
         ],
       ),
       trailing: !item.isRead

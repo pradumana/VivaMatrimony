@@ -95,9 +95,9 @@ class _BiodataScreenState extends ConsumerState<BiodataScreen> {
                 child: Column(children: [
                   const Icon(Icons.picture_as_pdf_outlined, size: 56, color: Colors.white),
                   const SizedBox(height: 12),
-                  const Text('Matrimonial Biodata', style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white)),
+                  const Text('Matrimonial Biodata', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white)),
                   const SizedBox(height: 4),
-                  Text('A beautiful PDF ready to share with families', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, color: Colors.white.withOpacity(0.85))),
+                  Text('A beautiful PDF ready to share with families', style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.85))),
                 ]),
               ),
               const SizedBox(height: 24),
@@ -107,7 +107,7 @@ class _BiodataScreenState extends ConsumerState<BiodataScreen> {
               const SizedBox(height: 20),
 
               // What's included
-              const Text('What\'s included', style: TextStyle(fontFamily: 'Poppins', fontSize: 15, fontWeight: FontWeight.w600)),
+              const Text('What\'s included', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
               const SizedBox(height: 12),
               for (final item in [
                 '✓  Profile photo and personal details',
@@ -122,7 +122,7 @@ class _BiodataScreenState extends ConsumerState<BiodataScreen> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 6),
                   child: Text(item, style: TextStyle(
-                    fontFamily: 'Poppins', fontSize: 13,
+                    fontSize: 13,
                     color: item.startsWith('✗') ? AppTheme.textTertiary : AppTheme.textPrimary,
                   )),
                 ),
@@ -132,7 +132,7 @@ class _BiodataScreenState extends ConsumerState<BiodataScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(color: AppTheme.error.withOpacity(0.08), borderRadius: BorderRadius.circular(AppRadius.md)),
-                  child: Text(_error!, style: const TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppTheme.error)),
+                  child: Text(_error!, style: const TextStyle(fontSize: 12, color: AppTheme.error)),
                 ),
                 const SizedBox(height: 16),
               ],
@@ -194,7 +194,7 @@ class _StatusCard extends StatelessWidget {
       child: Row(children: [
         Icon(icon, size: 18, color: color),
         const SizedBox(width: 10),
-        Text(label, style: TextStyle(fontFamily: 'Poppins', fontSize: 13, fontWeight: FontWeight.w500, color: color)),
+        Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: color)),
       ]),
     );
   }

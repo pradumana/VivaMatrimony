@@ -52,14 +52,14 @@ class _State extends ConsumerState<OnboardingPreferencesScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Age range
-          const Text('Age Range', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, fontWeight: FontWeight.w600)),
+          const Text('Age Range', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           Row(
             children: [
               _AgeField(label: 'Min Age', value: _minAge,
                   onChanged: (v) => setState(() => _minAge = v.clamp(18, _maxAge))),
               const SizedBox(width: 12),
-              const Text('to', style: TextStyle(fontFamily: 'Poppins', color: AppTheme.textSecondary)),
+              const Text('to', style: TextStyle(color: AppTheme.textSecondary)),
               const SizedBox(width: 12),
               _AgeField(label: 'Max Age', value: _maxAge,
                   onChanged: (v) => setState(() => _maxAge = v.clamp(_minAge, 70))),
@@ -67,7 +67,7 @@ class _State extends ConsumerState<OnboardingPreferencesScreen> {
           ),
           const SizedBox(height: 8),
           Text('$_minAge to $_maxAge years', style: const TextStyle(
-            fontFamily: 'Poppins', fontSize: 12, color: AppTheme.primary, fontWeight: FontWeight.w500,
+            fontSize: 12, color: AppTheme.primary, fontWeight: FontWeight.w500,
           )),
           const SizedBox(height: 20),
 
@@ -114,7 +114,7 @@ class _State extends ConsumerState<OnboardingPreferencesScreen> {
               ),
               const SizedBox(width: 8),
               const Text('Open to partner\'s relocation', style: TextStyle(
-                fontFamily: 'Poppins', fontSize: 13, color: AppTheme.textSecondary,
+                fontSize: 13, color: AppTheme.textSecondary,
               )),
             ],
           ),
@@ -136,7 +136,7 @@ class _AgeField extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontFamily: 'Poppins', fontSize: 11, color: AppTheme.textSecondary)),
+          Text(label, style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
           const SizedBox(height: 4),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -149,7 +149,7 @@ class _AgeField extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 IconButton(onPressed: () => onChanged(value - 1), icon: const Icon(Icons.remove, size: 16), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
-                Text('$value', style: const TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w700)),
+                Text('$value', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                 IconButton(onPressed: () => onChanged(value + 1), icon: const Icon(Icons.add, size: 16), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
               ],
             ),
@@ -170,11 +170,11 @@ class _ImportanceRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(child: Text(label, style: const TextStyle(fontFamily: 'Poppins', fontSize: 13, color: AppTheme.textSecondary))),
+        Expanded(child: Text(label, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary))),
         DropdownButton<String>(
           value: value,
           underline: const SizedBox.shrink(),
-          style: const TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppTheme.primary),
+          style: const TextStyle(fontSize: 12, color: AppTheme.primary),
           items: const [
             DropdownMenuItem(value: 'must_have', child: Text('Must Have')),
             DropdownMenuItem(value: 'preferred', child: Text('Preferred')),

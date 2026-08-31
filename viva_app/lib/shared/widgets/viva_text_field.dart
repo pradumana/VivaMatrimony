@@ -62,7 +62,6 @@ class VivaTextField extends StatelessWidget {
       autofocus: autofocus,
       inputFormatters: inputFormatters,
       style: const TextStyle(
-        fontFamily: 'Poppins',
         fontSize: 14,
         color: AppTheme.textPrimary,
       ),
@@ -107,7 +106,6 @@ class VivaDropdownField<T> extends StatelessWidget {
       validator: validator,
       decoration: InputDecoration(labelText: label),
       style: const TextStyle(
-        fontFamily: 'Poppins',
         fontSize: 14,
         color: AppTheme.textPrimary,
       ),

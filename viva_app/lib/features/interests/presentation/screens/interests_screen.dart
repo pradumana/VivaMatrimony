@@ -52,7 +52,7 @@ class _State extends ConsumerState<InterestsScreen> with SingleTickerProviderSta
           labelColor: AppTheme.primary,
           unselectedLabelColor: AppTheme.textSecondary,
           indicatorColor: AppTheme.primary,
-          labelStyle: const TextStyle(fontFamily: 'Poppins', fontSize: 13, fontWeight: FontWeight.w600),
+          labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
           tabs: const [Tab(text: 'Received'), Tab(text: 'Sent')],
         ),
       ),
@@ -116,11 +116,11 @@ class _InterestTile extends ConsumerWidget {
       ),
       title: GestureDetector(
         onTap: () => context.push('/profile/${item.userId}'),
-        child: Text(item.fullName, style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 14)),
+        child: Text(item.fullName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
       ),
       subtitle: Text(
         '${item.age != null ? "${item.age} yrs • " : ""}${item.location ?? ""}',
-        style: const TextStyle(fontFamily: 'Poppins', fontSize: 12, color: AppTheme.textSecondary),
+        style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
       ),
       trailing: isReceived && item.status == 'sent'
           ? Row(
@@ -203,7 +203,7 @@ class _ActionBtn extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(AppRadius.full), border: Border.all(color: color.withOpacity(0.4))),
-        child: Text(label, style: TextStyle(fontFamily: 'Poppins', fontSize: 11, fontWeight: FontWeight.w600, color: color)),
+        child: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color)),
       ),
     );
   }
@@ -223,7 +223,7 @@ class _StatusChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(AppRadius.full)),
-      child: Text(status.toUpperCase(), style: TextStyle(fontFamily: 'Poppins', fontSize: 10, fontWeight: FontWeight.w600, color: color)),
+      child: Text(status.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color)),
     );
   }
 }
@@ -264,7 +264,7 @@ class _AcceptedSheet extends StatelessWidget {
               width: 72,
               height: 72,
               decoration: const BoxDecoration(
-                color: Color(0xFFE8F8EF),
+                color: AppTheme.successSurface,
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -277,7 +277,6 @@ class _AcceptedSheet extends StatelessWidget {
             Text(
               'You\'re connected! 🎉',
               style: const TextStyle(
-                fontFamily: 'Poppins',
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
                 color: AppTheme.textPrimary,
@@ -289,7 +288,6 @@ class _AcceptedSheet extends StatelessWidget {
               'Continue the conversation on WhatsApp.',
               textAlign: TextAlign.center,
               style: const TextStyle(
-                fontFamily: 'Poppins',
                 fontSize: 13,
                 color: AppTheme.textSecondary,
                 height: 1.5,
@@ -302,7 +300,7 @@ class _AcceptedSheet extends StatelessWidget {
               height: 52,
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF25D366),
+                  backgroundColor: AppTheme.whatsAppGreen,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -313,7 +311,6 @@ class _AcceptedSheet extends StatelessWidget {
                 label: Text(
                   'Chat on WhatsApp',
                   style: const TextStyle(
-                    fontFamily: 'Poppins',
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                   ),
@@ -327,7 +324,6 @@ class _AcceptedSheet extends StatelessWidget {
               child: const Text(
                 'Later — view in Connections',
                 style: TextStyle(
-                  fontFamily: 'Poppins',
                   fontSize: 13,
                   color: AppTheme.textSecondary,
                 ),
