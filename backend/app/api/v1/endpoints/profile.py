@@ -18,7 +18,10 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, s
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
-from app.database import get_db
+from app.database import get_db, get_supabase
+from app.config import get_settings
+
+settings = get_settings()
 from app.middleware import get_current_user, AuthenticatedUser
 from app.schemas.profile import (
     ProfileCreateRequest, ProfileUpdateRequest, ProfileResponse, FullProfileResponse,
@@ -117,6 +120,41 @@ async def complete_onboarding(
 # ---------------------------------------------------------------------------
 # Photos
 # ---------------------------------------------------------------------------
+
+@router.get("/photos", response_model=list[PhotoResponse])
+async def list_photos(
+    current_user: AuthenticatedUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """List all photos for the current user."""
+    result = await db.execute(
+        text("""
+            SELECT id, storage_path, thumbnail_path, file_size_bytes, is_primary,
+                   display_order, created_at
+            FROM photos
+            WHERE user_id = :uid AND deleted_at IS NULL
+            ORDER BY display_order ASC
+        """),
+        {"uid": current_user.user_id},
+    )
+    rows = result.fetchall()
+    supabase = get_supabase()
+    bucket = settings.storage_bucket_profile_photos
+    photos = []
+    for row in rows:
+        public_url = supabase.storage.from_(bucket).get_public_url(row.storage_path)
+        thumb_url = supabase.storage.from_(bucket).get_public_url(row.thumbnail_path) if row.thumbnail_path else None
+        photos.append({
+            "id": row.id,
+            "url": public_url,
+            "thumbnail_url": thumb_url,
+            "is_primary": row.is_primary,
+            "display_order": row.display_order,
+            "file_size_bytes": row.file_size_bytes,
+            "created_at": row.created_at.isoformat(),
+        })
+    return photos
+
 
 @router.post("/photos", response_model=PhotoResponse, status_code=status.HTTP_201_CREATED)
 async def upload_photo(

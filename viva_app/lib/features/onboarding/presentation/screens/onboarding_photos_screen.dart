@@ -20,7 +20,28 @@ class OnboardingPhotosScreen extends ConsumerStatefulWidget {
 class _State extends ConsumerState<OnboardingPhotosScreen> {
   final List<Map<String, dynamic>> _photos = [];
   bool _uploading = false;
+  bool _loading = true;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadExistingPhotos();
+  }
+
+  Future<void> _loadExistingPhotos() async {
+    try {
+      final client = ref.read(apiClientProvider);
+      final r = await client.get('/profile/photos');
+      final list = r.data as List<dynamic>;
+      setState(() {
+        _photos.addAll(list.map((e) => Map<String, dynamic>.from(e as Map)));
+        _loading = false;
+      });
+    } catch (_) {
+      setState(() => _loading = false);
+    }
+  }
 
   Future<void> _pickPhoto() async {
     if (_photos.length >= AppConstants.maxPhotos) {
@@ -125,7 +146,9 @@ class _State extends ConsumerState<OnboardingPhotosScreen> {
 
               // Photo grid
               Expanded(
-                child: GridView.builder(
+                child: _loading
+                    ? const Center(child: CircularProgressIndicator(color: AppTheme.primary))
+                    : GridView.builder(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
                     crossAxisSpacing: 10,
