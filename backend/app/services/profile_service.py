@@ -523,7 +523,7 @@ async def upload_photo(
             ) VALUES (
               :uid, :path, :thumb_path, :filename,
               :size, :mime, :w, :h, :primary, :order
-            ) RETURNING id
+            ) RETURNING id, created_at
         """),
         {
             "uid": user_id,
@@ -538,7 +538,9 @@ async def upload_photo(
             "order": display_order,
         },
     )
-    photo_id = insert_result.fetchone().id
+    photo_row = insert_result.fetchone()
+    photo_id = photo_row.id
+    photo_created_at = photo_row.created_at
 
     await _update_completion(db, user_id)
     await db.commit()
@@ -553,6 +555,8 @@ async def upload_photo(
         "thumbnail_url": thumb_url,
         "is_primary": is_primary,
         "display_order": display_order,
+        "file_size_bytes": len(final_bytes),
+        "created_at": photo_created_at.isoformat(),
     }
 
 
