@@ -2,190 +2,186 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ full_name }} — Matrimonial Biodata</title>
   <style>
+    @page {
+      size: A4;
+      margin: 15mm 15mm 12mm 15mm;
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    
+
     body {
       font-family: 'Noto Sans', 'Noto Sans Devanagari', Arial, sans-serif;
-      font-size: 11pt;
+      font-size: 10.5pt;
       color: #2c1810;
       background: #fff;
-      padding: 0;
     }
 
-    .page {
-      width: 210mm;
-      min-height: 297mm;
-      margin: 0 auto;
-      padding: 15mm 15mm 10mm 15mm;
-    }
-
-    /* Header */
+    /* ── Header ─────────────────────────────────── */
     .header {
-      background: linear-gradient(135deg, #8B1A1A 0%, #C0392B 50%, #8B1A1A 100%);
+      background: linear-gradient(135deg, #8B1A1A 0%, #C0392B 60%, #8B1A1A 100%);
       color: white;
-      padding: 20px 25px;
+      padding: 18px 22px;
       border-radius: 8px;
       display: flex;
       align-items: center;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
     .header-photo {
-      width: 100px;
-      height: 120px;
+      width: 90px;
+      height: 110px;
       object-fit: cover;
       border-radius: 6px;
       border: 3px solid rgba(255,255,255,0.8);
-      margin-right: 20px;
+      margin-right: 18px;
       flex-shrink: 0;
     }
     .header-photo-placeholder {
-      width: 100px;
-      height: 120px;
-      background: rgba(255,255,255,0.2);
+      width: 90px;
+      height: 110px;
+      background: rgba(255,255,255,0.15);
       border-radius: 6px;
       border: 2px dashed rgba(255,255,255,0.5);
-      margin-right: 20px;
+      margin-right: 18px;
       flex-shrink: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 9pt;
+      font-size: 8.5pt;
       color: rgba(255,255,255,0.7);
+      text-align: center;
     }
-    .header-info { flex: 1; }
+    .header-info { flex: 1; min-width: 0; }
     .header-name {
-      font-size: 22pt;
+      font-size: 20pt;
       font-weight: 700;
-      letter-spacing: 0.5px;
-      margin-bottom: 4px;
+      letter-spacing: 0.3px;
+      margin-bottom: 5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .header-subtitle {
-      font-size: 10pt;
+      font-size: 9.5pt;
       opacity: 0.9;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
     .verified-badge {
       display: inline-block;
       background: rgba(255,255,255,0.2);
       border: 1px solid rgba(255,255,255,0.6);
-      padding: 3px 10px;
+      padding: 2px 10px;
       border-radius: 12px;
-      font-size: 9pt;
+      font-size: 8.5pt;
     }
     .app-brand {
-      text-align: right;
       margin-top: 6px;
-      font-size: 9pt;
-      opacity: 0.8;
+      font-size: 8.5pt;
+      opacity: 0.75;
+      text-align: right;
     }
 
-    /* Decorative divider */
-    .divider {
-      height: 2px;
-      background: linear-gradient(90deg, transparent, #C0392B, transparent);
-      margin: 8px 0;
+    /* ── Ornament ────────────────────────────────── */
+    .ornament {
+      text-align: center;
+      color: #C0392B;
+      font-size: 13pt;
+      letter-spacing: 8px;
+      margin: 4px 0 10px;
     }
 
-    /* Section */
+    /* ── Section ─────────────────────────────────── */
     .section {
-      margin-bottom: 14px;
+      margin-bottom: 13px;
       page-break-inside: avoid;
     }
     .section-title {
-      font-size: 11pt;
+      font-size: 10pt;
       font-weight: 700;
       color: #8B1A1A;
       text-transform: uppercase;
       letter-spacing: 1px;
       border-bottom: 1.5px solid #C0392B;
-      padding-bottom: 4px;
-      margin-bottom: 10px;
+      padding-bottom: 3px;
+      margin-bottom: 9px;
     }
 
-    /* Grid */
+    /* ── Grid ────────────────────────────────────── */
     .grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 6px 20px;
+      gap: 5px 22px;
     }
-    .grid-3 {
-      grid-template-columns: 1fr 1fr 1fr;
-    }
-    .field { margin-bottom: 4px; }
+    .field { margin-bottom: 3px; }
     .field-label {
-      font-size: 8.5pt;
+      font-size: 8pt;
       color: #8B4513;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.4px;
       font-weight: 600;
     }
     .field-value {
-      font-size: 10.5pt;
+      font-size: 10pt;
       color: #2c1810;
       font-weight: 500;
     }
-    .field-empty { color: #aaa; font-style: italic; font-size: 9.5pt; }
+    .field-empty {
+      color: #bbb;
+      font-style: italic;
+      font-size: 9pt;
+    }
 
-    /* About */
+    /* ── About ───────────────────────────────────── */
     .about-text {
-      font-size: 10.5pt;
+      font-size: 10pt;
       line-height: 1.6;
       color: #333;
       background: #fdf8f5;
-      padding: 10px 14px;
+      padding: 9px 13px;
       border-left: 3px solid #C0392B;
       border-radius: 0 4px 4px 0;
     }
 
-    /* Tags */
-    .tag-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 3px; }
+    /* ── Tags ────────────────────────────────────── */
+    .tag-list { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
     .tag {
       background: #fdf0ec;
       border: 1px solid #e8c5b8;
       color: #8B1A1A;
       padding: 2px 8px;
       border-radius: 10px;
-      font-size: 9pt;
+      font-size: 8.5pt;
     }
 
-    /* Footer */
+    /* ── Divider ─────────────────────────────────── */
+    .divider {
+      height: 1.5px;
+      background: linear-gradient(90deg, transparent, #C0392B, transparent);
+      margin: 8px 0;
+    }
+
+    /* ── Footer ──────────────────────────────────── */
     .footer {
-      margin-top: 20px;
+      margin-top: 14px;
       text-align: center;
-      font-size: 8.5pt;
+      font-size: 8pt;
       color: #999;
       border-top: 1px solid #f0d9d0;
-      padding-top: 10px;
+      padding-top: 8px;
     }
-    .footer-brand {
-      font-size: 10pt;
-      font-weight: 700;
-      color: #C0392B;
-    }
-    .footer-tagline { font-style: italic; }
-
-    /* Ornamental border */
-    .ornament {
-      text-align: center;
-      color: #C0392B;
-      font-size: 14pt;
-      letter-spacing: 6px;
-      margin: 6px 0;
-    }
+    .footer-brand { font-size: 9.5pt; font-weight: 700; color: #C0392B; }
+    .footer-tagline { font-style: italic; margin-bottom: 3px; }
   </style>
 </head>
 <body>
-<div class="page">
 
-  <!-- Header with photo and name -->
+  <!-- Header -->
   <div class="header">
     {% if photo_url %}
       <img class="header-photo" src="{{ photo_url }}" alt="{{ full_name }}">
     {% else %}
-      <div class="header-photo-placeholder">No Photo</div>
+      <div class="header-photo-placeholder">No<br>Photo</div>
     {% endif %}
     <div class="header-info">
       <div class="header-name">{{ full_name }}</div>
@@ -194,9 +190,7 @@
         {% if gender %} &nbsp;•&nbsp; {{ gender }}{% endif %}
         {% if current_location %} &nbsp;•&nbsp; {{ current_location }}{% endif %}
       </div>
-      {% if is_verified %}
-        <span class="verified-badge">✓ Verified Profile</span>
-      {% endif %}
+      {% if is_verified %}<span class="verified-badge">✓ Verified Profile</span>{% endif %}
       <div class="app-brand">{{ app_name }} Matrimony</div>
     </div>
   </div>
@@ -209,23 +203,23 @@
     <div class="grid">
       <div class="field">
         <div class="field-label">Age</div>
-        <div class="field-value">{% if age %}{{ age }} Years{% else %}<span class="field-empty">Not specified</span>{% endif %}</div>
+        <div class="field-value">{% if age %}{{ age }} Years{% else %}<span class="field-empty">—</span>{% endif %}</div>
       </div>
       <div class="field">
         <div class="field-label">Height</div>
-        <div class="field-value">{% if height %}{{ height }}{% else %}<span class="field-empty">Not specified</span>{% endif %}</div>
+        <div class="field-value">{% if height %}{{ height }}{% else %}<span class="field-empty">—</span>{% endif %}</div>
       </div>
       <div class="field">
         <div class="field-label">Marital Status</div>
-        <div class="field-value">{{ marital_status or '' }}</div>
+        <div class="field-value">{{ marital_status or '—' }}</div>
       </div>
       <div class="field">
         <div class="field-label">Mother Tongue</div>
-        <div class="field-value">{{ mother_tongue or '' }}</div>
+        <div class="field-value">{{ mother_tongue or '—' }}</div>
       </div>
       <div class="field">
         <div class="field-label">Religion</div>
-        <div class="field-value">{{ religion or '' }}</div>
+        <div class="field-value">{{ religion or '—' }}</div>
       </div>
       {% if caste %}
       <div class="field">
@@ -257,9 +251,15 @@
   <!-- Education & Career -->
   {% if education or employment %}
   <div class="section">
-    <div class="section-title">Education & Career</div>
+    <div class="section-title">Education &amp; Career</div>
     <div class="grid">
       {% if education %}
+        {% if education.highest_qualification %}
+        <div class="field">
+          <div class="field-label">Qualification</div>
+          <div class="field-value">{{ education.highest_qualification }}</div>
+        </div>
+        {% endif %}
         {% if education.degree %}
         <div class="field">
           <div class="field-label">Degree</div>
@@ -301,7 +301,7 @@
         {% if employment.income_min_lpa %}
         <div class="field">
           <div class="field-label">Income</div>
-          <div class="field-value">₹{{ employment.income_min_lpa }}–{{ employment.income_max_lpa }} LPA</div>
+          <div class="field-value">&#8377;{{ employment.income_min_lpa }}{% if employment.income_max_lpa %}–{{ employment.income_max_lpa }}{% endif %} LPA</div>
         </div>
         {% endif %}
       {% endif %}
@@ -327,16 +327,16 @@
       </div>
       {% endif %}
       <div class="field">
-        <div class="field-label">Brothers / Sisters</div>
+        <div class="field-label">Siblings</div>
         <div class="field-value">
-          {{ family.brothers_count }} Brothers ({{ family.brothers_married }} married),
-          {{ family.sisters_count }} Sisters ({{ family.sisters_married }} married)
+          {{ family.brothers_count }} Bro ({{ family.brothers_married }} married),
+          {{ family.sisters_count }} Sis ({{ family.sisters_married }} married)
         </div>
       </div>
       {% if family.family_type %}
       <div class="field">
         <div class="field-label">Family Type</div>
-        <div class="field-value">{{ family.family_type | title }}</div>
+        <div class="field-value">{{ family.family_type | replace('_', ' ') | title }}</div>
       </div>
       {% endif %}
       {% if family.family_values %}
@@ -388,14 +388,12 @@
       </div>
       {% endif %}
     </div>
-    {% if lifestyle.hobbies %}
+    {% if lifestyle.hobbies or lifestyle.interests %}
     <div style="margin-top:6px">
       <div class="field-label">Hobbies &amp; Interests</div>
       <div class="tag-list">
-        {% for h in lifestyle.hobbies %}<span class="tag">{{ h }}</span>{% endfor %}
-        {% if lifestyle.interests %}
-          {% for i in lifestyle.interests %}<span class="tag">{{ i }}</span>{% endfor %}
-        {% endif %}
+        {% if lifestyle.hobbies %}{% for h in lifestyle.hobbies %}<span class="tag">{{ h }}</span>{% endfor %}{% endif %}
+        {% if lifestyle.interests %}{% for i in lifestyle.interests %}<span class="tag">{{ i }}</span>{% endfor %}{% endif %}
       </div>
     </div>
     {% endif %}
@@ -408,11 +406,8 @@
   <div class="footer">
     <div class="footer-brand">{{ app_name }}</div>
     <div class="footer-tagline">"{{ app_tagline }}"</div>
-    <div style="margin-top:4px">
-      This biodata was generated by {{ app_name }} Matrimony. Information provided is as stated by the user.
-    </div>
+    <div>This biodata was generated by {{ app_name }} Matrimony. Information is as stated by the user.</div>
   </div>
 
-</div>
 </body>
 </html>
