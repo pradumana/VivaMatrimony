@@ -199,7 +199,8 @@ class _State extends ConsumerState<OnboardingPhotosScreen> {
     });
     try {
       final client = ref.read(apiClientProvider);
-      await client.post('/profile/photos/$photoId/set-primary');
+      // Correct endpoint: PUT /profile/photos/{id}/primary
+      await client.put('/profile/photos/$photoId/primary');
       if (mounted) {
         setState(() {
           for (final p in _photos) {

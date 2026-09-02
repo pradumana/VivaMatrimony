@@ -40,7 +40,7 @@ prefs_router = APIRouter(prefix="/preferences", tags=["Preferences"])
 
 
 # ---------------------------------------------------------------------------
-# Profile
+# Profile CRUD  (exact paths — no path params, so safe before /{user_id})
 # ---------------------------------------------------------------------------
 
 @router.get("", response_model=FullProfileResponse)
@@ -52,30 +52,6 @@ async def get_my_profile(
     data = await profile_service.get_profile(db, current_user.user_id, current_user.user_id)
     if not data:
         raise HTTPException(status_code=404, detail="Profile not found. Please create your profile.")
-    return data
-
-
-@router.get("/{user_id}", response_model=FullProfileResponse)
-async def get_user_profile(
-    user_id: UUID,
-    current_user: AuthenticatedUser = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    """View another user's profile. Applies privacy and block rules."""
-    data = await profile_service.get_profile(db, user_id, current_user.user_id)
-    if not data:
-        raise HTTPException(status_code=404, detail="Profile not found or not accessible")
-
-    # Log profile view
-    await db.execute(
-        text("""
-            INSERT INTO profile_views (viewer_id, viewed_id)
-            VALUES (:viewer, :viewed)
-            ON CONFLICT DO NOTHING
-        """),
-        {"viewer": current_user.user_id, "viewed": user_id},
-    )
-    await db.commit()
     return data
 
 
@@ -104,21 +80,50 @@ async def update_profile(
     return result
 
 
-@router.post("/complete-onboarding", status_code=status.HTTP_204_NO_CONTENT)
-async def complete_onboarding(
-    current_user: AuthenticatedUser = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    """Mark onboarding as completed for the current user."""
-    await db.execute(
-        text("UPDATE users SET onboarding_completed = TRUE WHERE id = :user_id"),
-        {"user_id": current_user.user_id},
+# ---------------------------------------------------------------------------
+# Shared upsert helper (used by sub-resource routes below)
+# ---------------------------------------------------------------------------
+
+_UPSERT_ALLOWED_TABLES = frozenset({
+    "current_locations", "native_places", "education",
+    "employment", "family_details", "lifestyle",
+})
+
+
+async def _upsert_location(db: AsyncSession, user_id: UUID, data: dict, table: str):
+    if table not in _UPSERT_ALLOWED_TABLES:
+        raise ValueError(f"Invalid table: {table}")
+    existing = await db.execute(
+        text(f"SELECT id FROM {table} WHERE user_id = :uid"), {"uid": user_id}
     )
+    if existing.fetchone():
+        sets = ", ".join(f"{k} = :{k}" for k in data if k != "user_id")
+        await db.execute(text(f"UPDATE {table} SET {sets}, updated_at = NOW() WHERE user_id = :user_id"), {"user_id": user_id, **data})
+    else:
+        cols = ", ".join(["user_id"] + list(data.keys()))
+        vals = ", ".join([":user_id"] + [f":{k}" for k in data])
+        await db.execute(text(f"INSERT INTO {table} ({cols}) VALUES ({vals})"), {"user_id": user_id, **data})
     await db.commit()
 
 
 # ---------------------------------------------------------------------------
-# Photos
+# Profile
+# ---------------------------------------------------------------------------
+
+@router.get("", response_model=FullProfileResponse)
+async def get_my_profile(
+    current_user: AuthenticatedUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get current user's full profile."""
+    data = await profile_service.get_profile(db, current_user.user_id, current_user.user_id)
+    if not data:
+        raise HTTPException(status_code=404, detail="Profile not found. Please create your profile.")
+    return data
+
+
+# ---------------------------------------------------------------------------
+# Photos  (must be defined BEFORE /{user_id} to avoid path-param shadowing)
 # ---------------------------------------------------------------------------
 
 @router.get("/photos", response_model=list[PhotoResponse])
@@ -205,7 +210,6 @@ async def set_primary_photo(
     db: AsyncSession = Depends(get_db),
 ):
     """Set a photo as the primary profile photo."""
-    # Check ownership
     result = await db.execute(
         text("SELECT id FROM photos WHERE id = :pid AND user_id = :uid AND deleted_at IS NULL"),
         {"pid": photo_id, "uid": current_user.user_id},
@@ -225,30 +229,8 @@ async def set_primary_photo(
 
 
 # ---------------------------------------------------------------------------
-# Location
+# Location  (also before /{user_id})
 # ---------------------------------------------------------------------------
-
-_UPSERT_ALLOWED_TABLES = frozenset({
-    "current_locations", "native_places", "education",
-    "employment", "family_details", "lifestyle",
-})
-
-
-async def _upsert_location(db: AsyncSession, user_id: UUID, data: dict, table: str):
-    if table not in _UPSERT_ALLOWED_TABLES:
-        raise ValueError(f"Invalid table: {table}")
-    existing = await db.execute(
-        text(f"SELECT id FROM {table} WHERE user_id = :uid"), {"uid": user_id}
-    )
-    if existing.fetchone():
-        sets = ", ".join(f"{k} = :{k}" for k in data if k != "user_id")
-        await db.execute(text(f"UPDATE {table} SET {sets}, updated_at = NOW() WHERE user_id = :user_id"), {"user_id": user_id, **data})
-    else:
-        cols = ", ".join(["user_id"] + list(data.keys()))
-        vals = ", ".join([":user_id"] + [f":{k}" for k in data])
-        await db.execute(text(f"INSERT INTO {table} ({cols}) VALUES ({vals})"), {"user_id": user_id, **data})
-    await db.commit()
-
 
 @router.get("/location", response_model=LocationResponse)
 async def get_location(
@@ -305,10 +287,6 @@ async def update_native_place(
     return body.model_dump()
 
 
-# ---------------------------------------------------------------------------
-# Education
-# ---------------------------------------------------------------------------
-
 @router.get("/education", response_model=EducationResponse)
 async def get_education(
     current_user: AuthenticatedUser = Depends(get_current_user),
@@ -341,10 +319,6 @@ async def update_education(
     return data
 
 
-# ---------------------------------------------------------------------------
-# Employment
-# ---------------------------------------------------------------------------
-
 @router.get("/employment", response_model=EmploymentResponse)
 async def get_employment(
     current_user: AuthenticatedUser = Depends(get_current_user),
@@ -372,10 +346,6 @@ async def update_employment(
     await db.commit()
     return data
 
-
-# ---------------------------------------------------------------------------
-# Family
-# ---------------------------------------------------------------------------
 
 @router.get("/family", response_model=FamilyDetailsResponse)
 async def get_family(
@@ -407,10 +377,6 @@ async def update_family(
     return data
 
 
-# ---------------------------------------------------------------------------
-# Lifestyle
-# ---------------------------------------------------------------------------
-
 @router.put("/lifestyle", response_model=LifestyleResponse)
 async def update_lifestyle(
     body: LifestyleRequest,
@@ -424,9 +390,44 @@ async def update_lifestyle(
     return data
 
 
+@router.post("/complete-onboarding", status_code=status.HTTP_204_NO_CONTENT)
+async def complete_onboarding(
+    current_user: AuthenticatedUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Mark onboarding as completed for the current user."""
+    await db.execute(
+        text("UPDATE users SET onboarding_completed = TRUE WHERE id = :user_id"),
+        {"user_id": current_user.user_id},
+    )
+    await db.commit()
+
+
 # ---------------------------------------------------------------------------
-# Partner Preferences
+# User profile by ID  (MUST be last — path param catches everything above)
 # ---------------------------------------------------------------------------
+
+@router.get("/{user_id}", response_model=FullProfileResponse)
+async def get_user_profile(
+    user_id: UUID,
+    current_user: AuthenticatedUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """View another user's profile. Applies privacy and block rules."""
+    data = await profile_service.get_profile(db, user_id, current_user.user_id)
+    if not data:
+        raise HTTPException(status_code=404, detail="Profile not found or not accessible")
+
+    await db.execute(
+        text("""
+            INSERT INTO profile_views (viewer_id, viewed_id)
+            VALUES (:viewer, :viewed)
+            ON CONFLICT DO NOTHING
+        """),
+        {"viewer": current_user.user_id, "viewed": user_id},
+    )
+    await db.commit()
+    return data
 
 @prefs_router.get("", response_model=PartnerPreferencesResponse)
 async def get_preferences(
