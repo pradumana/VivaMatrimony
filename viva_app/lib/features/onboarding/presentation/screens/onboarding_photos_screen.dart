@@ -1,8 +1,10 @@
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:dio/dio.dart';
 
 import '../../../../core/network/api_client.dart';
@@ -239,8 +241,28 @@ class _PhotoCell extends StatelessWidget {
         ClipRRect(
           borderRadius: BorderRadius.circular(AppRadius.lg),
           child: photo['local_path'] != null
-              ? Image.file(File(photo['local_path']), fit: BoxFit.cover, width: double.infinity, height: double.infinity)
-              : Image.network(photo['url'], fit: BoxFit.cover, width: double.infinity, height: double.infinity),
+              ? Image.file(
+                  File(photo['local_path'] as String),
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                )
+              : CachedNetworkImage(
+                  imageUrl: photo['url'] as String,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                  placeholder: (_, __) => Shimmer.fromColors(
+                    baseColor: Colors.grey.shade300,
+                    highlightColor: Colors.grey.shade100,
+                    child: Container(color: Colors.white),
+                  ),
+                  errorWidget: (_, __, ___) => Container(
+                    color: AppTheme.surfaceVariant,
+                    child: const Icon(Icons.broken_image_outlined,
+                        color: AppTheme.textTertiary, size: 28),
+                  ),
+                ),
         ),
         if (isPrimary)
           Positioned(

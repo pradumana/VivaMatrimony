@@ -87,10 +87,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           return AppRoutes.onboardingBasic;
         case AuthStatus.authenticated:
           if (isSplash || isOnAuthRoute) return AppRoutes.home;
-          // Allow authenticated users to access verification screens
-          if (isOnOnboardingRoute && !state.matchedLocation.startsWith('/verification')) {
-            return AppRoutes.home;
-          }
+          // Onboarding screens are also used in edit-mode (isEditing: true)
+          // by authenticated users — do not redirect them away.
           return null;
       }
     },
@@ -147,6 +145,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // Detail routes (no shell)
       GoRoute(path: AppRoutes.editProfile, builder: (_, __) => const EditProfileScreen()),
+      GoRoute(path: AppRoutes.biodata, builder: (_, __) => const BiodataScreen()),
       GoRoute(
         path: '/profile/:userId',
         builder: (context, state) {
