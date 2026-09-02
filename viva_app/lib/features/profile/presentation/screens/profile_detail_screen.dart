@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -148,9 +149,15 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
 
   @override
   Widget build(BuildContext context) {
-    final name = profile['full_name'] as String? ?? '';
-    final age = profile['age'] as int? ?? 0;
+    final name = (profile['full_name'] as String?)?.trim() ?? '';
+    final age = profile['age'] as int?;
     final isVerified = profile['is_verified'] as bool? ?? false;
+    // Build the display title — only append age when it's a real value
+    final nameAgeDisplay = (name.isEmpty
+        ? ''
+        : age != null && age > 0
+            ? '$name, $age'
+            : name);
 
     return Stack(
       children: [
@@ -223,11 +230,16 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
               flexibleSpace: FlexibleSpaceBar(
                 background: photoUrl != null
                     ? CachedNetworkImage(
-                        imageUrl: photoUrl!, fit: BoxFit.cover)
-                    : Container(
-                        color: AppTheme.primaryContainer,
-                        child: const Icon(Icons.person_outline,
-                            size: 80, color: AppTheme.primary)),
+                        imageUrl: photoUrl!,
+                        fit: BoxFit.cover,
+                        placeholder: (_, __) => Shimmer.fromColors(
+                          baseColor: Colors.grey.shade300,
+                          highlightColor: Colors.grey.shade100,
+                          child: Container(color: Colors.white),
+                        ),
+                        errorWidget: (_, __, ___) => _PhotoPlaceholder(name: name),
+                      )
+                    : _PhotoPlaceholder(name: name),
               ),
             ),
 
@@ -247,7 +259,9 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                '$name, $age',
+                                nameAgeDisplay,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                   fontSize: 26,
                                   fontWeight: FontWeight.w800,
@@ -348,7 +362,7 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                     title: 'Personal Details',
                     icon: Icons.info_outline_rounded,
                     child: _Grid([
-                      _Field('Age', '$age years'),
+                      if (age != null && age > 0) _Field('Age', '$age years'),
                       if (profile['height_display'] != null)
                         _Field('Height',
                             profile['height_display'] as String),
@@ -666,15 +680,21 @@ class _Grid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 16,
-      runSpacing: 14,
-      children: fields
-          .map((f) => SizedBox(
-              width: (MediaQuery.of(context).size.width - 96) / 2,
-              child: f))
-          .toList(),
-    );
+    // Use LayoutBuilder so the column width is always a positive fraction
+    // of the actual available space — never hard-coded pixel math that can
+    // go negative on small phones or when nested inside padding.
+    return LayoutBuilder(builder: (context, constraints) {
+      final colWidth = (constraints.maxWidth - 16) / 2;
+      return Wrap(
+        spacing: 16,
+        runSpacing: 14,
+        children: fields
+            .map((f) => SizedBox(
+                width: colWidth.clamp(80.0, double.infinity),
+                child: f))
+            .toList(),
+      );
+    });
   }
 }
 
@@ -707,6 +727,50 @@ class _Field extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ── Photo placeholder (no photo, or load failure) ────────────────────────────
+
+class _PhotoPlaceholder extends StatelessWidget {
+  final String name;
+  const _PhotoPlaceholder({this.name = ''});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(gradient: AppTheme.primaryGradient),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.2),
+              ),
+              child: const Icon(Icons.person_outline_rounded,
+                  size: 44, color: Colors.white70),
+            ),
+            if (name.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Text(
+                name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }
