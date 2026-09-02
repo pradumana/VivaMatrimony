@@ -41,34 +41,55 @@ class MainShellScreen extends StatelessWidget {
 class _VivaBottomNav extends StatelessWidget {
   final int selectedIndex;
   final void Function(int) onTap;
-  const _VivaBottomNav({required this.selectedIndex, required this.onTap});
+  const _VivaBottomNav(
+      {required this.selectedIndex, required this.onTap});
+
+  static const _items = [
+    _NavItem(
+        icon: Icons.home_outlined,
+        activeIcon: Icons.home_rounded,
+        label: 'Home'),
+    _NavItem(
+        icon: Icons.search_rounded,
+        activeIcon: Icons.search_rounded,
+        label: 'Search'),
+    _NavItem(
+        icon: Icons.favorite_border_rounded,
+        activeIcon: Icons.favorite_rounded,
+        label: 'Interests'),
+    _NavItem(
+        icon: Icons.people_outline_rounded,
+        activeIcon: Icons.people_rounded,
+        label: 'Connect'),
+    _NavItem(
+        icon: Icons.person_outline_rounded,
+        activeIcon: Icons.person_rounded,
+        label: 'Profile'),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, -4),
-          ),
-        ],
+        boxShadow: AppShadows.navBar,
       ),
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: 'Home', index: 0, selectedIndex: selectedIndex, onTap: onTap),
-              _NavItem(icon: Icons.search_rounded, activeIcon: Icons.search_rounded, label: 'Search', index: 1, selectedIndex: selectedIndex, onTap: onTap),
-              _NavItem(icon: Icons.favorite_border, activeIcon: Icons.favorite, label: 'Interests', index: 2, selectedIndex: selectedIndex, onTap: onTap),
-              _NavItem(icon: Icons.chat_bubble_outline, activeIcon: Icons.chat_bubble, label: 'Connections', index: 3, selectedIndex: selectedIndex, onTap: onTap),
-              _NavItem(icon: Icons.person_outline, activeIcon: Icons.person, label: 'Profile', index: 4, selectedIndex: selectedIndex, onTap: onTap),
-            ],
+            children: List.generate(
+              _items.length,
+              (i) => Expanded(
+                child: _NavTile(
+                  item: _items[i],
+                  isSelected: i == selectedIndex,
+                  onTap: () => onTap(i),
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -76,43 +97,66 @@ class _VivaBottomNav extends StatelessWidget {
   }
 }
 
-class _NavItem extends StatelessWidget {
+class _NavItem {
   final IconData icon;
   final IconData activeIcon;
   final String label;
-  final int index;
-  final int selectedIndex;
-  final void Function(int) onTap;
+  const _NavItem(
+      {required this.icon,
+      required this.activeIcon,
+      required this.label});
+}
 
-  const _NavItem({required this.icon, required this.activeIcon, required this.label, required this.index, required this.selectedIndex, required this.onTap});
+class _NavTile extends StatelessWidget {
+  final _NavItem item;
+  final bool isSelected;
+  final VoidCallback onTap;
 
-  bool get isSelected => index == selectedIndex;
+  const _NavTile(
+      {required this.item,
+      required this.isSelected,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => onTap(index),
+      onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primaryContainer : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppRadius.full),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(isSelected ? activeIcon : icon,
-                size: 22, color: isSelected ? AppTheme.primary : AppTheme.textTertiary),
-            const SizedBox(height: 2),
-            Text(label, style: TextStyle(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? AppTheme.primaryContainer
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(AppRadius.full),
+            ),
+            child: Icon(
+              isSelected ? item.activeIcon : item.icon,
+              size: 22,
+              color: isSelected
+                  ? AppTheme.primary
+                  : AppTheme.textTertiary,
+            ),
+          ),
+          const SizedBox(height: 2),
+          AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 200),
+            style: TextStyle(
               fontSize: 10,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-              color: isSelected ? AppTheme.primary : AppTheme.textTertiary,
-            )),
-          ],
-        ),
+              fontWeight:
+                  isSelected ? FontWeight.w700 : FontWeight.w400,
+              color:
+                  isSelected ? AppTheme.primary : AppTheme.textTertiary,
+              fontFamily: AppTheme.fontFamily,
+            ),
+            child: Text(item.label),
+          ),
+        ],
       ),
     );
   }

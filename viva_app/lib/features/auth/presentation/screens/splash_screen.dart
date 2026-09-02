@@ -17,16 +17,23 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   late AnimationController _controller;
   late Animation<double> _fadeAnim;
   late Animation<double> _scaleAnim;
+  late Animation<double> _taglineFade;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1200));
-    _fadeAnim =
-        CurvedAnimation(parent: _controller, curve: Curves.easeIn);
-    _scaleAnim = Tween<double>(begin: 0.85, end: 1.0).animate(
-        CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+        vsync: this, duration: const Duration(milliseconds: 1400));
+    _fadeAnim = CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOut));
+    _scaleAnim = Tween<double>(begin: 0.80, end: 1.0).animate(
+        CurvedAnimation(
+            parent: _controller,
+            curve: const Interval(0.0, 0.7, curve: Curves.easeOutBack)));
+    _taglineFade = CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.5, 1.0, curve: Curves.easeIn));
     _controller.forward();
   }
 
@@ -38,45 +45,169 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Auth state drives navigation via GoRouter redirect — just show splash
-    ref.listen(authProvider, (_, next) {
-      // Navigation is handled by router redirect
-    });
+    ref.listen(authProvider, (_, next) {});
 
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(gradient: AppTheme.primaryGradient),
-        child: SafeArea(
-          child: Center(
-            child: FadeTransition(
-              opacity: _fadeAnim,
-              child: ScaleTransition(
-                scale: _scaleAnim,
+        child: Stack(
+          children: [
+            // Subtle decorative circles
+            Positioned(
+              top: -60,
+              right: -60,
+              child: Container(
+                width: 220,
+                height: 220,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.05),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -80,
+              left: -80,
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.05),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 120,
+              right: -40,
+              child: Container(
+                width: 140,
+                height: 140,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.04),
+                ),
+              ),
+            ),
+
+            SafeArea(
+              child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Logo mark + wordmark + tagline
-                    const VivaLogo(
-                      size: 100,
-                      variant: VivaLogoVariant.white,
-                      showWordmark: true,
-                      showTagline: true,
-                    ),
-                    const SizedBox(height: 60),
-                    SizedBox(
-                      width: 28,
-                      height: 28,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        valueColor: AlwaysStoppedAnimation(
-                            Colors.white.withOpacity(0.7)),
+                    const Spacer(flex: 3),
+
+                    FadeTransition(
+                      opacity: _fadeAnim,
+                      child: ScaleTransition(
+                        scale: _scaleAnim,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Logo mark with soft glow ring
+                            Container(
+                              width: 112,
+                              height: 112,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white.withOpacity(0.15),
+                              ),
+                              child: Center(
+                                child: Container(
+                                  width: 92,
+                                  height: 92,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.white,
+                                  ),
+                                  child: ClipOval(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(14),
+                                      child: VivaLogo(
+                                        size: 64,
+                                        variant: VivaLogoVariant.gradient,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+
+                            // App name
+                            const Text(
+                              'Viva',
+                              style: TextStyle(
+                                fontSize: 40,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                                letterSpacing: 1.5,
+                              ),
+                            ),
+
+                            const SizedBox(height: 6),
+                            // Divider ornament
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                    width: 24,
+                                    height: 1,
+                                    color: Colors.white.withOpacity(0.5)),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                                  child: Icon(Icons.diamond_outlined,
+                                      size: 10,
+                                      color: Colors.white.withOpacity(0.7)),
+                                ),
+                                Container(
+                                    width: 24,
+                                    height: 1,
+                                    color: Colors.white.withOpacity(0.5)),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
+
+                    const SizedBox(height: 16),
+
+                    FadeTransition(
+                      opacity: _taglineFade,
+                      child: Text(
+                        'Find someone who feels like home.',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.white.withOpacity(0.85),
+                          letterSpacing: 0.3,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+
+                    const Spacer(flex: 3),
+
+                    // Loading indicator
+                    FadeTransition(
+                      opacity: _fadeAnim,
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation(
+                              Colors.white.withOpacity(0.6)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 48),
                   ],
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );

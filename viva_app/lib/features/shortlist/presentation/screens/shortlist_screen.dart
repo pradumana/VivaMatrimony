@@ -27,7 +27,8 @@ class _ShortlistItem {
     this.privateNotes,
   });
 
-  factory _ShortlistItem.fromJson(Map<String, dynamic> j) => _ShortlistItem(
+  factory _ShortlistItem.fromJson(Map<String, dynamic> j) =>
+      _ShortlistItem(
         userId: j['user_id'] as String,
         fullName: j['full_name'] as String,
         age: j['age'] as int?,
@@ -38,7 +39,8 @@ class _ShortlistItem {
       );
 }
 
-final _shortlistProvider = FutureProvider.autoDispose<List<_ShortlistItem>>((ref) async {
+final _shortlistProvider =
+    FutureProvider.autoDispose<List<_ShortlistItem>>((ref) async {
   final client = ref.read(apiClientProvider);
   final r = await client.get('/shortlist');
   return (r.data['shortlist'] as List)
@@ -53,6 +55,7 @@ class ShortlistScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(_shortlistProvider);
     return Scaffold(
+      backgroundColor: AppTheme.background,
       appBar: AppBar(title: const Text('Shortlisted')),
       body: async.when(
         loading: () => const LoadingView(),
@@ -62,125 +65,63 @@ class ShortlistScreen extends ConsumerWidget {
         ),
         data: (items) => items.isEmpty
             ? const EmptyStateView(
-                icon: Icons.bookmark_border,
+                icon: Icons.bookmark_border_rounded,
                 title: 'No profiles shortlisted',
-                subtitle: 'Tap the bookmark icon on any profile to save them here.',
+                subtitle:
+                    'Tap the bookmark icon on any profile to save them here.',
               )
             : ListView.builder(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 itemCount: items.length,
-                itemBuilder: (context, i) => _ShortlistTile(
+                itemBuilder: (context, i) => _ShortlistCard(
                   item: items[i],
                   onRemove: () async {
                     try {
-                      await ref.read(apiClientProvider).delete('/shortlist/${items[i].userId}');
+                      await ref
+                          .read(apiClientProvider)
+                          .delete('/shortlist/${items[i].userId}');
                       ref.invalidate(_shortlistProvider);
                     } catch (_) {}
                   },
+                  onEditNote: () => _editNote(context, ref, items[i]),
                 ),
               ),
       ),
     );
   }
-}
 
-class _ShortlistTile extends StatelessWidget {
-  final _ShortlistItem item;
-  final VoidCallback onRemove;
-  const _ShortlistTile({required this.item, required this.onRemove});
-
-  @override
-  Widget build(BuildContext context) {
-    return Dismissible(
-      key: Key(item.userId),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 24),
-        color: AppTheme.error,
-        child: const Icon(Icons.delete_outline, color: Colors.white, size: 28),
-      ),
-      onDismissed: (_) => onRemove(),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        leading: GestureDetector(
-          onTap: () => context.push('/profile/${item.userId}'),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            child: SizedBox(
-              width: 56,
-              height: 68,
-              child: item.photoUrl != null
-                  ? CachedNetworkImage(imageUrl: item.photoUrl!, fit: BoxFit.cover)
-                  : Container(
-                      color: AppTheme.primaryContainer,
-                      child: const Icon(Icons.person_outline, color: AppTheme.primary, size: 28),
-                    ),
-            ),
-          ),
-        ),
-        title: GestureDetector(
-          onTap: () => context.push('/profile/${item.userId}'),
-          child: Row(children: [
-            Text(
-              '${item.fullName}${item.age != null ? ', ${item.age}' : ''}',
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-            ),
-            const SizedBox(width: 6),
-            if (item.isVerified) const VerifiedBadge(small: true),
-          ]),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (item.location != null)
-              Text(item.location!, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
-            // Private notes — only visible to owner
-            if (item.privateNotes != null && item.privateNotes!.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Row(children: [
-                const Icon(Icons.lock_outline, size: 11, color: AppTheme.textTertiary),
-                const SizedBox(width: 4),
-                Expanded(child: Text(item.privateNotes!, style: const TextStyle(fontSize: 11, color: AppTheme.textTertiary, fontStyle: FontStyle.italic), overflow: TextOverflow.ellipsis)),
-              ]),
-            ],
-          ],
-        ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            GestureDetector(
-              onTap: () => context.push('/profile/${item.userId}'),
-              child: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppTheme.textTertiary),
-            ),
-            GestureDetector(
-              onTap: () => _editNote(context, item),
-              child: const Icon(Icons.edit_note, size: 18, color: AppTheme.textSecondary),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _editNote(BuildContext context, _ShortlistItem item) {
+  void _editNote(
+      BuildContext context, WidgetRef ref, _ShortlistItem item) {
     final ctrl = TextEditingController(text: item.privateNotes ?? '');
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Private Note', style: TextStyle(fontWeight: FontWeight.w600)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.xl)),
+        title: const Text('Private Note',
+            style: TextStyle(fontWeight: FontWeight.w700)),
         content: TextField(
           controller: ctrl,
           maxLines: 3,
           maxLength: 200,
-          decoration: const InputDecoration(hintText: 'e.g. Discuss with family, good match for values...'),
+          decoration: InputDecoration(
+            hintText:
+                'e.g. Discuss with family, good match for values…',
+            filled: true,
+            fillColor: AppTheme.surfaceVariant,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              borderSide: BorderSide.none,
+            ),
+          ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
-              // Save note via API
               try {
                 final container = ProviderScope.containerOf(context);
                 await container.read(apiClientProvider).post(
@@ -195,4 +136,189 @@ class _ShortlistTile extends StatelessWidget {
       ),
     );
   }
+}
+
+class _ShortlistCard extends StatelessWidget {
+  final _ShortlistItem item;
+  final VoidCallback onRemove;
+  final VoidCallback onEditNote;
+
+  const _ShortlistCard({
+    required this.item,
+    required this.onRemove,
+    required this.onEditNote,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Dismissible(
+      key: Key(item.userId),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 24),
+        decoration: BoxDecoration(
+          color: AppTheme.error,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.delete_outline_rounded,
+                color: Colors.white, size: 24),
+            SizedBox(height: 4),
+            Text('Remove',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600)),
+          ],
+        ),
+      ),
+      onDismissed: (_) => onRemove(),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          boxShadow: AppShadows.card,
+        ),
+        child: Row(
+          children: [
+            // Photo
+            GestureDetector(
+              onTap: () => context.push('/profile/${item.userId}'),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                child: SizedBox(
+                  width: 58,
+                  height: 70,
+                  child: item.photoUrl != null
+                      ? CachedNetworkImage(
+                          imageUrl: item.photoUrl!,
+                          fit: BoxFit.cover,
+                          errorWidget: (_, __, ___) => _placeholder(),
+                        )
+                      : _placeholder(),
+                ),
+              ),
+            ),
+            const SizedBox(width: 14),
+
+            // Info
+            Expanded(
+              child: GestureDetector(
+                onTap: () => context.push('/profile/${item.userId}'),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(children: [
+                      Expanded(
+                        child: Text(
+                          '${item.fullName}${item.age != null ? ', ${item.age}' : ''}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                      ),
+                      if (item.isVerified)
+                        const VerifiedBadge(small: true),
+                    ]),
+                    if (item.location != null) ...[
+                      const SizedBox(height: 3),
+                      Row(children: [
+                        const Icon(Icons.location_on_outlined,
+                            size: 12, color: AppTheme.textSecondary),
+                        const SizedBox(width: 3),
+                        Text(item.location!,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.textSecondary,
+                            )),
+                      ]),
+                    ],
+                    // Private note
+                    if (item.privateNotes != null &&
+                        item.privateNotes!.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: AppTheme.secondaryContainer,
+                          borderRadius:
+                              BorderRadius.circular(AppRadius.sm),
+                        ),
+                        child: Row(children: [
+                          const Icon(Icons.lock_outline_rounded,
+                              size: 11,
+                              color: AppTheme.textSecondary),
+                          const SizedBox(width: 5),
+                          Expanded(
+                            child: Text(
+                              item.privateNotes!,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppTheme.textSecondary,
+                                fontStyle: FontStyle.italic,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ]),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+
+            // Actions
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                GestureDetector(
+                  onTap: () => context.push('/profile/${item.userId}'),
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryContainer,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.arrow_forward_ios_rounded,
+                        size: 13, color: AppTheme.primary),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: onEditNote,
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: AppTheme.surfaceVariant,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.edit_note_rounded,
+                        size: 16, color: AppTheme.textSecondary),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _placeholder() => Container(
+        color: AppTheme.primaryContainer,
+        child: const Icon(Icons.person_outline,
+            color: AppTheme.primary, size: 28),
+      );
 }

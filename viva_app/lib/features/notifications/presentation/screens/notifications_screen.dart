@@ -12,9 +12,11 @@ import '../../../../shared/widgets/error_view.dart';
 final _notificationsProvider =
     FutureProvider.autoDispose<List<NotificationModel>>((ref) async {
   final client = ref.read(apiClientProvider);
-  final r = await client.get('/notifications', queryParameters: {'limit': 50});
+  final r = await client
+      .get('/notifications', queryParameters: {'limit': 50});
   return (r.data['notifications'] as List)
-      .map((e) => NotificationModel.fromJson(e as Map<String, dynamic>))
+      .map((e) =>
+          NotificationModel.fromJson(e as Map<String, dynamic>))
       .toList();
 });
 
@@ -26,18 +28,17 @@ class NotificationsScreen extends ConsumerWidget {
     final async = ref.watch(_notificationsProvider);
 
     return Scaffold(
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: const Text('Notifications'),
         actions: [
           TextButton(
-            onPressed: () async {
-              // Mark all as read
-              try {
-                // We'd call a bulk-read endpoint; for now invalidate to refresh
-                ref.invalidate(_notificationsProvider);
-              } catch (_) {}
+            onPressed: () {
+              ref.invalidate(_notificationsProvider);
             },
-            child: const Text('Mark all read', style: TextStyle(fontSize: 12, color: AppTheme.primary)),
+            child: const Text('Mark all read',
+                style: TextStyle(
+                    fontSize: 12, color: AppTheme.primary)),
           ),
         ],
       ),
@@ -51,104 +52,164 @@ class NotificationsScreen extends ConsumerWidget {
             ? const EmptyStateView(
                 icon: Icons.notifications_none_outlined,
                 title: 'No notifications yet',
-                subtitle: 'Interest received, messages and profile updates will appear here.',
+                subtitle:
+                    'Interests, matches and profile updates will appear here.',
               )
-            : ListView.separated(
+            : ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 itemCount: items.length,
-                separatorBuilder: (_, __) => const Divider(height: 1, indent: 72),
-                itemBuilder: (context, i) => _NotificationTile(
+                itemBuilder: (context, i) => _NotificationCard(
                   item: items[i],
-                  onTap: () => _handleTap(context, ref, items[i]),
+                  onTap: () =>
+                      _handleTap(context, ref, items[i]),
                 ),
               ),
       ),
     );
   }
 
-  void _handleTap(BuildContext context, WidgetRef ref, NotificationModel n) async {
-    // Mark as read
+  void _handleTap(
+      BuildContext context, WidgetRef ref, NotificationModel n) async {
     if (!n.isRead) {
       try {
-        await ref.read(apiClientProvider).put('/notifications/${n.id}/read');
+        await ref
+            .read(apiClientProvider)
+            .put('/notifications/${n.id}/read');
         ref.invalidate(_notificationsProvider);
       } catch (_) {}
     }
-
-    // Navigate to relevant screen
     if (n.entityType == 'interest' && n.entityId != null) {
       context.go(AppRoutes.interests);
-    } else if (n.entityType == 'interest' && n.type == 'interest_accepted') {
-      // Go to connections tab so they can open WhatsApp
+    } else if (n.type == 'interest_accepted') {
       context.go(AppRoutes.connections);
-    } else if (n.type == 'certificate_approved' || n.type == 'certificate_rejected') {
-      context.push(AppRoutes.verificationStatus);
-    } else if (n.type == 'verification_approved') {
+    } else if (n.type == 'certificate_approved' ||
+        n.type == 'certificate_rejected' ||
+        n.type == 'verification_approved') {
       context.push(AppRoutes.verificationStatus);
     }
   }
 }
 
-class _NotificationTile extends StatelessWidget {
+class _NotificationCard extends StatelessWidget {
   final NotificationModel item;
   final VoidCallback onTap;
-  const _NotificationTile({required this.item, required this.onTap});
+  const _NotificationCard({required this.item, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+    final color = _iconColor(item.type);
+    return GestureDetector(
       onTap: onTap,
-      leading: Container(
-        width: 44, height: 44,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: _iconColor(item.type).withOpacity(0.12),
-          shape: BoxShape.circle,
+          color: item.isRead ? Colors.white : AppTheme.primaryContainer.withOpacity(0.6),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          boxShadow: AppShadows.card,
+          border: item.isRead
+              ? null
+              : Border.all(
+                  color: AppTheme.primary.withOpacity(0.15), width: 1),
         ),
-        child: Icon(_iconData(item.type), size: 22, color: _iconColor(item.type)),
-      ),
-      title: Text(
-        item.title,
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: item.isRead ? FontWeight.w400 : FontWeight.w600,
-          color: AppTheme.textPrimary,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Icon
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(_iconData(item.type), size: 22, color: color),
+            ),
+            const SizedBox(width: 12),
+
+            // Content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          item.title,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: item.isRead
+                                ? FontWeight.w500
+                                : FontWeight.w700,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                      ),
+                      if (!item.isRead)
+                        Container(
+                          width: 8,
+                          height: 8,
+                          margin: const EdgeInsets.only(top: 3, left: 6),
+                          decoration: const BoxDecoration(
+                            color: AppTheme.primary,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    item.body,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.textSecondary,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    _timeAgo(item.createdAt),
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: AppTheme.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(item.body, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, height: 1.4)),
-          const SizedBox(height: 2),
-          Text(_timeAgo(item.createdAt), style: const TextStyle(fontSize: 10, color: AppTheme.textTertiary)),
-        ],
-      ),
-      trailing: !item.isRead
-          ? Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppTheme.primary, shape: BoxShape.circle))
-          : null,
     );
   }
 
-  IconData _iconData(String type) {
-    return switch (type) {
-      'interest_received' => Icons.favorite,
-      'interest_accepted' => Icons.chat,   // Opens to WhatsApp connections
-      'new_message' => Icons.chat_bubble,
-      'match_found' => Icons.people,
-      'certificate_approved' || 'verification_approved' => Icons.verified,
-      'certificate_rejected' || 'verification_rejected' => Icons.cancel,
-      _ => Icons.notifications,
-    };
-  }
+  IconData _iconData(String type) => switch (type) {
+        'interest_received' => Icons.favorite_rounded,
+        'interest_accepted' => Icons.people_rounded,
+        'new_message' => Icons.chat_bubble_rounded,
+        'match_found' => Icons.auto_awesome_rounded,
+        'certificate_approved' ||
+        'verification_approved' =>
+          Icons.verified_rounded,
+        'certificate_rejected' ||
+        'verification_rejected' =>
+          Icons.cancel_rounded,
+        _ => Icons.notifications_rounded,
+      };
 
-  Color _iconColor(String type) {
-    return switch (type) {
-      'interest_received' || 'interest_accepted' => AppTheme.primary,
-      'match_found' => AppTheme.secondary,
-      'certificate_approved' || 'verification_approved' => AppTheme.success,
-      'certificate_rejected' || 'verification_rejected' => AppTheme.error,
-      _ => AppTheme.secondary,
-    };
-  }
+  Color _iconColor(String type) => switch (type) {
+        'interest_received' || 'interest_accepted' => AppTheme.primary,
+        'match_found' => AppTheme.secondary,
+        'certificate_approved' ||
+        'verification_approved' =>
+          AppTheme.success,
+        'certificate_rejected' ||
+        'verification_rejected' =>
+          AppTheme.error,
+        _ => AppTheme.secondary,
+      };
 
   String _timeAgo(DateTime dt) {
     final diff = DateTime.now().difference(dt);

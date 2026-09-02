@@ -365,7 +365,9 @@ class AppSpacing {
   static const double xl = 32;
   static const double xxl = 48;
   /// Horizontal screen edge padding used across auth + onboarding screens.
-  static const double pagePadding = 28;
+  static const double pagePadding = 24;
+  /// Standard screen horizontal padding for main content.
+  static const double screenPadding = 20;
 }
 
 /// App-specific radius constants.
@@ -377,4 +379,50 @@ class AppRadius {
   static const double xl = 20;
   static const double xxl = 28;
   static const double full = 100;
+}
+
+/// Reusable box shadows to keep elevation consistent.
+class AppShadows {
+  AppShadows._();
+
+  /// Subtle card shadow — used on profile cards, section panels.
+  static const List<BoxShadow> card = [
+    BoxShadow(
+      color: Color(0x0D000000),
+      blurRadius: 12,
+      offset: Offset(0, 2),
+    ),
+    BoxShadow(
+      color: Color(0x08000000),
+      blurRadius: 4,
+      offset: Offset(0, 1),
+    ),
+  ];
+
+  /// Stronger shadow — hero photo cards, CTAs.
+  static const List<BoxShadow> lifted = [
+    BoxShadow(
+      color: Color(0x1A000000),
+      blurRadius: 24,
+      offset: Offset(0, 6),
+    ),
+  ];
+
+  /// Navigation bar shadow.
+  static const List<BoxShadow> navBar = [
+    BoxShadow(
+      color: Color(0x14000000),
+      blurRadius: 20,
+      offset: Offset(0, -4),
+    ),
+  ];
+
+  /// Primary-tinted shadow for active elements.
+  static List<BoxShadow> primary = [
+    BoxShadow(
+      color: AppTheme.primary.withOpacity(0.20),
+      blurRadius: 16,
+      offset: const Offset(0, 4),
+    ),
+  ];
 }

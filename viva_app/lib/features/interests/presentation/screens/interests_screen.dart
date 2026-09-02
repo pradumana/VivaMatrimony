@@ -12,16 +12,22 @@ import '../../../../shared/models/user_model.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../../../../shared/widgets/viva_button.dart';
 
-final _sentInterestsProvider = FutureProvider.autoDispose<List<InterestModel>>((ref) async {
+final _sentInterestsProvider =
+    FutureProvider.autoDispose<List<InterestModel>>((ref) async {
   final client = ref.read(apiClientProvider);
   final r = await client.get('/interests/sent');
-  return (r.data['interests'] as List).map((e) => InterestModel.fromJson(e as Map<String, dynamic>)).toList();
+  return (r.data['interests'] as List)
+      .map((e) => InterestModel.fromJson(e as Map<String, dynamic>))
+      .toList();
 });
 
-final _receivedInterestsProvider = FutureProvider.autoDispose<List<InterestModel>>((ref) async {
+final _receivedInterestsProvider =
+    FutureProvider.autoDispose<List<InterestModel>>((ref) async {
   final client = ref.read(apiClientProvider);
   final r = await client.get('/interests/received');
-  return (r.data['interests'] as List).map((e) => InterestModel.fromJson(e as Map<String, dynamic>)).toList();
+  return (r.data['interests'] as List)
+      .map((e) => InterestModel.fromJson(e as Map<String, dynamic>))
+      .toList();
 });
 
 class InterestsScreen extends ConsumerStatefulWidget {
@@ -30,7 +36,8 @@ class InterestsScreen extends ConsumerStatefulWidget {
   ConsumerState<InterestsScreen> createState() => _State();
 }
 
-class _State extends ConsumerState<InterestsScreen> with SingleTickerProviderStateMixin {
+class _State extends ConsumerState<InterestsScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -40,27 +47,55 @@ class _State extends ConsumerState<InterestsScreen> with SingleTickerProviderSta
   }
 
   @override
-  void dispose() { _tabController.dispose(); super.dispose(); }
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: const Text('Interests'),
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: AppTheme.primary,
-          unselectedLabelColor: AppTheme.textSecondary,
-          indicatorColor: AppTheme.primary,
-          labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-          tabs: const [Tab(text: 'Received'), Tab(text: 'Sent')],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceVariant,
+              borderRadius: BorderRadius.circular(AppRadius.full),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              indicator: BoxDecoration(
+                gradient: AppTheme.primaryGradient,
+                borderRadius: BorderRadius.circular(AppRadius.full),
+              ),
+              indicatorSize: TabBarIndicatorSize.tab,
+              dividerColor: Colors.transparent,
+              labelColor: Colors.white,
+              unselectedLabelColor: AppTheme.textSecondary,
+              labelStyle: const TextStyle(
+                  fontSize: 13, fontWeight: FontWeight.w700),
+              unselectedLabelStyle: const TextStyle(
+                  fontSize: 13, fontWeight: FontWeight.w500),
+              tabs: const [
+                Tab(text: 'Received'),
+                Tab(text: 'Sent'),
+              ],
+            ),
+          ),
         ),
       ),
       body: TabBarView(
         controller: _tabController,
         children: [
-          _InterestList(provider: _receivedInterestsProvider, isReceived: true),
-          _InterestList(provider: _sentInterestsProvider, isReceived: false),
+          _InterestList(
+              provider: _receivedInterestsProvider, isReceived: true),
+          _InterestList(
+              provider: _sentInterestsProvider, isReceived: false),
         ],
       ),
     );
@@ -70,91 +105,157 @@ class _State extends ConsumerState<InterestsScreen> with SingleTickerProviderSta
 class _InterestList extends ConsumerWidget {
   final ProviderBase<AsyncValue<List<InterestModel>>> provider;
   final bool isReceived;
-  const _InterestList({required this.provider, required this.isReceived});
+  const _InterestList(
+      {required this.provider, required this.isReceived});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(provider);
     return async.when(
       loading: () => const LoadingView(),
-      error: (e, _) => ErrorView(message: e.toString(), onRetry: () => ref.invalidate(provider)),
+      error: (e, _) => ErrorView(
+          message: e.toString(),
+          onRetry: () => ref.invalidate(provider)),
       data: (items) => items.isEmpty
           ? EmptyStateView(
-              icon: Icons.favorite_border,
-              title: isReceived ? 'No interests received yet' : 'No interests sent yet',
+              icon: Icons.favorite_border_rounded,
+              title: isReceived
+                  ? 'No interests received yet'
+                  : 'No interests sent yet',
               subtitle: isReceived
                   ? 'Complete your profile so others can find you.'
                   : 'Browse matches and send interests to connect.',
-              actionLabel: isReceived ? 'Edit Profile' : 'Browse Matches',
-              onAction: () => context.go(isReceived ? AppRoutes.myProfile : AppRoutes.home),
+              actionLabel:
+                  isReceived ? 'Edit Profile' : 'Browse Matches',
+              onAction: () => context
+                  .go(isReceived ? AppRoutes.myProfile : AppRoutes.home),
             )
           : ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 8),
               itemCount: items.length,
-              itemBuilder: (context, i) => _InterestTile(item: items[i], isReceived: isReceived),
+              itemBuilder: (context, i) =>
+                  _InterestCard(item: items[i], isReceived: isReceived),
             ),
     );
   }
 }
 
-class _InterestTile extends ConsumerWidget {
+class _InterestCard extends ConsumerWidget {
   final InterestModel item;
   final bool isReceived;
-  const _InterestTile({required this.item, required this.isReceived});
+  const _InterestCard(
+      {required this.item, required this.isReceived});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      leading: GestureDetector(
-        onTap: () => context.push('/profile/${item.userId}'),
-        child: CircleAvatar(
-          radius: 28,
-          backgroundColor: AppTheme.surfaceVariant,
-          backgroundImage: item.photoUrl != null ? CachedNetworkImageProvider(item.photoUrl!) : null,
-          child: item.photoUrl == null ? const Icon(Icons.person_outline, color: AppTheme.textTertiary) : null,
-        ),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        boxShadow: AppShadows.card,
       ),
-      title: GestureDetector(
-        onTap: () => context.push('/profile/${item.userId}'),
-        child: Text(item.fullName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-      ),
-      subtitle: Text(
-        '${item.age != null ? "${item.age} yrs • " : ""}${item.location ?? ""}',
-        style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-      ),
-      trailing: isReceived && item.status == 'sent'
-          ? Row(
-              mainAxisSize: MainAxisSize.min,
+      child: Row(
+        children: [
+          // Photo
+          GestureDetector(
+            onTap: () => context.push('/profile/${item.userId}'),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              child: SizedBox(
+                width: 60,
+                height: 72,
+                child: item.photoUrl != null
+                    ? CachedNetworkImage(
+                        imageUrl: item.photoUrl!,
+                        fit: BoxFit.cover,
+                        errorWidget: (_, __, ___) => _placeholder(),
+                      )
+                    : _placeholder(),
+              ),
+            ),
+          ),
+          const SizedBox(width: 14),
+
+          // Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _ActionBtn(label: 'Accept', color: AppTheme.success,
-                  onTap: () => _accept(context, ref, item.interestId)),
-                const SizedBox(width: 8),
-                _ActionBtn(label: 'Decline', color: AppTheme.error,
-                  onTap: () => _decline(context, ref, item.interestId)),
+                GestureDetector(
+                  onTap: () =>
+                      context.push('/profile/${item.userId}'),
+                  child: Text(
+                    item.fullName,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  [
+                    if (item.age != null) '${item.age} yrs',
+                    if (item.location != null) item.location!,
+                  ].join(' · '),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                // Actions or status
+                isReceived && item.status == 'sent'
+                    ? Row(
+                        children: [
+                          _ActionBtn(
+                            label: 'Accept',
+                            color: AppTheme.success,
+                            onTap: () => _accept(
+                                context, ref, item.interestId),
+                          ),
+                          const SizedBox(width: 8),
+                          _ActionBtn(
+                            label: 'Decline',
+                            color: AppTheme.error,
+                            onTap: () => _decline(
+                                context, ref, item.interestId),
+                          ),
+                        ],
+                      )
+                    : _StatusBadge(status: item.status),
               ],
-            )
-          : _StatusChip(status: item.status),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Future<void> _accept(BuildContext ctx, WidgetRef ref, String id) async {
+  Widget _placeholder() => Container(
+        color: AppTheme.primaryContainer,
+        child: const Icon(Icons.person_outline,
+            color: AppTheme.primary, size: 28),
+      );
+
+  Future<void> _accept(
+      BuildContext ctx, WidgetRef ref, String id) async {
     try {
       final client = ref.read(apiClientProvider);
-      // Accept the interest — backend now returns whatsapp_url
       final r = await client.post('/interests/$id/accept');
       final data = r.data as Map<String, dynamic>;
       final waUrl = data['whatsapp_url'] as String?;
-
       ref.invalidate(_receivedInterestsProvider);
-
       if (!ctx.mounted) return;
-
-      // Show success bottom sheet with WhatsApp CTA
       showModalBottomSheet(
         context: ctx,
         isDismissible: true,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius:
+              BorderRadius.vertical(top: Radius.circular(20)),
         ),
         builder: (_) => _AcceptedSheet(
           waUrl: waUrl,
@@ -176,12 +277,14 @@ class _InterestTile extends ConsumerWidget {
         ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
           content: Text(ApiException.fromDioError(e).message),
           backgroundColor: AppTheme.error,
+          behavior: SnackBarBehavior.floating,
         ));
       }
     }
   }
 
-  Future<void> _decline(BuildContext ctx, WidgetRef ref, String id) async {
+  Future<void> _decline(
+      BuildContext ctx, WidgetRef ref, String id) async {
     try {
       final client = ref.read(apiClientProvider);
       await client.post('/interests/$id/decline');
@@ -194,62 +297,89 @@ class _ActionBtn extends StatelessWidget {
   final String label;
   final Color color;
   final VoidCallback onTap;
-  const _ActionBtn({required this.label, required this.color, required this.onTap});
+  const _ActionBtn(
+      {required this.label, required this.color, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(AppRadius.full), border: Border.all(color: color.withOpacity(0.4))),
-        child: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color)),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(AppRadius.full),
+          border: Border.all(color: color.withOpacity(0.35)),
+        ),
+        child: Text(label,
+            style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: color)),
       ),
     );
   }
 }
 
-class _StatusChip extends StatelessWidget {
+class _StatusBadge extends StatelessWidget {
   final String status;
-  const _StatusChip({required this.status});
+  const _StatusBadge({required this.status});
 
   @override
   Widget build(BuildContext context) {
-    final colors = {
-      'sent': AppTheme.warning, 'accepted': AppTheme.success,
-      'declined': AppTheme.error, 'withdrawn': AppTheme.textSecondary,
+    final (color, icon, label) = switch (status) {
+      'accepted' => (AppTheme.success, Icons.check_circle_rounded, 'Accepted'),
+      'declined' => (AppTheme.error, Icons.cancel_rounded, 'Declined'),
+      'withdrawn' =>
+        (AppTheme.textSecondary, Icons.remove_circle_outline, 'Withdrawn'),
+      _ => (AppTheme.warning, Icons.schedule_rounded, 'Pending'),
     };
-    final color = colors[status] ?? AppTheme.textSecondary;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(AppRadius.full)),
-      child: Text(status.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color)),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(AppRadius.full),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
-// ── Accepted bottom sheet ────────────────────────────────────────────────────
+// ── Accepted bottom sheet ─────────────────────────────────────────────────────
 
 class _AcceptedSheet extends StatelessWidget {
   final String? waUrl;
   final String name;
   final VoidCallback? onOpenWhatsApp;
 
-  const _AcceptedSheet({
-    required this.waUrl,
-    required this.name,
-    this.onOpenWhatsApp,
-  });
+  const _AcceptedSheet(
+      {required this.waUrl,
+      required this.name,
+      this.onOpenWhatsApp});
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Handle
             Container(
               width: 40,
               height: 4,
@@ -259,26 +389,22 @@ class _AcceptedSheet extends StatelessWidget {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            // Celebration icon
             Container(
-              width: 72,
-              height: 72,
+              width: 76,
+              height: 76,
               decoration: const BoxDecoration(
                 color: AppTheme.successSurface,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.check_circle_outline,
-                size: 40,
-                color: AppTheme.success,
-              ),
+              child: const Icon(Icons.check_circle_outline_rounded,
+                  size: 42, color: AppTheme.success),
             ),
             const SizedBox(height: 16),
-            Text(
+            const Text(
               'You\'re connected! 🎉',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w800,
                 color: AppTheme.textPrimary,
               ),
             ),
@@ -294,7 +420,6 @@ class _AcceptedSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            // WhatsApp CTA
             SizedBox(
               width: double.infinity,
               height: 52,
@@ -303,31 +428,23 @@ class _AcceptedSheet extends StatelessWidget {
                   backgroundColor: AppTheme.whatsAppGreen,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.lg),
-                  ),
+                      borderRadius:
+                          BorderRadius.circular(AppRadius.lg)),
                   elevation: 0,
                 ),
-                icon: const Icon(Icons.chat, size: 20),
-                label: Text(
-                  'Chat on WhatsApp',
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                icon: const Icon(Icons.chat_rounded, size: 20),
+                label: const Text('Chat on WhatsApp',
+                    style: TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w700)),
                 onPressed: onOpenWhatsApp,
               ),
             ),
             const SizedBox(height: 10),
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'Later — view in Connections',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: AppTheme.textSecondary,
-                ),
-              ),
+              child: const Text('Later — view in Connections',
+                  style: TextStyle(
+                      fontSize: 13, color: AppTheme.textSecondary)),
             ),
           ],
         ),
