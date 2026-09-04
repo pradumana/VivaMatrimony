@@ -137,7 +137,7 @@ async def list_photos(
             SELECT id, storage_path, thumbnail_path, file_size_bytes, is_primary,
                    display_order, created_at
             FROM photos
-            WHERE user_id = :uid AND deleted_at IS NULL
+            WHERE user_id = :uid AND deleted_at IS NULL AND is_approved = TRUE
             ORDER BY display_order ASC
         """),
         {"uid": current_user.user_id},
@@ -172,10 +172,28 @@ async def upload_photo(
     if not photo.content_type or photo.content_type not in profile_service.ALLOWED_PHOTO_MIMES:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Unsupported file type. Allowed: JPEG, PNG, WebP",
+            detail="Unsupported file type. Allowed: JPEG, PNG, WebP",
+        )
+
+    # Reject oversized uploads before reading the full body.
+    # Content-Length is optional (chunked uploads won't have it), so this is
+    # a fast-path only — the service re-checks after read.
+    max_bytes = settings.max_photo_size_bytes
+    declared_size = photo.size  # populated by Starlette from Content-Length
+    if declared_size is not None and declared_size > max_bytes:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"File too large. Maximum {settings.max_photo_size_mb}MB allowed.",
         )
 
     file_bytes = await photo.read()
+
+    # Double-check actual size after read (covers chunked/missing Content-Length).
+    if len(file_bytes) > max_bytes:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"File too large. Maximum {settings.max_photo_size_mb}MB allowed.",
+        )
     try:
         result = await profile_service.upload_photo(
             db=db,
@@ -211,7 +229,7 @@ async def set_primary_photo(
 ):
     """Set a photo as the primary profile photo."""
     result = await db.execute(
-        text("SELECT id FROM photos WHERE id = :pid AND user_id = :uid AND deleted_at IS NULL"),
+        text("SELECT id FROM photos WHERE id = :pid AND user_id = :uid AND deleted_at IS NULL AND is_approved = TRUE"),
         {"pid": photo_id, "uid": current_user.user_id},
     )
     if not result.fetchone():

@@ -90,6 +90,17 @@ class _State extends ConsumerState<OnboardingPhotosScreen> {
     );
     if (picked == null) return;
 
+    // Client-side size guard — mirrors the 10 MB backend limit.
+    // Catches the error before a slow upload, with a clear message.
+    final fileSize = await picked.length();
+    const maxBytes = AppConstants.maxPhotoSizeMB * 1024 * 1024;
+    if (fileSize > maxBytes) {
+      setState(() => _error =
+          'Photo is too large (${(fileSize / (1024 * 1024)).toStringAsFixed(1)} MB). '
+          'Maximum size is ${AppConstants.maxPhotoSizeMB} MB.');
+      return;
+    }
+
     setState(() {
       _uploading = true;
       _error = null;
@@ -179,11 +190,13 @@ class _State extends ConsumerState<OnboardingPhotosScreen> {
           _deletingIds.remove(photoId);
         });
       }
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         setState(() {
           _deletingIds.remove(photoId);
-          _error = 'Could not delete photo. Please try again.';
+          _error = e is DioException
+              ? ApiException.fromDioError(e).message
+              : 'Could not delete photo. Please try again.';
         });
       }
     }
