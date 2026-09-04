@@ -79,3 +79,11 @@ logs/
 
 # ── Kiro artifacts ───────────────────────────────────────────────────────────
 .artifacts/
+
+# ── Kiro IDE local config ─────────────────────────────────────────────────────
+.kiro/
+
+# ── React admin panel ─────────────────────────────────────────────────────────
+viva-admin/node_modules/
+viva-admin/dist/
+viva-admin/.env
