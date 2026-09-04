@@ -551,3 +551,306 @@ async def get_audit_logs(
     )
     rows = result.fetchall()
     return {"logs": [r._asdict() for r in rows]}
+
+
+# ---------------------------------------------------------------------------
+# References management
+# ---------------------------------------------------------------------------
+
+@router.get("/references")
+async def list_references(
+    status: Optional[str] = Query(None),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """List member reference requests with optional status filter."""
+    admin.require("verify")
+
+    conditions = []
+    params: dict = {"limit": page_size, "offset": (page - 1) * page_size}
+
+    if status:
+        conditions.append("rm.status = :status")
+        params["status"] = status
+
+    where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+
+    result = await db.execute(
+        text(f"""
+            SELECT
+                rm.id,
+                rm.user_id,
+                rm.reference_user_id,
+                rm.status,
+                rm.created_at,
+                rm.confirmed_at,
+                rm.rejected_at,
+                pu.full_name  AS user_name,
+                pr.full_name  AS reference_name
+            FROM reference_members rm
+            LEFT JOIN profiles pu ON pu.user_id = rm.user_id
+            LEFT JOIN profiles pr ON pr.user_id = rm.reference_user_id
+            {where}
+            ORDER BY rm.created_at DESC
+            LIMIT :limit OFFSET :offset
+        """),
+        params,
+    )
+    rows = result.fetchall()
+
+    return {
+        "references": [
+            {
+                "id": str(r.id),
+                "user_id": str(r.user_id),
+                "reference_user_id": str(r.reference_user_id),
+                "status": r.status,
+                "created_at": r.created_at,
+                "confirmed_at": r.confirmed_at,
+                "rejected_at": r.rejected_at,
+                "user_name": r.user_name,
+                "reference_name": r.reference_name,
+            }
+            for r in rows
+        ]
+    }
+
+
+# ---------------------------------------------------------------------------
+# Reports — dismiss action (resolve already exists above)
+# ---------------------------------------------------------------------------
+
+class DismissReportRequest(BaseModel):
+    resolution_note: str
+
+
+@router.post("/reports/{report_id}/dismiss")
+async def dismiss_report(
+    report_id: UUID,
+    body: DismissReportRequest,
+    admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    admin.require("moderate")
+
+    result = await db.execute(
+        text("SELECT id, status FROM reports WHERE id = :rid"),
+        {"rid": report_id},
+    )
+    row = result.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Report not found")
+    if row.status in ("resolved", "dismissed"):
+        raise HTTPException(status_code=409, detail="Report has already been processed")
+
+    await db.execute(
+        text("""
+            UPDATE reports
+            SET status = 'dismissed',
+                reviewed_by = :admin_id,
+                reviewed_at = NOW(),
+                resolution_note = :note
+            WHERE id = :rid
+        """),
+        {"rid": report_id, "admin_id": admin.admin_id, "note": body.resolution_note},
+    )
+    await db.commit()
+    await log_action(db, "admin", admin.admin_id, "dismiss_report", "report", report_id)
+    return {"success": True}
+
+
+# ---------------------------------------------------------------------------
+# Admin user management  (super_admin only)
+# ---------------------------------------------------------------------------
+
+class CreateAdminRequest(BaseModel):
+    full_name: str
+    email: str
+    role: str
+    password: str
+
+
+class PatchAdminRequest(BaseModel):
+    is_active: bool
+
+
+@router.get("/admins")
+async def list_admins(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """List all admin accounts. Super Admin only."""
+    admin.require("*")  # Only super_admin has '*'
+
+    result = await db.execute(
+        text("""
+            SELECT id, email, full_name, role, is_active, created_at, last_login_at
+            FROM admin_users
+            ORDER BY created_at DESC
+            LIMIT :limit OFFSET :offset
+        """),
+        {"limit": page_size, "offset": (page - 1) * page_size},
+    )
+    rows = result.fetchall()
+
+    count_result = await db.execute(text("SELECT COUNT(*) AS total FROM admin_users"))
+    total = count_result.fetchone().total
+
+    return {
+        "admins": [
+            {
+                "id": str(r.id),
+                "email": r.email,
+                "full_name": r.full_name,
+                "role": r.role,
+                "is_active": r.is_active,
+                "created_at": r.created_at,
+                "last_login_at": r.last_login_at,
+            }
+            for r in rows
+        ],
+        "total": total,
+    }
+
+
+@router.post("/admins", status_code=status.HTTP_201_CREATED)
+async def create_admin(
+    body: CreateAdminRequest,
+    admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Create a new admin account. Super Admin only."""
+    admin.require("*")
+
+    valid_roles = {"super_admin", "admin", "moderator", "support"}
+    if body.role not in valid_roles:
+        raise HTTPException(status_code=422, detail=f"Role must be one of: {valid_roles}")
+
+    # Check email uniqueness
+    existing = await db.execute(
+        text("SELECT id FROM admin_users WHERE email = :email"),
+        {"email": body.email.lower().strip()},
+    )
+    if existing.fetchone():
+        raise HTTPException(status_code=409, detail="An admin with this email already exists")
+
+    if len(body.password) < 8:
+        raise HTTPException(status_code=422, detail="Password must be at least 8 characters")
+
+    pw_hash = hash_password(body.password)
+
+    result = await db.execute(
+        text("""
+            INSERT INTO admin_users (email, password_hash, full_name, role, is_active)
+            VALUES (:email, :pw_hash, :full_name, :role, TRUE)
+            RETURNING id
+        """),
+        {
+            "email": body.email.lower().strip(),
+            "pw_hash": pw_hash,
+            "full_name": body.full_name.strip(),
+            "role": body.role,
+        },
+    )
+    new_id = result.fetchone().id
+    await db.commit()
+
+    await log_action(
+        db, "admin", admin.admin_id, "create_admin", "admin_user", new_id,
+        {"email": body.email, "role": body.role},
+    )
+
+    return {"id": str(new_id), "email": body.email, "role": body.role}
+
+
+@router.patch("/admins/{target_id}")
+async def update_admin_status(
+    target_id: UUID,
+    body: PatchAdminRequest,
+    admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Enable or disable an admin account. Super Admin only."""
+    admin.require("*")
+
+    # Prevent self-disablement
+    if str(target_id) == str(admin.admin_id):
+        raise HTTPException(status_code=400, detail="You cannot disable your own account")
+
+    result = await db.execute(
+        text("SELECT id, full_name FROM admin_users WHERE id = :tid"),
+        {"tid": target_id},
+    )
+    row = result.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Admin not found")
+
+    await db.execute(
+        text("UPDATE admin_users SET is_active = :active, updated_at = NOW() WHERE id = :tid"),
+        {"active": body.is_active, "tid": target_id},
+    )
+    await db.commit()
+
+    action = "enable_admin" if body.is_active else "disable_admin"
+    await log_action(db, "admin", admin.admin_id, action, "admin_user", target_id)
+
+    return {"success": True, "is_active": body.is_active}
+
+
+# ---------------------------------------------------------------------------
+# Settings  (super_admin only)
+# ---------------------------------------------------------------------------
+
+# ponytail: settings are stored as key/value rows in a simple table.
+# The frontend renders whatever the backend returns — no hardcoded keys.
+# Add rows to the app_settings table to expose new configuration.
+# Upgrade path: switch to a typed Pydantic config model if settings grow complex.
+
+@router.get("/settings")
+async def get_settings_endpoint(
+    admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return platform settings. Super Admin only."""
+    admin.require("*")
+
+    result = await db.execute(
+        text("SELECT key, value, description FROM app_settings ORDER BY key")
+    )
+    rows = result.fetchall()
+    # Return as flat dict so the React panel can render it generically
+    return {r.key: r.value for r in rows}
+
+
+@router.put("/settings")
+async def update_settings_endpoint(
+    body: dict,
+    admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update platform settings. Super Admin only."""
+    admin.require("*")
+
+    if not body:
+        raise HTTPException(status_code=422, detail="No settings provided")
+
+    for key, value in body.items():
+        await db.execute(
+            text("""
+                INSERT INTO app_settings (key, value, updated_by, updated_at)
+                VALUES (:key, :value, :admin_id, NOW())
+                ON CONFLICT (key) DO UPDATE
+                    SET value = EXCLUDED.value,
+                        updated_by = EXCLUDED.updated_by,
+                        updated_at = NOW()
+            """),
+            {"key": key, "value": str(value), "admin_id": admin.admin_id},
+        )
+
+    await db.commit()
+    await log_action(db, "admin", admin.admin_id, "update_settings", details={"keys": list(body.keys())})
+    return {"success": True, "updated": list(body.keys())}

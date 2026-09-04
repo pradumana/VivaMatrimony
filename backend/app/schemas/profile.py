@@ -380,6 +380,7 @@ class PartnerPreferencesResponse(PartnerPreferencesRequest):
 
 class FullProfileResponse(BaseModel):
     profile: ProfileResponse
+    member_id: Optional[str] = None
     current_location: Optional[LocationResponse]
     native_place: Optional[LocationResponse]
     education: Optional[EducationResponse]
