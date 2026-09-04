@@ -69,7 +69,7 @@ class _StatusBody extends StatelessWidget {
                   width: 72,
                   height: 72,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -99,7 +99,7 @@ class _StatusBody extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     height: 1.5,
                   ),
                 ),
@@ -151,19 +151,19 @@ class _StatusBody extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppTheme.error.withOpacity(0.06),
+                color: AppTheme.error.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(AppRadius.lg),
                 border: Border.all(
-                    color: AppTheme.error.withOpacity(0.25)),
+                    color: AppTheme.error.withValues(alpha: 0.25)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(children: [
-                    const Icon(Icons.error_outline_rounded,
+                  Row(children: const [
+                    Icon(Icons.error_outline_rounded,
                         size: 16, color: AppTheme.error),
-                    const SizedBox(width: 8),
-                    const Text('Rejection Reason',
+                    SizedBox(width: 8),
+                    Text('Rejection Reason',
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
@@ -210,18 +210,21 @@ class _StatusBody extends StatelessWidget {
   }
 
   String _statusTitle(VerificationStatus s) {
-    if (s.isPending) return 'Under Review';
-    if (s.requestStatus == 'rejected') return 'Verification Rejected';
+    if (s.isPending) { return 'Under Review'; }
+    if (s.requestStatus == 'rejected') { return 'Verification Rejected'; }
     return 'Not Yet Verified';
   }
 
   String _statusSubtitle(VerificationStatus s) {
-    if (s.isVerified)
+    if (s.isVerified) {
       return 'Your profile is verified.\nMatches can trust your identity.';
-    if (s.isPending)
+    }
+    if (s.isPending) {
       return 'Our team is reviewing your request.\nThis usually takes ${AppConstants.verificationSlaDays}.';
-    if (s.requestStatus == 'rejected')
+    }
+    if (s.requestStatus == 'rejected') {
       return 'Your verification was rejected.\nSee the reason below and try again.';
+    }
     return 'Complete verification to unlock all features\nand build trust with matches.';
   }
 }

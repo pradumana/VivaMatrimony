@@ -42,7 +42,7 @@ class _OnboardingBasicScreenState
     final now = DateTime.now();
     int age = now.year - _dob!.year;
     if (now.month < _dob!.month ||
-        (now.month == _dob!.month && now.day < _dob!.day)) age--;
+        (now.month == _dob!.month && now.day < _dob!.day)) { age--; }
     return age;
   }
 
@@ -95,8 +95,11 @@ class _OnboardingBasicScreenState
     });
 
     if (ok && mounted) {
-      if (widget.isEditing) context.pop();
-      else context.go(AppRoutes.onboardingBio);
+      if (widget.isEditing) {
+        context.pop();
+      } else {
+        context.go(AppRoutes.onboardingBio);
+      }
     }
   }
 
@@ -112,6 +115,7 @@ class _OnboardingBasicScreenState
       error: state.error,
       onNext: _next,
       showBack: false,
+      showSkip: false,
       child: Form(
         key: _formKey,
         child: Column(

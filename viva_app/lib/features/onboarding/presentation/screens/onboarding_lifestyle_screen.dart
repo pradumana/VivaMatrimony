@@ -34,8 +34,11 @@ class _State extends ConsumerState<OnboardingLifestyleScreen> {
       'interests': _interests.toList(),
     });
     if (ok && mounted) {
-      if (widget.isEditing) context.pop();
-      else context.go(AppRoutes.onboardingNativePlace);
+      if (widget.isEditing) {
+        context.pop();
+      } else {
+        context.go(AppRoutes.onboardingNativePlace);
+      }
     }
   }
 

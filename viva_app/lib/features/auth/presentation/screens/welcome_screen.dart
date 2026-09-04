@@ -24,7 +24,7 @@ class WelcomeScreen extends StatelessWidget {
                 height: 200,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.06),
+                  color: Colors.white.withValues(alpha: 0.06),
                 ),
               ),
             ),
@@ -36,7 +36,7 @@ class WelcomeScreen extends StatelessWidget {
                 height: 180,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.05),
+                  color: Colors.white.withValues(alpha: 0.05),
                 ),
               ),
             ),
@@ -54,7 +54,7 @@ class WelcomeScreen extends StatelessWidget {
                       height: 80,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                       ),
                       child: Center(
                         child: Container(
@@ -95,7 +95,7 @@ class WelcomeScreen extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 15,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         fontStyle: FontStyle.italic,
                         letterSpacing: 0.2,
                       ),
@@ -104,21 +104,21 @@ class WelcomeScreen extends StatelessWidget {
                     const Spacer(flex: 1),
 
                     // Steps — framed cards
-                    _StepCard(
+                    const _StepCard(
                       icon: Icons.person_outline_rounded,
                       step: '01',
                       title: 'Build your profile',
                       subtitle: 'Complete your matrimonial profile in minutes',
                     ),
                     const SizedBox(height: 12),
-                    _StepCard(
+                    const _StepCard(
                       icon: Icons.verified_user_outlined,
                       step: '02',
                       title: 'Get verified',
                       subtitle: 'Earn a verified badge for trusted matches',
                     ),
                     const SizedBox(height: 12),
-                    _StepCard(
+                    const _StepCard(
                       icon: Icons.favorite_border_rounded,
                       step: '03',
                       title: 'Connect',
@@ -180,9 +180,9 @@ class _StepCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.12),
+        color: Colors.white.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1),
       ),
       child: Row(
         children: [
@@ -190,7 +190,7 @@ class _StepCard extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: Icon(icon, color: Colors.white, size: 22),
@@ -213,7 +213,7 @@ class _StepCard extends StatelessWidget {
                   subtitle,
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     height: 1.3,
                   ),
                 ),
@@ -225,7 +225,7 @@ class _StepCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w800,
-              color: Colors.white.withOpacity(0.25),
+              color: Colors.white.withValues(alpha: 0.25),
             ),
           ),
         ],

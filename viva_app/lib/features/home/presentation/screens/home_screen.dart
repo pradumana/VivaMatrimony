@@ -22,7 +22,7 @@ final _matchesProvider =
       .toList();
 });
 
-final _userNameProvider = FutureProvider<String?>((ref) async {
+final _userNameProvider = FutureProvider.autoDispose<String?>((ref) async {
   try {
     final client = ref.read(apiClientProvider);
     final response = await client.get('/profile');
@@ -87,7 +87,7 @@ class HomeScreen extends ConsumerWidget {
                 icon: Container(
                   width: 38,
                   height: 38,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: AppTheme.surfaceVariant,
                     shape: BoxShape.circle,
                   ),
@@ -314,11 +314,12 @@ class HomeScreen extends ConsumerWidget {
     context.push('/profile/$userId');
   }
 
-  void _shortlist(BuildContext context, String userId) async {
+  Future<void> _shortlist(BuildContext context, String userId) async {
     try {
       final container = ProviderScope.containerOf(context);
       final client = container.read(apiClientProvider);
       await client.post('/shortlist/$userId');
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Row(
@@ -336,6 +337,7 @@ class HomeScreen extends ConsumerWidget {
         ),
       );
     } catch (_) {
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Could not shortlist. Please try again.'),

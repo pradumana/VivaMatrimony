@@ -389,10 +389,10 @@ class _State extends ConsumerState<OnboardingPhotosScreen> {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 12, vertical: 9),
                   decoration: BoxDecoration(
-                    color: AppTheme.error.withOpacity(0.08),
+                    color: AppTheme.error.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(AppRadius.md),
                     border: Border.all(
-                        color: AppTheme.error.withOpacity(0.25)),
+                        color: AppTheme.error.withValues(alpha: 0.25)),
                   ),
                   child: Row(children: [
                     const Icon(Icons.error_outline,
@@ -462,7 +462,7 @@ class _State extends ConsumerState<OnboardingPhotosScreen> {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: AppTheme.error.withOpacity(0.08),
+              color: AppTheme.error.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.photo_library_outlined,
@@ -579,7 +579,7 @@ class _PhotoCell extends StatelessWidget {
               padding:
                   const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
               decoration: BoxDecoration(
-                color: AppTheme.verifiedBadge.withOpacity(0.9),
+                color: AppTheme.verifiedBadge.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(AppRadius.full),
               ),
               child: const Row(
@@ -627,7 +627,7 @@ class _PhotoCell extends StatelessWidget {
                 child: Container(
                   width: 26,
                   height: 26,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: Colors.black54,
                     shape: BoxShape.circle,
                   ),
@@ -658,7 +658,7 @@ class _AddPhotoCell extends StatelessWidget {
           color: AppTheme.primaryContainer,
           borderRadius: BorderRadius.circular(AppRadius.lg),
           border: Border.all(
-              color: AppTheme.primary.withOpacity(0.3), width: 1.5),
+              color: AppTheme.primary.withValues(alpha: 0.3), width: 1.5),
         ),
         child: isLoading
             ? const Center(
@@ -671,7 +671,7 @@ class _AddPhotoCell extends StatelessWidget {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: AppTheme.primary.withOpacity(0.12),
+                      color: AppTheme.primary.withValues(alpha: 0.12),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.add_a_photo_outlined,

@@ -257,7 +257,7 @@ class _SettingsTile extends StatelessWidget {
         height: 36,
         decoration: BoxDecoration(
           color: isDanger
-              ? AppTheme.error.withOpacity(0.1)
+              ? AppTheme.error.withValues(alpha: 0.1)
               : AppTheme.surfaceVariant,
           borderRadius: BorderRadius.circular(AppRadius.sm),
         ),

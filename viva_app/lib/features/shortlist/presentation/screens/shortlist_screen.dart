@@ -123,12 +123,20 @@ class ShortlistScreen extends ConsumerWidget {
             onPressed: () async {
               Navigator.pop(context);
               try {
-                final container = ProviderScope.containerOf(context);
-                await container.read(apiClientProvider).post(
+                await ref.read(apiClientProvider).post(
                   '/shortlist/${item.userId}',
                   data: {'private_notes': ctrl.text.trim()},
                 );
-              } catch (_) {}
+                ref.invalidate(_shortlistProvider);
+              } catch (_) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Could not save note. Please try again.'),
+                    backgroundColor: AppTheme.error,
+                    behavior: SnackBarBehavior.floating,
+                  ));
+                }
+              }
             },
             child: const Text('Save'),
           ),
@@ -286,7 +294,7 @@ class _ShortlistCard extends StatelessWidget {
                   child: Container(
                     width: 32,
                     height: 32,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: AppTheme.primaryContainer,
                       shape: BoxShape.circle,
                     ),
@@ -300,7 +308,7 @@ class _ShortlistCard extends StatelessWidget {
                   child: Container(
                     width: 32,
                     height: 32,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: AppTheme.surfaceVariant,
                       shape: BoxShape.circle,
                     ),

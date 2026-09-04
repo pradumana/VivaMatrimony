@@ -29,8 +29,11 @@ class _State extends ConsumerState<OnboardingBioScreen> {
         .read(onboardingProvider.notifier)
         .saveBio(_controller.text.trim());
     if (ok && mounted) {
-      if (widget.isEditing) context.pop();
-      else context.go(AppRoutes.onboardingEducation);
+      if (widget.isEditing) {
+        context.pop();
+      } else {
+        context.go(AppRoutes.onboardingEducation);
+      }
     }
   }
 

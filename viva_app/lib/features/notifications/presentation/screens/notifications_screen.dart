@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:dio/dio.dart';
 
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/constants/app_constants.dart';
+import '../../../../shared/extensions/string_extensions.dart';
 import '../../../../shared/models/user_model.dart';
 import '../../../../shared/widgets/error_view.dart';
 
@@ -33,9 +33,7 @@ class NotificationsScreen extends ConsumerWidget {
         title: const Text('Notifications'),
         actions: [
           TextButton(
-            onPressed: () {
-              ref.invalidate(_notificationsProvider);
-            },
+            onPressed: () => _markAllRead(context, ref),
             child: const Text('Mark all read',
                 style: TextStyle(
                     fontSize: 12, color: AppTheme.primary)),
@@ -68,7 +66,16 @@ class NotificationsScreen extends ConsumerWidget {
     );
   }
 
-  void _handleTap(
+  Future<void> _markAllRead(BuildContext context, WidgetRef ref) async {
+    try {
+      await ref.read(apiClientProvider).post('/notifications/mark-all-read');
+    } catch (_) {
+      // Best-effort: even if the API fails, refresh the list below
+    }
+    ref.invalidate(_notificationsProvider);
+  }
+
+  Future<void> _handleTap(
       BuildContext context, WidgetRef ref, NotificationModel n) async {
     if (!n.isRead) {
       try {
@@ -78,6 +85,7 @@ class NotificationsScreen extends ConsumerWidget {
         ref.invalidate(_notificationsProvider);
       } catch (_) {}
     }
+    if (!context.mounted) return;
     if (n.entityType == 'interest' && n.entityId != null) {
       context.go(AppRoutes.interests);
     } else if (n.type == 'interest_accepted') {
@@ -104,13 +112,13 @@ class _NotificationCard extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: item.isRead ? Colors.white : AppTheme.primaryContainer.withOpacity(0.6),
+          color: item.isRead ? Colors.white : AppTheme.primaryContainer.withValues(alpha: 0.6),
           borderRadius: BorderRadius.circular(AppRadius.lg),
           boxShadow: AppShadows.card,
           border: item.isRead
               ? null
               : Border.all(
-                  color: AppTheme.primary.withOpacity(0.15), width: 1),
+                  color: AppTheme.primary.withValues(alpha: 0.15), width: 1),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -120,7 +128,7 @@ class _NotificationCard extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
+                color: color.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: Icon(_iconData(item.type), size: 22, color: color),
@@ -170,7 +178,7 @@ class _NotificationCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    _timeAgo(item.createdAt),
+                    item.createdAt.timeAgo,
                     style: const TextStyle(
                       fontSize: 10,
                       color: AppTheme.textTertiary,
@@ -210,12 +218,4 @@ class _NotificationCard extends StatelessWidget {
           AppTheme.error,
         _ => AppTheme.secondary,
       };
-
-  String _timeAgo(DateTime dt) {
-    final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
-    return '${dt.day}/${dt.month}/${dt.year}';
-  }
 }

@@ -23,13 +23,13 @@ class EditProfileScreen extends ConsumerWidget {
               color: AppTheme.secondaryContainer,
               borderRadius: BorderRadius.circular(AppRadius.md),
               border: Border.all(
-                  color: AppTheme.secondary.withOpacity(0.3)),
+                  color: AppTheme.secondary.withValues(alpha: 0.3)),
             ),
-            child: Row(children: [
+            child: const Row(children: [
               Icon(Icons.info_outline_rounded,
                   size: 16, color: AppTheme.secondary),
-              const SizedBox(width: 10),
-              const Expanded(
+              SizedBox(width: 10),
+              Expanded(
                 child: Text(
                   'Tap any section to edit. Changes are saved immediately.',
                   style: TextStyle(

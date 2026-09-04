@@ -8,6 +8,7 @@ import 'package:shimmer/shimmer.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/error_view.dart';
+import '../../../../shared/extensions/string_extensions.dart';
 import '../../../../shared/widgets/verified_badge.dart';
 import '../../../../shared/widgets/viva_button.dart';
 
@@ -54,8 +55,12 @@ class _ProfileBody extends ConsumerStatefulWidget {
 }
 
 class _ProfileBodyState extends ConsumerState<_ProfileBody> {
-  bool _interestSent = false;
-  bool _shortlisted = false;
+  bool get _interestSent =>
+      widget.data['has_sent_interest'] as bool? ?? _localInterestSent;
+  bool _localInterestSent = false;
+  bool get _shortlisted =>
+      _localShortlisted ?? (widget.data['is_shortlisted'] as bool? ?? false);
+  bool? _localShortlisted;
 
   Map<String, dynamic> get profile =>
       (widget.data['profile'] as Map<String, dynamic>?) ?? {};
@@ -101,7 +106,7 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
     try {
       final client = ref.read(apiClientProvider);
       await client.post('/interests/${widget.userId}');
-      setState(() => _interestSent = true);
+      setState(() => _localInterestSent = true);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
@@ -126,14 +131,15 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
   }
 
   Future<void> _toggleShortlist() async {
+    final currentState = _shortlisted;
     try {
       final client = ref.read(apiClientProvider);
-      if (_shortlisted) {
+      if (currentState) {
         await client.delete('/shortlist/${widget.userId}');
       } else {
         await client.post('/shortlist/${widget.userId}');
       }
-      setState(() => _shortlisted = !_shortlisted);
+      setState(() => _localShortlisted = !currentState);
     } on DioException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -176,7 +182,7 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                     width: 38,
                     height: 38,
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.35),
+                      color: Colors.black.withValues(alpha: 0.35),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.arrow_back_ios_new_rounded,
@@ -194,7 +200,7 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                       height: 38,
                       margin: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.35),
+                        color: Colors.black.withValues(alpha: 0.35),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -218,7 +224,7 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                       height: 38,
                       margin: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.35),
+                        color: Colors.black.withValues(alpha: 0.35),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(Icons.more_vert,
@@ -332,8 +338,7 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                           ? '✓ Interest Sent'
                           : '❤️  Send Interest',
                       onPressed: _interestSent ? null : _sendInterest,
-                    ),
-                    const SizedBox(height: 20),
+                    ),                    const SizedBox(height: 20),
                   ],
                 ),
               ),
@@ -492,7 +497,7 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: AppTheme.error.withOpacity(0.1),
+                    color: AppTheme.error.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.flag_outlined,
@@ -510,7 +515,7 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: AppTheme.error.withOpacity(0.1),
+                    color: AppTheme.error.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.block_rounded,
@@ -524,18 +529,20 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                     await ref
                         .read(apiClientProvider)
                         .post('/users/${widget.userId}/block');
-                    if (mounted) context.pop();
+                    if (mounted) {
+                      // ignore: use_build_context_synchronously
+                      this.context.pop();
+                    }
                   } on DioException catch (e) {
                     if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      ScaffoldMessenger.of(this.context).showSnackBar(SnackBar(
                         content: Text(ApiException.fromDioError(e).message),
                         backgroundColor: AppTheme.error,
                         behavior: SnackBarBehavior.floating,
                       ));
                     }
                   }
-                },
-              ),
+                },              ),
             ],
           ),
         ),
@@ -592,9 +599,9 @@ class _CompatibilityBar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.07),
+        color: color.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
@@ -613,7 +620,7 @@ class _CompatibilityBar extends StatelessWidget {
             'Based on preferences',
             style: TextStyle(
               fontSize: 11,
-              color: color.withOpacity(0.7),
+              color: color.withValues(alpha: 0.7),
             ),
           ),
         ],
@@ -750,7 +757,7 @@ class _PhotoPlaceholder extends StatelessWidget {
               height: 80,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
               ),
               child: const Icon(Icons.person_outline_rounded,
                   size: 44, color: Colors.white70),
@@ -776,8 +783,6 @@ class _PhotoPlaceholder extends StatelessWidget {
 }
 
 extension _StringExt on String {
-  String get capitalize =>
-      isEmpty ? this : '${this[0].toUpperCase()}${substring(1)}';
   String removePrefix(String prefix) =>
       startsWith(prefix) ? substring(prefix.length) : this;
 }

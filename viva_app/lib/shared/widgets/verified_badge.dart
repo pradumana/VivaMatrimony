@@ -12,11 +12,11 @@ class VerifiedBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final badgeColor = onDark ? Colors.white : AppTheme.verifiedBadge;
     final bgColor = onDark
-        ? Colors.white.withOpacity(0.2)
-        : AppTheme.verifiedBadge.withOpacity(0.12);
+        ? Colors.white.withValues(alpha: 0.2)
+        : AppTheme.verifiedBadge.withValues(alpha: 0.12);
     final borderColor = onDark
-        ? Colors.white.withOpacity(0.4)
-        : AppTheme.verifiedBadge.withOpacity(0.4);
+        ? Colors.white.withValues(alpha: 0.4)
+        : AppTheme.verifiedBadge.withValues(alpha: 0.4);
     final textColor = onDark ? Colors.white : AppTheme.verifiedBadge;
 
     return Container(

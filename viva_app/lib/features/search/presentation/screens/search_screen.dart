@@ -169,7 +169,6 @@ class _State extends ConsumerState<SearchScreen> {
     });
     _search();
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -220,37 +219,39 @@ class _State extends ConsumerState<SearchScreen> {
                       color: AppTheme.textSecondary, size: 20),
                 ),
                 Expanded(
-                  child: TextField(
-                    controller: _searchCtrl,
-                    decoration: InputDecoration(
-                      hintText: 'Name or Member ID (e.g. VIVA001234)',
-                      hintStyle: const TextStyle(
-                        fontSize: 13,
-                        color: AppTheme.textTertiary,
+                  child: ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _searchCtrl,
+                    builder: (context, value, _) => TextField(
+                      controller: _searchCtrl,
+                      decoration: InputDecoration(
+                        hintText: 'Name or Member ID (e.g. VIVA001234)',
+                        hintStyle: const TextStyle(
+                          fontSize: 13,
+                          color: AppTheme.textTertiary,
+                        ),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        filled: false,
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 14),
+                        suffixIcon: value.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.close_rounded,
+                                    size: 18, color: AppTheme.textSecondary),
+                                onPressed: () {
+                                  _searchCtrl.clear();
+                                  _search();
+                                })
+                            : null,
                       ),
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      filled: false,
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 14),
-                      suffixIcon: _searchCtrl.text.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.close_rounded,
-                                  size: 18, color: AppTheme.textSecondary),
-                              onPressed: () {
-                                _searchCtrl.clear();
-                                _search();
-                              })
-                          : null,
+                      onChanged: (_) {
+                        _debounce?.cancel();
+                        _debounce = Timer(
+                            const Duration(milliseconds: 400), _search);
+                      },
+                      onSubmitted: (_) => _search(),
                     ),
-                    onChanged: (_) {
-                      setState(() {});
-                      _debounce?.cancel();
-                      _debounce = Timer(
-                          const Duration(milliseconds: 400), _search);
-                    },
-                    onSubmitted: (_) => _search(),
                   ),
                 ),
               ],
@@ -258,26 +259,34 @@ class _State extends ConsumerState<SearchScreen> {
           ),
 
           // Member ID hint
-          if (_searchCtrl.text.trim().toUpperCase().startsWith('VIVA') &&
-              _searchCtrl.text.trim().isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
-              child: Row(
-                children: [
-                  const Icon(Icons.badge_outlined,
-                      size: 13, color: AppTheme.primary),
-                  const SizedBox(width: 5),
-                  Text(
-                    'Searching by Member ID',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: AppTheme.primary,
-                      fontWeight: FontWeight.w600,
+          ValueListenableBuilder<TextEditingValue>(
+            valueListenable: _searchCtrl,
+            builder: (context, value, _) {
+              final trimmed = value.text.trim();
+              if (!trimmed.toUpperCase().startsWith('VIVA') ||
+                  trimmed.isEmpty) {
+                return const SizedBox.shrink();
+              }
+              return const Padding(
+                padding: EdgeInsets.fromLTRB(16, 0, 16, 6),
+                child: Row(
+                  children: [
+                    Icon(Icons.badge_outlined,
+                        size: 13, color: AppTheme.primary),
+                    SizedBox(width: 5),
+                    Text(
+                      'Searching by Member ID',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppTheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
+                  ],
+                ),
+              );
+            },
+          ),
 
           // Active filter chips
           if (_hasActiveFilters)
@@ -399,7 +408,7 @@ class _FilterChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.primaryContainer,
         borderRadius: BorderRadius.circular(AppRadius.full),
-        border: Border.all(color: AppTheme.primary.withOpacity(0.3)),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -467,20 +476,23 @@ class _FilterSheetState extends State<_FilterSheet> {
       expand: false,
       builder: (_, controller) => Column(
         children: [
-          // Handle + header
+          // Handle
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(top: 14, bottom: 4),
+              decoration: BoxDecoration(
+                color: AppTheme.border,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          // Header row
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 14, 16, 4),
+            padding: const EdgeInsets.fromLTRB(24, 4, 16, 4),
             child: Row(
               children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppTheme.border,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(width: 12),
                 const Text('Filters',
                     style: TextStyle(
                         fontSize: 18, fontWeight: FontWeight.w800)),
@@ -612,8 +624,11 @@ class _FilterSheetState extends State<_FilterSheet> {
                 onPressed: () {
                   Navigator.pop(context);
                   widget.onApply({
-                    'min_age': _minAge == 18 ? null : _minAge,
-                    'max_age': _maxAge == 70 ? null : _maxAge,
+                    // Pass null only when the slider is at the absolute range
+                    // boundary AND was not deliberately set by the user.
+                    // This ensures age-18 or age-70 are honoured when chosen.
+                    'min_age': _minAge,
+                    'max_age': _maxAge,
                     'state': _state,
                     'religion': _religion,
                     'diet': _diet,
@@ -633,7 +648,7 @@ class _FilterSheetState extends State<_FilterSheet> {
   Widget _dropdown(String label, String? value, List<String> options,
       void Function(String?) onChanged) {
     return DropdownButtonFormField<String>(
-      value: value ?? options.first,
+      initialValue: value ?? options.first,
       decoration: InputDecoration(labelText: label),
       items: options
           .map((o) => DropdownMenuItem(value: o, child: Text(o)))
@@ -673,7 +688,7 @@ class _FilterSheetState extends State<_FilterSheet> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppTheme.primary,
+            activeThumbColor: AppTheme.primary,
           ),
         ],
       ),

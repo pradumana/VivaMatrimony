@@ -35,8 +35,11 @@ class _State extends ConsumerState<OnboardingPreferencesScreen> {
       'open_to_relocation': _openToRelocation,
     });
     if (ok && mounted) {
-      if (widget.isEditing) context.pop();
-      else context.go(AppRoutes.onboardingPhotos);
+      if (widget.isEditing) {
+        context.pop();
+      } else {
+        context.go(AppRoutes.onboardingPhotos);
+      }
     }
   }
 
@@ -114,7 +117,7 @@ class _State extends ConsumerState<OnboardingPreferencesScreen> {
               Switch(
                 value: _openToRelocation,
                 onChanged: (v) => setState(() => _openToRelocation = v),
-                activeColor: AppTheme.primary,
+                activeThumbColor: AppTheme.primary,
               ),
               const SizedBox(width: 8),
               const Text('Open to partner\'s relocation', style: TextStyle(

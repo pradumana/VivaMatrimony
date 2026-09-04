@@ -52,8 +52,11 @@ class _State extends ConsumerState<OnboardingCareerScreen> {
       'show_company': _showCompany,
     });
     if (ok && mounted) {
-      if (widget.isEditing) context.pop();
-      else context.go(AppRoutes.onboardingFamily);
+      if (widget.isEditing) {
+        context.pop();
+      } else {
+        context.go(AppRoutes.onboardingFamily);
+      }
     }
   }
 
@@ -122,7 +125,7 @@ class _State extends ConsumerState<OnboardingCareerScreen> {
               Switch(
                 value: _showIncome,
                 onChanged: (v) => setState(() => _showIncome = v),
-                activeColor: AppTheme.primary,
+                activeThumbColor: AppTheme.primary,
               ),
               const SizedBox(width: 8),
               const Text('Show income on profile', style: TextStyle(

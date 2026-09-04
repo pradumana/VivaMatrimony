@@ -68,7 +68,7 @@ class _State extends ConsumerState<VerificationReferenceScreen> {
                   keyboardType: TextInputType.phone,
                   inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9+\s]'))],
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500, letterSpacing: 2),
-                  decoration: InputDecoration(labelText: 'Reference\'s Mobile Number', hintText: '${AppConstants.indiaCode} 98765 43210', prefixIcon: Icon(Icons.phone_outlined)),
+                  decoration: InputDecoration(labelText: 'Reference\'s Mobile Number', hintText: '${AppConstants.indiaCode} 98765 43210', prefixIcon: const Icon(Icons.phone_outlined)),
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) return 'Please enter the mobile number';
                     if (v.replaceAll(RegExp(r'\D'), '').length < 7) return 'Enter a valid mobile number';
@@ -79,7 +79,7 @@ class _State extends ConsumerState<VerificationReferenceScreen> {
                   const SizedBox(height: 14),
                   Container(
                     padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(color: AppTheme.error.withOpacity(0.08), borderRadius: BorderRadius.circular(AppRadius.md)),
+                    decoration: BoxDecoration(color: AppTheme.error.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(AppRadius.md)),
                     child: Row(children: [
                       const Icon(Icons.error_outline, size: 16, color: AppTheme.error),
                       const SizedBox(width: 8),

@@ -41,7 +41,7 @@ class HelpScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text('Contact Support', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
-                  Text(AppConstants.supportEmail, style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.9))),
+                  Text(AppConstants.supportEmail, style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.9))),
                   const Text('Response within 24 hours', style: TextStyle(fontSize: 11, color: Colors.white70)),
                 ],
               )),
@@ -86,7 +86,7 @@ class _FaqTileState extends State<_FaqTile> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: _expanded ? AppTheme.primary.withOpacity(0.3) : AppTheme.border),
+        border: Border.all(color: _expanded ? AppTheme.primary.withValues(alpha: 0.3) : AppTheme.border),
       ),
       child: Column(children: [
         ListTile(

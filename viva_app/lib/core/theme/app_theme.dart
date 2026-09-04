@@ -168,11 +168,10 @@ class AppTheme {
       secondary: secondary,
       secondaryContainer: secondaryContainer,
       surface: surface,
-      background: background,
       error: error,
     ).copyWith(
       tertiary: tertiary,
-      surfaceVariant: surfaceVariant,
+      surfaceContainerHighest: surfaceVariant,
       outline: border,
     );
 
@@ -420,7 +419,7 @@ class AppShadows {
   /// Primary-tinted shadow for active elements.
   static List<BoxShadow> primary = [
     BoxShadow(
-      color: AppTheme.primary.withOpacity(0.20),
+      color: AppTheme.primary.withValues(alpha: 0.20),
       blurRadius: 16,
       offset: const Offset(0, 4),
     ),

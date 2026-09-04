@@ -124,6 +124,9 @@ class ProfileCard extends StatelessWidget {
               ? CachedNetworkImage(
                   imageUrl: photoUrl!,
                   fit: BoxFit.cover,
+                  // Decode at display size, not full resolution.
+                  // Card fills screen width − 32px margin; 400px covers all phones.
+                  memCacheWidth: 400,
                   placeholder: (_, __) => Shimmer.fromColors(
                     baseColor: Colors.grey.shade200,
                     highlightColor: Colors.grey.shade100,
@@ -146,7 +149,7 @@ class ProfileCard extends StatelessWidget {
                 begin: Alignment.bottomCenter,
                 end: Alignment.topCenter,
                 colors: [
-                  Colors.black.withOpacity(0.72),
+                  Colors.black.withValues(alpha: 0.72),
                   Colors.transparent,
                 ],
               ),
@@ -223,7 +226,7 @@ class ProfileCard extends StatelessWidget {
           Container(
             width: 64,
             height: 64,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppTheme.border,
               shape: BoxShape.circle,
             ),
@@ -250,9 +253,9 @@ class ProfileCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(AppRadius.full),
-        border: Border.all(color: color.withOpacity(0.25), width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.25), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -324,7 +327,7 @@ class _PrimaryActionButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.md),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primary.withOpacity(0.25),
+              color: AppTheme.primary.withValues(alpha: 0.25),
               blurRadius: 8,
               offset: const Offset(0, 3),
             ),
@@ -365,12 +368,12 @@ class _ShortlistButton extends StatelessWidget {
         height: 42,
         decoration: BoxDecoration(
           color: isShortlisted
-              ? AppTheme.secondary.withOpacity(0.12)
+              ? AppTheme.secondary.withValues(alpha: 0.12)
               : AppTheme.surfaceVariant,
           borderRadius: BorderRadius.circular(AppRadius.md),
           border: Border.all(
             color: isShortlisted
-                ? AppTheme.secondary.withOpacity(0.4)
+                ? AppTheme.secondary.withValues(alpha: 0.4)
                 : AppTheme.border,
             width: 1,
           ),

@@ -2,16 +2,13 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:dio/dio.dart';
-
-import '../../../../core/network/api_client.dart';
+import 'package:dio/dio.dart';import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/viva_button.dart';
 
-final _biodataStatusProvider =
+final _biodataProvider =
     FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
   final client = ref.read(apiClientProvider);
   final r = await client.get('/biodata');
@@ -37,7 +34,7 @@ class _BiodataScreenState extends ConsumerState<BiodataScreen> {
     });
     try {
       await ref.read(apiClientProvider).post('/biodata/generate');
-      ref.invalidate(_biodataStatusProvider);
+      ref.invalidate(_biodataProvider);
       setState(() => _generating = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -92,7 +89,7 @@ class _BiodataScreenState extends ConsumerState<BiodataScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final statusAsync = ref.watch(_biodataStatusProvider);
+    final statusAsync = ref.watch(_biodataProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -123,7 +120,7 @@ class _BiodataScreenState extends ConsumerState<BiodataScreen> {
                       width: 60,
                       height: 60,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius:
                             BorderRadius.circular(AppRadius.md),
                       ),
@@ -148,7 +145,7 @@ class _BiodataScreenState extends ConsumerState<BiodataScreen> {
                             'A beautiful PDF ready to share with families',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.white.withOpacity(0.85),
+                              color: Colors.white.withValues(alpha: 0.85),
                               height: 1.3,
                             ),
                           ),
@@ -188,8 +185,7 @@ class _BiodataScreenState extends ConsumerState<BiodataScreen> {
                     const SizedBox(height: 14),
                     ..._included
                         .map((item) => _IncludedRow(
-                            label: item.$1, included: item.$2))
-                        .toList(),
+                            label: item.$1, included: item.$2)),
                   ],
                 ),
               ),
@@ -201,10 +197,10 @@ class _BiodataScreenState extends ConsumerState<BiodataScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppTheme.error.withOpacity(0.08),
+                    color: AppTheme.error.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(AppRadius.md),
                     border: Border.all(
-                        color: AppTheme.error.withOpacity(0.3)),
+                        color: AppTheme.error.withValues(alpha: 0.3)),
                   ),
                   child: Row(children: [
                     const Icon(Icons.error_outline,
@@ -324,9 +320,9 @@ class _StatusCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: color.withOpacity(0.25)),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
       child: Row(children: [
         Icon(icon, size: 18, color: color),

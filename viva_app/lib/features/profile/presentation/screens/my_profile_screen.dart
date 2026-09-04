@@ -214,7 +214,7 @@ class _ProfileBody extends ConsumerWidget {
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
                           colors: [
-                            Colors.black.withOpacity(0.7),
+                            Colors.black.withValues(alpha: 0.7),
                             Colors.transparent,
                           ],
                         ),
@@ -551,7 +551,7 @@ class _ProfileBody extends ConsumerWidget {
               height: 72,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
               ),
               child: const Icon(Icons.person_outline_rounded,
                   size: 40, color: Colors.white70),
@@ -594,21 +594,23 @@ class _ProfileBody extends ConsumerWidget {
 
   List<_InfoItem> _buildPersonal() {
     final items = <_InfoItem>[];
-    if (profile['gender'] != null)
+    if (profile['gender'] != null) {
       items.add(_InfoItem('Gender', _cap(profile['gender'] as String)));
-    if (profile['mother_tongue'] != null)
-      items.add(_InfoItem(
-          'Mother Tongue', profile['mother_tongue'] as String));
-    if (profile['height_display'] != null)
-      items.add(
-          _InfoItem('Height', profile['height_display'] as String));
-    if (profile['marital_status'] != null)
+    }
+    if (profile['mother_tongue'] != null) {
+      items.add(_InfoItem('Mother Tongue', profile['mother_tongue'] as String));
+    }
+    if (profile['height_display'] != null) {
+      items.add(_InfoItem('Height', profile['height_display'] as String));
+    }
+    if (profile['marital_status'] != null) {
       items.add(_InfoItem(
           'Marital Status',
-          _cap((profile['marital_status'] as String)
-              .replaceAll('_', ' '))));
-    if (profile['religion'] != null)
+          _cap((profile['marital_status'] as String).replaceAll('_', ' '))));
+    }
+    if (profile['religion'] != null) {
       items.add(_InfoItem('Religion', profile['religion'] as String));
+    }
     return items;
   }
 
@@ -616,13 +618,15 @@ class _ProfileBody extends ConsumerWidget {
     final edu = data['education'] as Map<String, dynamic>?;
     final emp = data['employment'] as Map<String, dynamic>?;
     final items = <_InfoItem>[];
-    if (edu?['degree'] != null)
+    if (edu?['degree'] != null) {
       items.add(_InfoItem('Degree', edu!['degree'] as String));
-    if (emp?['profession'] != null)
+    }
+    if (emp?['profession'] != null) {
       items.add(_InfoItem('Profession', emp!['profession'] as String));
-    if (emp?['company'] != null &&
-        (emp!['show_company'] as bool? ?? true))
+    }
+    if (emp?['company'] != null && (emp!['show_company'] as bool? ?? true)) {
       items.add(_InfoItem('Company', emp['company'] as String));
+    }
     return items;
   }
 
@@ -645,14 +649,18 @@ class _ProfileBody extends ConsumerWidget {
       s.isEmpty ? s : '${s[0].toUpperCase()}${s.substring(1)}';
 
   String _completionTip(int pct) {
-    if (pct == 0)
+    if (pct == 0) {
       return 'Start by adding your basic information.';
-    if (pct < 30)
+    }
+    if (pct < 30) {
       return 'Add your education and career details to improve visibility.';
-    if (pct < 60)
+    }
+    if (pct < 60) {
       return 'Add family details and a photo to get more matches.';
-    if (pct < 80)
+    }
+    if (pct < 80) {
       return 'Add partner preferences for better match recommendations.';
+    }
     return 'Get verified to build trust with potential matches.';
   }
 }
@@ -673,7 +681,7 @@ class _AppBarAction extends StatelessWidget {
         height: 38,
         margin: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.3),
+          color: Colors.black.withValues(alpha: 0.3),
           shape: BoxShape.circle,
         ),
         child: Icon(icon, size: 18, color: Colors.white),
@@ -716,7 +724,7 @@ class _QuickAction extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: c.withOpacity(0.1),
+                color: c.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, size: 20, color: c),
@@ -877,12 +885,12 @@ class _MemberIdBadgeState extends State<_MemberIdBadge> {
           color: AppTheme.primaryContainer,
           borderRadius: BorderRadius.circular(AppRadius.full),
           border: Border.all(
-              color: AppTheme.primary.withOpacity(0.3)),
+              color: AppTheme.primary.withValues(alpha: 0.3)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.badge_outlined,
+            const Icon(Icons.badge_outlined,
                 size: 14, color: AppTheme.primary),
             const SizedBox(width: 6),
             Flexible(
@@ -907,7 +915,7 @@ class _MemberIdBadgeState extends State<_MemberIdBadge> {
                   : Icon(Icons.copy_outlined,
                       key: const ValueKey('copy'),
                       size: 13,
-                      color: AppTheme.primary.withOpacity(0.6)),
+                      color: AppTheme.primary.withValues(alpha: 0.6)),
             ),
           ],
         ),

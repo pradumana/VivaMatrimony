@@ -82,7 +82,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         height: 160,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.07),
+                          color: Colors.white.withValues(alpha: 0.07),
                         ),
                       ),
                     ),
@@ -124,7 +124,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             AppConstants.appTagline,
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.white.withOpacity(0.85),
+                              color: Colors.white.withValues(alpha: 0.85),
                               fontStyle: FontStyle.italic,
                               height: 1.4,
                             ),
@@ -287,8 +287,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     height: 1.5,
                                   ),
                                   children: [
-                                    TextSpan(text: 'I agree to the '),
-                                    TextSpan(
+                                    const TextSpan(text: 'I agree to the '),
+                                    const TextSpan(
                                       text: 'Terms & Conditions',
                                       style: TextStyle(
                                         color: AppTheme.primary,
@@ -296,8 +296,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         decoration: TextDecoration.underline,
                                       ),
                                     ),
-                                    TextSpan(text: ' and '),
-                                    TextSpan(
+                                    const TextSpan(text: ' and '),
+                                    const TextSpan(
                                       text: 'Privacy Policy',
                                       style: TextStyle(
                                         color: AppTheme.primary,
@@ -365,7 +365,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               width: 28,
                               height: 28,
                               decoration: BoxDecoration(
-                                color: AppTheme.whatsAppGreen.withOpacity(0.12),
+                                color: AppTheme.whatsAppGreen.withValues(alpha: 0.12),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(Icons.lock_outline_rounded,

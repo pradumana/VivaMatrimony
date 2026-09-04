@@ -43,7 +43,7 @@ class _State extends State<VerificationSelectScreen> {
                       width: 56,
                       height: 56,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(Icons.verified_user_rounded,
@@ -67,7 +67,7 @@ class _State extends State<VerificationSelectScreen> {
                             'Build trust with potential matches',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.white.withOpacity(0.85),
+                              color: Colors.white.withValues(alpha: 0.85),
                               height: 1.3,
                             ),
                           ),
@@ -111,10 +111,10 @@ class _State extends State<VerificationSelectScreen> {
               const SizedBox(height: 14),
 
               // OR divider
-              Row(children: [
-                const Expanded(child: Divider()),
+              Row(children: const [
+                Expanded(child: Divider()),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  padding: EdgeInsets.symmetric(horizontal: 14),
                   child: Text(
                     'OR',
                     style: TextStyle(
@@ -124,7 +124,7 @@ class _State extends State<VerificationSelectScreen> {
                     ),
                   ),
                 ),
-                const Expanded(child: Divider()),
+                Expanded(child: Divider()),
               ]),
 
               const SizedBox(height: 14),
@@ -208,7 +208,7 @@ class _OptionCard extends StatelessWidget {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: AppTheme.primary.withOpacity(0.12),
+                    color: AppTheme.primary.withValues(alpha: 0.12),
                     blurRadius: 14,
                     offset: const Offset(0, 4),
                   )
@@ -261,7 +261,7 @@ class _OptionCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: tagColor.withOpacity(0.12),
+                        color: tagColor.withValues(alpha: 0.12),
                         borderRadius:
                             BorderRadius.circular(AppRadius.full),
                       ),

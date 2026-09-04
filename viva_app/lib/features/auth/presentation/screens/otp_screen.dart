@@ -48,8 +48,8 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   @override
   void dispose() {
     _timer?.cancel();
-    for (final c in _controllers) c.dispose();
-    for (final f in _focusNodes) f.dispose();
+    for (final c in _controllers) { c.dispose(); }
+    for (final f in _focusNodes) { f.dispose(); }
     super.dispose();
   }
 
@@ -62,8 +62,13 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     } else if (value.isEmpty && index > 0) {
       _focusNodes[index - 1].requestFocus();
     }
+    // Clear any previous error so the user can re-attempt without
+    // being blocked by a stale error state from an earlier bad OTP.
+    if (ref.read(authScreenProvider).error != null) {
+      ref.read(authScreenProvider.notifier).clearError();
+    }
     final state = ref.read(authScreenProvider);
-    if (_otpComplete && !state.isLoading && state.error == null) _verify();
+    if (_otpComplete && !state.isLoading) _verify();
   }
 
   Future<void> _verify() async {
@@ -130,7 +135,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                 width: 64,
                 height: 64,
                 decoration: BoxDecoration(
-                  color: AppTheme.whatsAppGreen.withOpacity(0.12),
+                  color: AppTheme.whatsAppGreen.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.chat_bubble_outline_rounded,
@@ -192,10 +197,10 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
-                    color: AppTheme.error.withOpacity(0.08),
+                    color: AppTheme.error.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(AppRadius.md),
                     border: Border.all(
-                        color: AppTheme.error.withOpacity(0.25), width: 1),
+                        color: AppTheme.error.withValues(alpha: 0.25), width: 1),
                   ),
                   child: Row(
                     children: [
@@ -311,13 +316,13 @@ class _OtpBox extends StatelessWidget {
           contentPadding: EdgeInsets.zero,
           filled: true,
           fillColor: hasError
-              ? AppTheme.error.withOpacity(0.06)
+              ? AppTheme.error.withValues(alpha: 0.06)
               : Colors.white,
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppRadius.md),
             borderSide: BorderSide(
               color: hasError
-                  ? AppTheme.error.withOpacity(0.6)
+                  ? AppTheme.error.withValues(alpha: 0.6)
                   : AppTheme.border,
               width: 1.5,
             ),

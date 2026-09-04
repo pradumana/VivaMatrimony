@@ -93,9 +93,9 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color: AppTheme.error.withOpacity(0.08),
+                color: AppTheme.error.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppTheme.error.withOpacity(0.3)),
+                border: Border.all(color: AppTheme.error.withValues(alpha: 0.3)),
               ),
               child: Row(children: [
                 const Icon(Icons.warning_amber_rounded, size: 18, color: AppTheme.error),
@@ -172,7 +172,7 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
       title: Text(label, style: const TextStyle(fontSize: 13)),
       value: value,
       onChanged: onChanged,
-      activeColor: AppTheme.primary,
+      activeThumbColor: AppTheme.primary,
       dense: true,
       contentPadding: EdgeInsets.zero,
     );

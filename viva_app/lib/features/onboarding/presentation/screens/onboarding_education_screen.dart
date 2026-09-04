@@ -38,8 +38,11 @@ class _State extends ConsumerState<OnboardingEducationScreen> {
       'graduation_year': _gradYear,
     });
     if (ok && mounted) {
-      if (widget.isEditing) context.pop();
-      else context.go(AppRoutes.onboardingCareer);
+      if (widget.isEditing) {
+        context.pop();
+      } else {
+        context.go(AppRoutes.onboardingCareer);
+      }
     }
   }
 

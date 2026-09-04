@@ -65,8 +65,11 @@ class _State extends ConsumerState<OnboardingNativePlaceScreen> {
     }
 
     if (mounted) {
-      if (widget.isEditing) context.pop();
-      else context.go(AppRoutes.onboardingPreferences);
+      if (widget.isEditing) {
+        context.pop();
+      } else {
+        context.go(AppRoutes.onboardingPreferences);
+      }
     }
   }
 
@@ -115,7 +118,7 @@ class _State extends ConsumerState<OnboardingNativePlaceScreen> {
               Switch(
                 value: _nativeVisible,
                 onChanged: (v) => setState(() => _nativeVisible = v),
-                activeColor: AppTheme.primary,
+                activeThumbColor: AppTheme.primary,
               ),
               const SizedBox(width: 8),
               const Text('Show native place on profile', style: TextStyle(

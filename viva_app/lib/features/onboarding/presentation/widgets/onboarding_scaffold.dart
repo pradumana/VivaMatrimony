@@ -14,6 +14,7 @@ class OnboardingScaffold extends StatelessWidget {
   final bool isLoading;
   final String nextLabel;
   final bool showBack;
+  final bool showSkip;
   final String? error;
 
   const OnboardingScaffold({
@@ -27,6 +28,7 @@ class OnboardingScaffold extends StatelessWidget {
     this.isLoading = false,
     this.nextLabel = 'Continue',
     this.showBack = true,
+    this.showSkip = true,
     this.error,
   });
 
@@ -47,7 +49,7 @@ class OnboardingScaffold extends StatelessWidget {
                 icon: Container(
                   width: 36,
                   height: 36,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: AppTheme.surfaceVariant,
                     shape: BoxShape.circle,
                   ),
@@ -86,22 +88,24 @@ class OnboardingScaffold extends StatelessWidget {
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: onNext,
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-            ),
-            child: const Text(
-              'Skip',
-              style: TextStyle(
-                fontSize: 13,
-                color: AppTheme.textSecondary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
+        actions: showSkip
+            ? [
+                TextButton(
+                  onPressed: onNext,
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                  ),
+                  child: const Text(
+                    'Skip',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppTheme.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ]
+            : null,
       ),
       body: SafeArea(
         child: Column(
@@ -160,8 +164,8 @@ class OnboardingScaffold extends StatelessWidget {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              AppTheme.primary.withOpacity(0.3),
-                              AppTheme.border.withOpacity(0.3),
+                              AppTheme.primary.withValues(alpha: 0.3),
+                              AppTheme.border.withValues(alpha: 0.3),
                               Colors.transparent,
                             ],
                           ),
@@ -182,9 +186,9 @@ class OnboardingScaffold extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppTheme.error.withOpacity(0.08),
+                  color: AppTheme.error.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(AppRadius.md),
-                  border: Border.all(color: AppTheme.error.withOpacity(0.2)),
+                  border: Border.all(color: AppTheme.error.withValues(alpha: 0.2)),
                 ),
                 child: Row(
                   children: [

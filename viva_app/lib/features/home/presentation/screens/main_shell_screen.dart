@@ -5,34 +5,25 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/constants/app_constants.dart';
 
 class MainShellScreen extends StatelessWidget {
-  final Widget child;
-  const MainShellScreen({super.key, required this.child});
+  final StatefulNavigationShell navigationShell;
+  const MainShellScreen({super.key, required this.navigationShell});
 
-  static const _routes = [
-    AppRoutes.home,
-    AppRoutes.search,
-    AppRoutes.interests,
-    AppRoutes.connections,
-    AppRoutes.myProfile,
-  ];
-
-  int _selectedIndex(BuildContext context) {
-    final location = GoRouterState.of(context).matchedLocation;
-    final idx = _routes.indexOf(location);
-    return idx < 0 ? 0 : idx;
+  void _onTabTap(int index) {
+    // goBranch keeps the branch's navigation stack alive;
+    // initialLocation: true re-roots the branch if tapping the active tab.
+    navigationShell.goBranch(
+      index,
+      initialLocation: index == navigationShell.currentIndex,
+    );
   }
-
-  void _onTabTap(BuildContext context, int index) =>
-      context.go(_routes[index]);
 
   @override
   Widget build(BuildContext context) {
-    final selectedIndex = _selectedIndex(context);
     return Scaffold(
-      body: child,
+      body: navigationShell,
       bottomNavigationBar: _VivaBottomNav(
-        selectedIndex: selectedIndex,
-        onTap: (i) => _onTabTap(context, i),
+        selectedIndex: navigationShell.currentIndex,
+        onTap: _onTabTap,
       ),
     );
   }

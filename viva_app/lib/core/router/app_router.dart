@@ -131,15 +131,26 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.verificationStatus, builder: (_, __) => const VerificationStatusScreen()),
 
       // Main app shell (with bottom nav)
-      ShellRoute(
-        builder: (context, state, child) => MainShellScreen(child: child),
-        routes: [
-          GoRoute(path: AppRoutes.home, builder: (_, __) => const HomeScreen()),
-          GoRoute(path: AppRoutes.search, builder: (_, __) => const SearchScreen()),
-          GoRoute(path: AppRoutes.interests, builder: (_, __) => const InterestsScreen()),
-          GoRoute(path: AppRoutes.connections, builder: (_, __) => const ConversationsScreen()),
-          GoRoute(path: AppRoutes.myProfile, builder: (_, __) => const MyProfileScreen()),
-          GoRoute(path: AppRoutes.shortlist, builder: (_, __) => const ShortlistScreen()),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            MainShellScreen(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(routes: [
+            GoRoute(path: AppRoutes.home, builder: (_, __) => const HomeScreen()),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: AppRoutes.search, builder: (_, __) => const SearchScreen()),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: AppRoutes.interests, builder: (_, __) => const InterestsScreen()),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: AppRoutes.connections, builder: (_, __) => const ConversationsScreen()),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: AppRoutes.myProfile, builder: (_, __) => const MyProfileScreen()),
+            GoRoute(path: AppRoutes.shortlist, builder: (_, __) => const ShortlistScreen()),
+          ]),
         ],
       ),
 

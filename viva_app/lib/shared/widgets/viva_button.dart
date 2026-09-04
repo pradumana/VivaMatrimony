@@ -47,14 +47,16 @@ class VivaButton extends StatelessWidget {
       child: Material(
         borderRadius: BorderRadius.circular(AppRadius.lg),
         child: InkWell(
-          onTap: isLoading ? null : onPressed,
+          onTap: (isLoading || onPressed == null) ? null : onPressed,
           borderRadius: BorderRadius.circular(AppRadius.lg),
           child: Ink(
             decoration: BoxDecoration(
-              gradient: onPressed == null
+              gradient: (isLoading || onPressed == null)
                   ? null
                   : AppTheme.primaryGradient,
-              color: onPressed == null ? Colors.grey.shade300 : null,
+              color: (isLoading || onPressed == null)
+                  ? Colors.grey.shade300
+                  : null,
               borderRadius: BorderRadius.circular(AppRadius.lg),
             ),
             child: Center(
@@ -70,15 +72,21 @@ class VivaButton extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         if (icon != null) ...[
-                          Icon(icon, color: Colors.white, size: 18),
+                          Icon(icon,
+                              color: onPressed == null
+                                  ? Colors.grey.shade600
+                                  : Colors.white,
+                              size: 18),
                           const SizedBox(width: 8),
                         ],
                         Text(
                           label,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                            color: onPressed == null
+                                ? Colors.grey.shade600
+                                : Colors.white,
                             letterSpacing: 0.3,
                           ),
                         ),

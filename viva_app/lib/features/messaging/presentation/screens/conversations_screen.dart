@@ -7,7 +7,6 @@ import 'package:dio/dio.dart';
 
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../shared/constants/app_constants.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../../../../shared/widgets/verified_badge.dart';
 
@@ -115,7 +114,7 @@ class ConversationsScreen extends ConsumerWidget {
 
 class _ConnectionCard extends ConsumerStatefulWidget {
   final _Connection connection;
-  const _ConnectionCard({super.key, required this.connection});
+  const _ConnectionCard({required this.connection});
 
   @override
   ConsumerState<_ConnectionCard> createState() =>
@@ -246,11 +245,11 @@ class _ConnectionCardState extends ConsumerState<_ConnectionCard> {
                     ]),
                   ],
                   const SizedBox(height: 6),
-                  Row(children: [
-                    const Icon(Icons.check_circle_outline_rounded,
+                  const Row(children: [
+                    Icon(Icons.check_circle_outline_rounded,
                         size: 12, color: AppTheme.success),
-                    const SizedBox(width: 4),
-                    const Text(
+                    SizedBox(width: 4),
+                    Text(
                       'Mutually connected',
                       style: TextStyle(
                         fontSize: 11,
@@ -287,7 +286,7 @@ class _ConnectionCardState extends ConsumerState<_ConnectionCard> {
                       boxShadow: [
                         BoxShadow(
                           color: AppTheme.whatsAppGreen
-                              .withOpacity(0.3),
+                              .withValues(alpha: 0.3),
                           blurRadius: 8,
                           offset: const Offset(0, 3),
                         ),

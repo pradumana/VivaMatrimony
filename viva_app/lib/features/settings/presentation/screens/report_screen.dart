@@ -81,9 +81,9 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: AppTheme.warning.withOpacity(0.08),
+                  color: AppTheme.warning.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(AppRadius.md),
-                  border: Border.all(color: AppTheme.warning.withOpacity(0.3)),
+                  border: Border.all(color: AppTheme.warning.withValues(alpha: 0.3)),
                 ),
                 child: const Row(children: [
                   Icon(Icons.info_outline, size: 18, color: AppTheme.warning),
@@ -97,14 +97,26 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
 
               Expanded(
                 child: ListView(children: [
-                  ..._reasons.map((r) => RadioListTile<String>(
-                    value: r.$1,
-                    groupValue: _selectedReason,
-                    onChanged: (v) => setState(() => _selectedReason = v),
-                    title: Text(r.$2, style: const TextStyle(fontSize: 14)),
-                    activeColor: AppTheme.primary,
-                    contentPadding: EdgeInsets.zero,
-                    dense: true,
+                  ..._reasons.map((r) => InkWell(
+                    onTap: () => setState(() => _selectedReason = r.$1),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        children: [
+                          Radio<String>(
+                            value: r.$1,
+                            groupValue: _selectedReason,
+                            onChanged: (v) => setState(() => _selectedReason = v),
+                            activeColor: AppTheme.primary,
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          Expanded(
+                            child: Text(r.$2,
+                                style: const TextStyle(fontSize: 14)),
+                          ),
+                        ],
+                      ),
+                    ),
                   )),
                   const SizedBox(height: 16),
                   const Text('Additional details (optional)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
