@@ -74,6 +74,22 @@ class ProfileCreateRequest(BaseModel):
     caste: Optional[str] = None
     sub_caste: Optional[str] = None
     about_me: Optional[str] = None
+    whatsapp_phone: Optional[str] = None
+
+    @field_validator("whatsapp_phone", mode="before")
+    @classmethod
+    def validate_whatsapp_phone(cls, v: Optional[str]) -> Optional[str]:
+        if not v:
+            return None
+        v = v.strip()
+        if not v:
+            return None
+        import re
+        if not re.match(r'^\+[1-9]\d{6,14}$', v):
+            raise ValueError(
+                "WhatsApp number must be in international format, e.g. +919876543210"
+            )
+        return v
 
     @field_validator("full_name")
     @classmethod
@@ -141,6 +157,7 @@ class ProfileResponse(BaseModel):
     photo_visibility: str
     completion_percentage: int
     is_verified: bool
+    whatsapp_phone: Optional[str] = None
 
     class Config:
         from_attributes = True

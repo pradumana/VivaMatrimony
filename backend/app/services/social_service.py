@@ -111,11 +111,11 @@ async def accept_interest(db: AsyncSession, interest_id: UUID, user_id: UUID) ->
     result = await db.execute(
         text("""
             SELECT i.id, i.sender_id, i.receiver_id, i.status,
-                   u_sender.phone_normalized as sender_phone,
-                   u_receiver.phone_normalized as receiver_phone
+                   ps.whatsapp_phone as sender_wa,
+                   pr.whatsapp_phone as receiver_wa
             FROM interests i
-            JOIN users u_sender   ON u_sender.id   = i.sender_id
-            JOIN users u_receiver ON u_receiver.id = i.receiver_id
+            JOIN profiles ps ON ps.user_id = i.sender_id
+            JOIN profiles pr ON pr.user_id = i.receiver_id
             WHERE i.id = :iid
         """),
         {"iid": interest_id},
@@ -141,16 +141,20 @@ async def accept_interest(db: AsyncSession, interest_id: UUID, user_id: UUID) ->
 
     await _notify_interest_accepted(db, user_id, interest.sender_id, str(interest_id))
 
-    # Determine which phone belongs to the OTHER party from each user's perspective.
-    # The receiver (user_id) accepted — so the other party is the sender.
-    other_phone = interest.sender_phone
+    # Receiver accepted — other party is the sender
+    other_wa = interest.sender_wa
+    if other_wa:
+        stripped = other_wa.lstrip("+")
+        whatsapp_url = f"https://wa.me/{stripped}"
+    else:
+        stripped = None
+        whatsapp_url = None
 
     return {
         "interest_id": str(interest_id),
         "status": "accepted",
-        # Stripped of + for wa.me URL: wa.me/919876543210
-        "whatsapp_number": other_phone.lstrip("+"),
-        "whatsapp_url": f"https://wa.me/{other_phone.lstrip('+')}",
+        "whatsapp_number": stripped,
+        "whatsapp_url": whatsapp_url,
     }
 
 
@@ -168,15 +172,13 @@ async def get_whatsapp_contact(
     result = await db.execute(
         text("""
             SELECT i.sender_id, i.receiver_id, i.status,
-                   u_sender.phone_normalized   as sender_phone,
-                   u_receiver.phone_normalized as receiver_phone,
+                   ps.whatsapp_phone as sender_wa,
+                   pr.whatsapp_phone as receiver_wa,
                    ps.full_name as sender_name,
                    pr.full_name as receiver_name
             FROM interests i
-            JOIN users u_sender   ON u_sender.id   = i.sender_id
-            JOIN users u_receiver ON u_receiver.id = i.receiver_id
-            LEFT JOIN profiles ps ON ps.user_id = i.sender_id
-            LEFT JOIN profiles pr ON pr.user_id = i.receiver_id
+            JOIN profiles ps ON ps.user_id = i.sender_id
+            JOIN profiles pr ON pr.user_id = i.receiver_id
             WHERE i.id = :iid
         """),
         {"iid": interest_id},
@@ -186,26 +188,31 @@ async def get_whatsapp_contact(
     if not row:
         raise SocialError("Interest not found.", code="not_found")
 
-    # Must be a party to this interest
     if requesting_user_id not in (row.sender_id, row.receiver_id):
         raise SocialError("Access denied.", code="unauthorized")
 
-    # Must be accepted
     if row.status != "accepted":
         raise SocialError(
             "WhatsApp contact is only available after the interest is accepted.",
             code="not_accepted",
         )
 
-    # Return the OTHER party's details
     if requesting_user_id == row.sender_id:
-        other_phone = row.receiver_phone
-        other_name  = row.receiver_name
+        other_wa = row.receiver_wa
+        other_name = row.receiver_name
     else:
-        other_phone = row.sender_phone
-        other_name  = row.sender_name
+        other_wa = row.sender_wa
+        other_name = row.sender_name
 
-    stripped = other_phone.lstrip("+")
+    if not other_wa:
+        return {
+            "full_name": other_name,
+            "whatsapp_number": None,
+            "whatsapp_url": None,
+            "message": "This member has not added a WhatsApp number yet.",
+        }
+
+    stripped = other_wa.lstrip("+")
     return {
         "full_name": other_name,
         "whatsapp_number": stripped,

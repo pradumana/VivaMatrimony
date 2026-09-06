@@ -25,6 +25,9 @@ backend/venv/
 .coverage
 htmlcov/
 *.xml
+# Re-include Android/Flutter XML source files excluded by the rule above
+!viva_app/android/**/*.xml
+!viva_app/ios/**/*.plist
 
 # ── Alembic ──────────────────────────────────────────────────────────────────
 # Keep migrations tracked, ignore compiled cache

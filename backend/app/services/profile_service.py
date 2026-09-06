@@ -196,6 +196,10 @@ async def get_profile(
         "completion_percentage": row.completion_percentage,
         "is_verified": row.verification_status == "verified",
         "last_active_at": row.last_active_at,
+        # whatsapp_phone: only expose to own profile or after accepted interest.
+        # For other users it is resolved by the social layer (get_whatsapp_contact).
+        # Here we expose it for own profile only so the edit screen can pre-fill it.
+        "whatsapp_phone": row.whatsapp_phone if is_own else None,
     }
 
     current_location = {
@@ -319,6 +323,7 @@ async def upsert_profile(
                   caste = COALESCE(:caste, caste),
                   sub_caste = COALESCE(:sub_caste, sub_caste),
                   about_me = COALESCE(:about_me, about_me),
+                  whatsapp_phone = COALESCE(:whatsapp_phone, whatsapp_phone),
                   updated_at = NOW()
                 WHERE user_id = :user_id
             """),
@@ -337,6 +342,7 @@ async def upsert_profile(
                 "caste": data.get("caste"),
                 "sub_caste": data.get("sub_caste"),
                 "about_me": data.get("about_me"),
+                "whatsapp_phone": data.get("whatsapp_phone"),
             },
         )
     else:
@@ -345,11 +351,13 @@ async def upsert_profile(
                 INSERT INTO profiles (
                   user_id, full_name, gender, date_of_birth, height_cm,
                   marital_status, have_children, children_count,
-                  mother_tongue, languages_known, religion, caste, sub_caste, about_me
+                  mother_tongue, languages_known, religion, caste, sub_caste,
+                  about_me, whatsapp_phone
                 ) VALUES (
                   :user_id, :full_name, :gender, :dob, :height,
                   :marital_status, :have_children, :children_count,
-                  :mother_tongue, :languages, :religion, :caste, :sub_caste, :about_me
+                  :mother_tongue, :languages, :religion, :caste, :sub_caste,
+                  :about_me, :whatsapp_phone
                 )
             """),
             {
@@ -367,6 +375,7 @@ async def upsert_profile(
                 "caste": data.get("caste"),
                 "sub_caste": data.get("sub_caste"),
                 "about_me": data.get("about_me"),
+                "whatsapp_phone": data.get("whatsapp_phone"),
             },
         )
 

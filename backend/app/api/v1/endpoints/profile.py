@@ -107,22 +107,6 @@ async def _upsert_location(db: AsyncSession, user_id: UUID, data: dict, table: s
 
 
 # ---------------------------------------------------------------------------
-# Profile
-# ---------------------------------------------------------------------------
-
-@router.get("", response_model=FullProfileResponse)
-async def get_my_profile(
-    current_user: AuthenticatedUser = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    """Get current user's full profile."""
-    data = await profile_service.get_profile(db, current_user.user_id, current_user.user_id)
-    if not data:
-        raise HTTPException(status_code=404, detail="Profile not found. Please create your profile.")
-    return data
-
-
-# ---------------------------------------------------------------------------
 # Photos  (must be defined BEFORE /{user_id} to avoid path-param shadowing)
 # ---------------------------------------------------------------------------
 

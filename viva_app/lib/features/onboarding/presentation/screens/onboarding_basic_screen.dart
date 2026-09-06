@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/constants/app_constants.dart';
 import '../../../../shared/widgets/viva_text_field.dart';
@@ -22,6 +23,7 @@ class _OnboardingBasicScreenState
     extends ConsumerState<OnboardingBasicScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _whatsappController = TextEditingController();
   String? _gender;
   DateTime? _dob;
   int? _heightCm;
@@ -31,7 +33,37 @@ class _OnboardingBasicScreenState
   @override
   void dispose() {
     _nameController.dispose();
+    _whatsappController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.isEditing) _loadExisting();
+  }
+
+  Future<void> _loadExisting() async {
+    try {
+      final client = ref.read(apiClientProvider);
+      final r = await client.get('/profile');
+      final data = r.data as Map<String, dynamic>;
+      final profile = data['profile'] as Map<String, dynamic>? ?? {};
+      if (!mounted) return;
+      setState(() {
+        _nameController.text = (profile['full_name'] as String?)?.trim() ?? '';
+        _gender = profile['gender'] as String?;
+        final dobStr = profile['date_of_birth'] as String?;
+        if (dobStr != null) _dob = DateTime.tryParse(dobStr);
+        _heightCm = profile['height_cm'] as int?;
+        _maritalStatus = profile['marital_status'] as String?;
+        _motherTongue = profile['mother_tongue'] as String?;
+        final wa = profile['whatsapp_phone'] as String?;
+        if (wa != null) _whatsappController.text = wa;
+      });
+    } catch (_) {
+      // pre-fill is best-effort — user can enter manually
+    }
   }
 
   String get _dobDisplay =>
@@ -92,6 +124,9 @@ class _OnboardingBasicScreenState
       'height_cm': _heightCm,
       'marital_status': _maritalStatus ?? 'never_married',
       'mother_tongue': _motherTongue,
+      'whatsapp_phone': _whatsappController.text.trim().isEmpty
+          ? null
+          : _whatsappController.text.trim(),
     });
 
     if (ok && mounted) {
@@ -247,6 +282,22 @@ class _OnboardingBasicScreenState
                 DropdownMenuItem(value: 'Other', child: Text('Other')),
               ],
               onChanged: (v) => setState(() => _motherTongue = v),
+            ),
+            const SizedBox(height: 16),
+
+            // WhatsApp number
+            VivaTextField(
+              label: 'WhatsApp Number (optional)',
+              hint: '+91 98765 43210 — shared only after interest accepted',
+              controller: _whatsappController,
+              keyboardType: TextInputType.phone,
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return null;
+                if (!RegExp(r'^\+[1-9]\d{6,14}$').hasMatch(v.trim())) {
+                  return 'Use international format: +919876543210';
+                }
+                return null;
+              },
             ),
           ],
         ),

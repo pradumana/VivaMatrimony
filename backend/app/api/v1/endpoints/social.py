@@ -276,3 +276,20 @@ async def mark_notification_read(
         {"nid": notification_id, "uid": current_user.user_id},
     )
     await db.commit()
+
+
+@router.post("/notifications/mark-all-read", status_code=status.HTTP_204_NO_CONTENT)
+async def mark_all_notifications_read(
+    current_user: AuthenticatedUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Mark all unread notifications as read for the current user."""
+    await db.execute(
+        text("""
+            UPDATE notifications
+            SET is_read = TRUE, read_at = NOW()
+            WHERE user_id = :uid AND is_read = FALSE
+        """),
+        {"uid": current_user.user_id},
+    )
+    await db.commit()
