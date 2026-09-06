@@ -50,7 +50,16 @@ COMMENT ON TABLE sessions IS
     'Supabase Auth manages sessions. Kept for audit trail.';
 
 -- 6. Remove the otp_resend_cooldown_secs app_setting row (no longer used)
-DELETE FROM app_settings WHERE key = 'otp_resend_cooldown_secs';
+--    Guard: app_settings is created in migration 004; skip if not yet applied.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'app_settings'
+  ) THEN
+    DELETE FROM app_settings WHERE key = 'otp_resend_cooldown_secs';
+  END IF;
+END $$;
 
 -- 7. Index for fast JWT sub lookup (email-auth users looked up by supabase_uid)
 CREATE INDEX IF NOT EXISTS idx_users_email ON users (email)
