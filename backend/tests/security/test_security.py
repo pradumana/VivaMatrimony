@@ -57,15 +57,14 @@ async def test_no_stack_trace_in_production_errors(async_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_send_otp_rate_limit_enforced(async_client: AsyncClient):
+async def test_register_endpoint_exists(async_client: AsyncClient):
     """
-    OTP endpoint has rate limiting.
-    Under normal conditions (mock provider), rapid requests should
-    eventually hit cooldown or rate limit.
+    POST /auth/register must exist and require a valid Supabase JWT.
+    OTP rate-limit test removed — WhatsApp OTP auth removed in migration 005.
     """
-    # Not easily testable without real DB, but endpoint must exist and reject bad input
-    response = await async_client.post("/api/v1/auth/send-otp", json={"phone": ""})
-    assert response.status_code == 422  # Validation error, not 500
+    response = await async_client.post("/api/v1/auth/register", json={})
+    # Without a valid Supabase JWT the endpoint must return 401, not 404 or 500
+    assert response.status_code == 401
 
 
 @pytest.mark.asyncio
