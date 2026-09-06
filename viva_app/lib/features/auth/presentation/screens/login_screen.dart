@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -17,37 +16,26 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _phoneController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  final _emailCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
+  bool _obscure = true;
   bool _termsAccepted = false;
 
   @override
   void dispose() {
-    _phoneController.dispose();
+    _emailCtrl.dispose();
+    _passwordCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _sendOtp() async {
+  Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
-    if (!_termsAccepted) {
-      _showTermsError();
-      return;
-    }
-    final phone = _phoneController.text.trim();
-    await ref.read(authScreenProvider.notifier).sendOtp(
-          context: context,
-          phone: phone,
-          onSuccess: () => context.push(AppRoutes.otp, extra: phone),
+    await ref.read(authScreenProvider.notifier).login(
+          email: _emailCtrl.text,
+          password: _passwordCtrl.text,
+          onSuccess: () {}, // router reacts to authProvider state change
         );
-  }
-
-  void _showTermsError() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Please accept the Terms & Conditions to continue'),
-        backgroundColor: AppTheme.error,
-      ),
-    );
   }
 
   @override
@@ -61,7 +49,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Warm gradient hero ──────────────────────────────────────
+              // ── Hero ──────────────────────────────────────────────────────
               Container(
                 width: double.infinity,
                 decoration: const BoxDecoration(
@@ -73,13 +61,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 child: Stack(
                   children: [
-                    // Decorative circle
                     Positioned(
-                      top: -30,
-                      right: -30,
+                      top: -30, right: -30,
                       child: Container(
-                        width: 160,
-                        height: 160,
+                        width: 160, height: 160,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Colors.white.withValues(alpha: 0.07),
@@ -91,21 +76,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Logo badge
                           Container(
-                            width: 64,
-                            height: 64,
+                            width: 64, height: 64,
                             decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white,
-                            ),
+                                shape: BoxShape.circle, color: Colors.white),
                             child: Center(
                               child: Padding(
                                 padding: const EdgeInsets.all(10),
                                 child: VivaLogo(
-                                  size: 44,
-                                  variant: VivaLogoVariant.gradient,
-                                ),
+                                    size: 44,
+                                    variant: VivaLogoVariant.gradient),
                               ),
                             ),
                           ),
@@ -113,10 +93,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           const Text(
                             'Welcome to Viva',
                             style: TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                              letterSpacing: -0.3,
+                              fontSize: 28, fontWeight: FontWeight.w800,
+                              color: Colors.white, letterSpacing: -0.3,
                             ),
                           ),
                           const SizedBox(height: 6),
@@ -125,8 +103,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.white.withValues(alpha: 0.85),
-                              fontStyle: FontStyle.italic,
-                              height: 1.4,
+                              fontStyle: FontStyle.italic, height: 1.4,
                             ),
                           ),
                         ],
@@ -136,7 +113,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
 
-              // ── Form ───────────────────────────────────────────────────
+              // ── Form ──────────────────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.pagePadding),
@@ -146,116 +123,117 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 32),
-
                       const Text(
-                        'Sign in or create account',
+                        'Sign in to your account',
                         style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 18, fontWeight: FontWeight.w700,
                           color: AppTheme.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      const Text(
-                        'We\'ll send a one-time code to your WhatsApp number.',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: AppTheme.textSecondary,
-                          height: 1.5,
-                        ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Text(
+                            'New here?  ',
+                            style: TextStyle(
+                                fontSize: 13, color: AppTheme.textSecondary),
+                          ),
+                          GestureDetector(
+                            onTap: () => context.go(AppRoutes.register),
+                            child: const Text(
+                              'Create account',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: AppTheme.primary,
+                                fontWeight: FontWeight.w600,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 28),
 
-                      // ── Phone field ───────────────────────────────────
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(AppRadius.lg),
-                          border: Border.all(color: AppTheme.border, width: 1.5),
-                          boxShadow: AppShadows.card,
+                      // Email
+                      TextFormField(
+                        controller: _emailCtrl,
+                        keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
+                        autofocus: true,
+                        autocorrect: false,
+                        decoration: const InputDecoration(
+                          labelText: 'Email address',
+                          prefixIcon: Icon(Icons.email_outlined),
                         ),
-                        child: Row(
-                          children: [
-                            // Country prefix
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 16),
-                              decoration: BoxDecoration(
-                                border: Border(
-                                  right: BorderSide(
-                                      color: AppTheme.border, width: 1.5),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Text('🇮🇳',
-                                      style: TextStyle(fontSize: 20)),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    AppConstants.indiaCode,
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppTheme.textPrimary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // Number input
-                            Expanded(
-                              child: TextFormField(
-                                controller: _phoneController,
-                                keyboardType: TextInputType.phone,
-                                textInputAction: TextInputAction.done,
-                                autofocus: true,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.allow(
-                                      RegExp(r'[0-9+\s\-]')),
-                                ],
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppTheme.textPrimary,
-                                  letterSpacing: 1.5,
-                                ),
-                                decoration: const InputDecoration(
-                                  hintText: '98765 43210',
-                                  hintStyle: TextStyle(
-                                    fontSize: 18,
-                                    color: AppTheme.textTertiary,
-                                    letterSpacing: 1.5,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                  border: InputBorder.none,
-                                  enabledBorder: InputBorder.none,
-                                  focusedBorder: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 16),
-                                  filled: false,
-                                ),
-                                validator: (v) {
-                                  if (v == null || v.trim().isEmpty) {
-                                    return 'Please enter your WhatsApp number';
-                                  }
-                                  final digits =
-                                      v.replaceAll(RegExp(r'\D'), '');
-                                  if (digits.length < 7) {
-                                    return 'Please enter a valid phone number';
-                                  }
-                                  return null;
-                                },
-                                onFieldSubmitted: (_) => _sendOtp(),
-                              ),
-                            ),
-                          ],
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) {
+                            return 'Email is required';
+                          }
+                          if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+                              .hasMatch(v.trim())) {
+                            return 'Enter a valid email address';
+                          }
+                          return null;
+                        },
+                        onChanged: (_) => ref
+                            .read(authScreenProvider.notifier)
+                            .clearError(),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Password
+                      TextFormField(
+                        controller: _passwordCtrl,
+                        obscureText: _obscure,
+                        textInputAction: TextInputAction.done,
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          prefixIcon: const Icon(Icons.lock_outline_rounded),
+                          suffixIcon: IconButton(
+                            icon: Icon(_obscure
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined),
+                            onPressed: () =>
+                                setState(() => _obscure = !_obscure),
+                          ),
+                        ),
+                        validator: (v) {
+                          if (v == null || v.isEmpty) {
+                            return 'Password is required';
+                          }
+                          return null;
+                        },
+                        onFieldSubmitted: (_) =>
+                            state.isLoading ? null : _login(),
+                        onChanged: (_) => ref
+                            .read(authScreenProvider.notifier)
+                            .clearError(),
+                      ),
+
+                      // Forgot password
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () =>
+                              context.push(AppRoutes.forgotPassword),
+                          child: const Text(
+                            'Forgot password?',
+                            style: TextStyle(
+                                fontSize: 13, color: AppTheme.primary),
+                          ),
                         ),
                       ),
 
-                      const SizedBox(height: 20),
+                      // Error
+                      if (state.error != null) ...[
+                        const SizedBox(height: 4),
+                        _ErrorBanner(state.error!),
+                        const SizedBox(height: 8),
+                      ],
 
-                      // ── Terms ─────────────────────────────────────────
+                      const SizedBox(height: 8),
+
+                      // Terms
                       GestureDetector(
                         onTap: () =>
                             setState(() => _termsAccepted = !_termsAccepted),
@@ -263,124 +241,53 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             SizedBox(
-                              width: 22,
-                              height: 22,
+                              width: 22, height: 22,
                               child: Checkbox(
                                 value: _termsAccepted,
                                 onChanged: (v) => setState(
                                     () => _termsAccepted = v ?? false),
                                 activeColor: AppTheme.primary,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
+                                    borderRadius: BorderRadius.circular(4)),
                                 materialTapTargetSize:
                                     MaterialTapTargetSize.shrinkWrap,
                               ),
                             ),
                             const SizedBox(width: 10),
-                            Expanded(
-                              child: RichText(
-                                text: const TextSpan(
-                                  style: TextStyle(
+                            const Expanded(
+                              child: Text(
+                                'I agree to the Terms & Conditions and Privacy Policy',
+                                style: TextStyle(
                                     fontSize: 12,
                                     color: AppTheme.textSecondary,
-                                    height: 1.5,
-                                  ),
-                                  children: [
-                                    const TextSpan(text: 'I agree to the '),
-                                    const TextSpan(
-                                      text: 'Terms & Conditions',
-                                      style: TextStyle(
-                                        color: AppTheme.primary,
-                                        fontWeight: FontWeight.w600,
-                                        decoration: TextDecoration.underline,
-                                      ),
-                                    ),
-                                    const TextSpan(text: ' and '),
-                                    const TextSpan(
-                                      text: 'Privacy Policy',
-                                      style: TextStyle(
-                                        color: AppTheme.primary,
-                                        fontWeight: FontWeight.w600,
-                                        decoration: TextDecoration.underline,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                    height: 1.5),
                               ),
                             ),
                           ],
                         ),
                       ),
 
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 24),
 
-                      // ── CTA ───────────────────────────────────────────
                       VivaButton(
-                        label: 'Send OTP via WhatsApp',
-                        icon: Icons.send_rounded,
+                        label: 'Sign In',
+                        icon: Icons.login_rounded,
                         isLoading: state.isLoading,
-                        onPressed: _sendOtp,
-                      ),
-
-                      // Error
-                      if (state.error != null) ...[
-                        const SizedBox(height: 14),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppTheme.error.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(AppRadius.md),
-                            border: Border.all(
-                              color: AppTheme.error.withValues(alpha: 0.3),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.error_outline,
-                                  size: 16, color: AppTheme.error),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  state.error!,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: AppTheme.error,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-
-                      const SizedBox(height: 28),
-
-                      // WhatsApp privacy note
-                      Center(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 28,
-                              height: 28,
-                              decoration: BoxDecoration(
-                                color: AppTheme.whatsAppGreen.withValues(alpha: 0.12),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.lock_outline_rounded,
-                                  size: 14, color: AppTheme.whatsAppGreen),
-                            ),
-                            const SizedBox(width: 8),
-                            const Text(
-                              'Your number is safe and private',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: AppTheme.textTertiary,
-                              ),
-                            ),
-                          ],
-                        ),
+                        onPressed: state.isLoading
+                            ? null
+                            : () {
+                                if (!_termsAccepted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                          'Please accept the Terms & Conditions to continue'),
+                                      backgroundColor: AppTheme.error,
+                                    ),
+                                  );
+                                  return;
+                                }
+                                _login();
+                              },
                       ),
                       const SizedBox(height: 32),
                     ],
@@ -390,6 +297,34 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ErrorBanner extends StatelessWidget {
+  final String message;
+  const _ErrorBanner(this.message);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.error.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppTheme.error.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline, size: 16, color: AppTheme.error),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(message,
+                style:
+                    const TextStyle(fontSize: 12, color: AppTheme.error)),
+          ),
+        ],
       ),
     );
   }

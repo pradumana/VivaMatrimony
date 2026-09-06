@@ -20,10 +20,13 @@ dependencies:
   # Navigation
   go_router: ^14.2.0
 
+  # Supabase (Auth + Storage client)
+  supabase_flutter: ^2.5.9
+
   # HTTP
   dio: ^5.4.3
 
-  # Secure storage
+  # Secure storage (still used for memberId / onboarding flag)
   flutter_secure_storage: ^9.2.2
 
   # Image handling

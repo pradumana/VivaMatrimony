@@ -1,71 +1,28 @@
-"""Auth request/response schemas."""
+"""Auth request/response schemas. OTP/WhatsApp schemas removed in migration 005."""
 from typing import Optional
-from pydantic import BaseModel, field_validator
-import re
+from pydantic import BaseModel, EmailStr, field_validator
 
 
-class SendOTPRequest(BaseModel):
-    phone: str
+class RegisterRequest(BaseModel):
+    """
+    Sent by Flutter after Supabase Auth signUp/signIn succeeds.
+    The email here is a fallback — the middleware extracts it from the
+    validated JWT claim first. This field is only used when the JWT's
+    email claim is absent (shouldn't happen with Supabase Auth).
+    """
+    email: Optional[EmailStr] = None
 
-    @field_validator("phone")
+    @field_validator("email", mode="before")
     @classmethod
-    def phone_not_empty(cls, v: str) -> str:
-        v = v.strip()
-        if not v:
-            raise ValueError("Phone number is required")
-        if len(v) > 20:
-            raise ValueError("Phone number too long")
-        return v
-
-
-class SendOTPResponse(BaseModel):
-    success: bool
-    masked_phone: str
-    resend_after: int
-    expires_in_minutes: int
-    message: str = "OTP sent to your WhatsApp number"
-
-
-class VerifyOTPRequest(BaseModel):
-    phone: str
-    otp: str
-    device_info: Optional[str] = None
-
-    @field_validator("otp")
-    @classmethod
-    def otp_format(cls, v: str) -> str:
-        v = v.strip()
-        if not v.isdigit():
-            raise ValueError("OTP must contain only digits")
-        if len(v) < 4 or len(v) > 8:
-            raise ValueError("Invalid OTP format")
-        return v
-
-
-class VerifyOTPResponse(BaseModel):
-    access_token: str
-    refresh_token: str
-    token_type: str = "Bearer"
-    user_id: str
-    member_id: Optional[str] = None
-    is_new_user: bool
-    onboarding_completed: bool
-    account_status: str
-
-
-class RefreshTokenRequest(BaseModel):
-    refresh_token: str
-
-
-class TokenResponse(BaseModel):
-    access_token: str
-    refresh_token: str
-    token_type: str = "Bearer"
+    def normalise_email(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        v = v.strip().lower()
+        return v or None
 
 
 class MeResponse(BaseModel):
     user_id: str
-    phone_normalized: str
+    email: Optional[str]
     account_status: str
     onboarding_completed: bool
-    masked_phone: str

@@ -4,7 +4,7 @@ Never import secrets directly; always use settings.field_name.
 """
 from functools import lru_cache
 from typing import List, Literal
-from pydantic import field_validator, model_validator
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -49,35 +49,18 @@ class Settings(BaseSettings):
     supabase_service_role_key: str
 
     # -------------------------------------------------------------------------
-    # JWT
+    # Supabase Auth JWT
+    # Found in: Supabase dashboard → Project Settings → API → JWT Secret
+    # Used to verify Supabase-issued access tokens on the backend.
+    # -------------------------------------------------------------------------
+    supabase_jwt_secret: str
+
+    # -------------------------------------------------------------------------
+    # Admin JWT (separate from Supabase user tokens)
+    # Used only for the viva-admin panel login.
     # -------------------------------------------------------------------------
     jwt_secret_key: str
     jwt_algorithm: str = "HS256"
-    jwt_access_token_expire_minutes: int = 60
-    jwt_refresh_token_expire_days: int = 30
-
-    # -------------------------------------------------------------------------
-    # OTP
-    # -------------------------------------------------------------------------
-    otp_length: int = 6
-    otp_expire_minutes: int = 10
-    otp_max_attempts: int = 5
-    otp_resend_cooldown_seconds: int = 60
-    otp_max_send_per_day: int = 10
-
-    # -------------------------------------------------------------------------
-    # WhatsApp
-    # -------------------------------------------------------------------------
-    whatsapp_provider: Literal["openwa", "official", "mock"] = "mock"
-
-    # OpenWA
-    openwa_base_url: str = "http://localhost:8002"
-    openwa_api_key: str = ""
-
-    # Meta / Official
-    meta_whatsapp_token: str = ""
-    meta_whatsapp_phone_number_id: str = ""
-    meta_whatsapp_verify_token: str = ""
 
     # -------------------------------------------------------------------------
     # Storage
@@ -103,7 +86,6 @@ class Settings(BaseSettings):
     # Rate Limiting
     # -------------------------------------------------------------------------
     rate_limit_per_minute: int = 60
-    rate_limit_otp_per_hour: int = 5
     rate_limit_search_per_minute: int = 30
 
     # -------------------------------------------------------------------------
@@ -147,6 +129,13 @@ class Settings(BaseSettings):
     def jwt_key_length(cls, v: str) -> str:
         if len(v) < 32:
             raise ValueError("JWT_SECRET_KEY must be at least 32 characters")
+        return v
+
+    @field_validator("supabase_jwt_secret")
+    @classmethod
+    def supabase_jwt_not_empty(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("SUPABASE_JWT_SECRET is required")
         return v
 
 

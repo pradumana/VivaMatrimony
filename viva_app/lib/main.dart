@@ -3,14 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
+import 'shared/constants/app_constants.dart';
 
 void main() async {
-  debugPrint('VIVA: App main() started');
   WidgetsFlutterBinding.ensureInitialized();
-  debugPrint('VIVA: WidgetsBinding initialized');
 
   // Catch Flutter framework errors
   FlutterError.onError = (FlutterErrorDetails details) {
@@ -24,7 +24,13 @@ void main() async {
     return true;
   };
 
-  // Lock to portrait - move after runApp if it hangs
+  // Initialise Supabase — must happen before runApp so the SDK can
+  // restore any persisted session before the router reads auth state.
+  await Supabase.initialize(
+    url: AppConstants.supabaseUrl,
+    publishableKey: AppConstants.supabaseAnonKey,
+  );
+
   try {
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,

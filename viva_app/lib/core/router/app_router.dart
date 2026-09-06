@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
-import '../../features/auth/presentation/screens/otp_screen.dart';
+import '../../features/auth/presentation/screens/register_screen.dart';
+import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/welcome_screen.dart';
 import '../../features/onboarding/presentation/screens/onboarding_basic_screen.dart';
 import '../../features/onboarding/presentation/screens/onboarding_bio_screen.dart';
@@ -40,9 +41,7 @@ import '../../shared/constants/app_constants.dart';
 final routerProvider = Provider<GoRouter>((ref) {
   final notifier = _AuthChangeNotifier();
 
-  // Listen to auth changes and notify GoRouter to re-run redirect
   ref.listen<AsyncValue<AuthState>>(authProvider, (previous, next) {
-    // Notify on status change OR when transitioning to/from an error state
     final prevStatus = previous?.valueOrNull?.status;
     final nextStatus = next.valueOrNull?.status;
     final wasError = previous is AsyncError;
@@ -60,21 +59,20 @@ final routerProvider = Provider<GoRouter>((ref) {
       final authAsync = ref.read(authProvider);
       final auth = authAsync.valueOrNull;
 
-      debugPrint('[Router] redirect — status=${auth?.status} location=${state.matchedLocation}');
+      debugPrint(
+          '[Router] redirect — status=${auth?.status} location=${state.matchedLocation}');
 
-      // On AsyncError (e.g. storage failure on cold launch), treat as unauthenticated
-      // so the app never gets stuck on the splash screen forever.
       if (authAsync is AsyncError) return AppRoutes.login;
+      if (auth == null) return null; // still loading
 
-      if (auth == null) return null; // Still loading
-
-      final isSplash = state.matchedLocation == AppRoutes.splash;
-      final isOnAuthRoute = state.matchedLocation == AppRoutes.login ||
-          state.matchedLocation == AppRoutes.otp ||
-          state.matchedLocation == AppRoutes.welcome;
+      final loc = state.matchedLocation;
+      final isSplash = loc == AppRoutes.splash;
+      final isOnAuthRoute = loc == AppRoutes.login ||
+          loc == AppRoutes.register ||
+          loc == AppRoutes.forgotPassword ||
+          loc == AppRoutes.welcome;
       final isOnOnboardingRoute =
-          state.matchedLocation.startsWith('/onboarding') ||
-          state.matchedLocation.startsWith('/verification');
+          loc.startsWith('/onboarding') || loc.startsWith('/verification');
 
       switch (auth.status) {
         case AuthStatus.loading:
@@ -83,35 +81,21 @@ final routerProvider = Provider<GoRouter>((ref) {
           if (isOnAuthRoute) return null;
           return AppRoutes.login;
         case AuthStatus.onboardingRequired:
+          // Allow forgot-password while onboarding state is unclear
+          if (loc == AppRoutes.forgotPassword) return null;
           if (isOnOnboardingRoute) return null;
           return AppRoutes.onboardingBasic;
         case AuthStatus.authenticated:
           if (isSplash || isOnAuthRoute) return AppRoutes.home;
-          // Onboarding screens are also used in edit-mode (isEditing: true)
-          // by authenticated users — do not redirect them away.
           return null;
       }
     },
     routes: [
-      GoRoute(
-        path: AppRoutes.splash,
-        builder: (_, __) => const SplashScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.login,
-        builder: (_, __) => const LoginScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.otp,
-        builder: (context, state) {
-          final phone = state.extra as String? ?? '';
-          return OtpScreen(phone: phone);
-        },
-      ),
-      GoRoute(
-        path: AppRoutes.welcome,
-        builder: (_, __) => const WelcomeScreen(),
-      ),
+      GoRoute(path: AppRoutes.splash, builder: (_, __) => const SplashScreen()),
+      GoRoute(path: AppRoutes.login, builder: (_, __) => const LoginScreen()),
+      GoRoute(path: AppRoutes.register, builder: (_, __) => const RegisterScreen()),
+      GoRoute(path: AppRoutes.forgotPassword, builder: (_, __) => const ForgotPasswordScreen()),
+      GoRoute(path: AppRoutes.welcome, builder: (_, __) => const WelcomeScreen()),
 
       // Onboarding
       GoRoute(path: AppRoutes.onboardingBasic, builder: (_, s) => OnboardingBasicScreen(isEditing: s.extra == true)),
@@ -130,7 +114,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.verificationCertificate, builder: (_, __) => const VerificationCertificateScreen()),
       GoRoute(path: AppRoutes.verificationStatus, builder: (_, __) => const VerificationStatusScreen()),
 
-      // Main app shell (with bottom nav)
+      // Main app shell
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             MainShellScreen(navigationShell: navigationShell),
@@ -154,15 +138,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
 
-      // Detail routes (no shell)
+      // Detail / settings routes
       GoRoute(path: AppRoutes.editProfile, builder: (_, __) => const EditProfileScreen()),
       GoRoute(path: AppRoutes.biodata, builder: (_, __) => const BiodataScreen()),
       GoRoute(
         path: '/profile/:userId',
-        builder: (context, state) {
-          final userId = state.pathParameters['userId']!;
-          return ProfileDetailScreen(userId: userId);
-        },
+        builder: (context, state) =>
+            ProfileDetailScreen(userId: state.pathParameters['userId']!),
       ),
       GoRoute(path: AppRoutes.notifications, builder: (_, __) => const NotificationsScreen()),
       GoRoute(path: AppRoutes.settings, builder: (_, __) => const SettingsScreen()),
@@ -170,10 +152,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.helpSupport, builder: (_, __) => const HelpScreen()),
       GoRoute(
         path: '/report/:userId',
-        builder: (context, state) {
-          final userId = state.pathParameters['userId']!;
-          return ReportScreen(reportedUserId: userId);
-        },
+        builder: (context, state) =>
+            ReportScreen(reportedUserId: state.pathParameters['userId']!),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
@@ -183,7 +163,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           children: [
             const Icon(Icons.error_outline, size: 60, color: Colors.grey),
             const SizedBox(height: 16),
-            const Text('Page not found', style: TextStyle(fontSize: 18)),
+            const Text('Page not found',
+                style: TextStyle(fontSize: 18)),
             const SizedBox(height: 16),
             TextButton(
               onPressed: () => context.go(AppRoutes.home),
@@ -196,7 +177,6 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-/// Bridges Riverpod auth state changes to GoRouter's [refreshListenable].
 class _AuthChangeNotifier extends ChangeNotifier {
   void notify() => notifyListeners();
 }

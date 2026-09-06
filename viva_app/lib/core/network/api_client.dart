@@ -1,55 +1,45 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../shared/constants/app_constants.dart';
 
-/// Dio HTTP client with JWT interceptor and error handling.
+/// Dio HTTP client that attaches the current Supabase access token.
+/// Token refresh is handled automatically by supabase_flutter — when the
+/// SDK refreshes a token it fires onAuthStateChange which updates the session
+/// object we read here. No custom refresh interceptor needed.
 class ApiClient {
   late final Dio _dio;
-  final FlutterSecureStorage _storage;
-  late final _AuthInterceptor _authInterceptor;
 
-  ApiClient({FlutterSecureStorage? storage, void Function()? onForceLogout})
-      : _storage = storage ?? const FlutterSecureStorage() {
-    _authInterceptor = _AuthInterceptor(_storage, onForceLogout: onForceLogout);
+  ApiClient() {
     _dio = Dio(
       BaseOptions(
         baseUrl: AppConstants.baseUrl,
-        connectTimeout: const Duration(milliseconds: AppConstants.connectTimeoutMs),
-        receiveTimeout: const Duration(milliseconds: AppConstants.receiveTimeoutMs),
+        connectTimeout:
+            const Duration(milliseconds: AppConstants.connectTimeoutMs),
+        receiveTimeout:
+            const Duration(milliseconds: AppConstants.receiveTimeoutMs),
         headers: {
-          'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
       ),
     );
 
     _dio.interceptors.addAll([
-      _authInterceptor,
-      LogInterceptor(
-        requestBody: false,
-        responseBody: false,
-        error: true,
-      ),
+      _SupabaseAuthInterceptor(),
+      LogInterceptor(requestBody: false, responseBody: false, error: true),
     ]);
-    // Wire the Dio instance into the interceptor after construction.
-    _authInterceptor._dio = _dio;
   }
 
-  // Allows wiring a force-logout callback after construction (used by authProvider).
-  set onForceLogout(void Function() cb) => _authInterceptor._onForceLogout = cb;
-
   Dio get dio => _dio;
-
-  // ── Convenience methods ──────────────────────────────────────────────────
 
   Future<Response<T>> get<T>(
     String path, {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) =>
-      _dio.get<T>(path, queryParameters: queryParameters, options: options);
+      _dio.get<T>(path,
+          queryParameters: queryParameters, options: options);
 
   Future<Response<T>> post<T>(
     String path, {
@@ -57,7 +47,8 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) =>
-      _dio.post<T>(path, data: data, queryParameters: queryParameters, options: options);
+      _dio.post<T>(path,
+          data: data, queryParameters: queryParameters, options: options);
 
   Future<Response<T>> put<T>(
     String path, {
@@ -87,108 +78,17 @@ class ApiClient {
       );
 }
 
-class _AuthInterceptor extends Interceptor {
-  final FlutterSecureStorage _storage;
-  late Dio _dio;
-  void Function()? _onForceLogout;
-  bool _isRefreshing = false;
-  // Pending completers waiting for the in-flight refresh to finish.
-  final List<({RequestOptions options, ErrorInterceptorHandler handler})>
-      _pendingRequests = [];
-
-  _AuthInterceptor(this._storage, {void Function()? onForceLogout})
-      : _onForceLogout = onForceLogout;
-
+/// Injects the current Supabase access token into every request.
+/// If the session is null (logged out) the request proceeds without a token
+/// and the backend will return 401 — the router will catch it via auth state.
+class _SupabaseAuthInterceptor extends Interceptor {
   @override
-  void onRequest(
-    RequestOptions options,
-    RequestInterceptorHandler handler,
-  ) async {
-    final token = await _storage.read(key: AppConstants.accessTokenKey);
-    if (token != null) {
-      options.headers['Authorization'] = 'Bearer $token';
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session != null) {
+      options.headers['Authorization'] = 'Bearer ${session.accessToken}';
     }
     handler.next(options);
-  }
-
-  @override
-  void onError(DioException err, ErrorInterceptorHandler handler) async {
-    if (err.response?.statusCode != 401) {
-      return handler.next(err);
-    }
-
-    // If already refreshing, queue this request and wait.
-    if (_isRefreshing) {
-      _pendingRequests.add((options: err.requestOptions, handler: handler));
-      return;
-    }
-
-    _isRefreshing = true;
-    try {
-      final refreshToken = await _storage.read(key: AppConstants.refreshTokenKey);
-      if (refreshToken == null) {
-        _isRefreshing = false;
-        _failPending(err);
-        return handler.next(err);
-      }
-
-      final refreshResponse = await _dio.post(
-        '/auth/refresh',
-        data: {'refresh_token': refreshToken},
-      );
-
-      final newAccessToken = refreshResponse.data['access_token'] as String;
-      final newRefreshToken = refreshResponse.data['refresh_token'] as String;
-
-      await _storage.write(key: AppConstants.accessTokenKey, value: newAccessToken);
-      await _storage.write(key: AppConstants.refreshTokenKey, value: newRefreshToken);
-
-      // Retry the original request.
-      err.requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
-      final retryResponse = await _dio.fetch(err.requestOptions);
-      _isRefreshing = false;
-      // Resolve all queued requests with the new token.
-      await _retryPending(newAccessToken);
-      return handler.resolve(retryResponse);
-    } catch (_) {
-      _isRefreshing = false;
-      // Refresh failed — clear only tokens (not onboarding flag) and force logout.
-      await Future.wait([
-        _storage.delete(key: AppConstants.accessTokenKey),
-        _storage.delete(key: AppConstants.refreshTokenKey),
-        _storage.delete(key: AppConstants.userIdKey),
-      ]);
-      _failPending(err);
-      _onForceLogout?.call();
-      return handler.next(err);
-    }
-  }
-
-  Future<void> _retryPending(String newToken) async {
-    final pending = List.of(_pendingRequests);
-    _pendingRequests.clear();
-    for (final p in pending) {
-      try {
-        p.options.headers['Authorization'] = 'Bearer $newToken';
-        final response = await _dio.fetch(p.options);
-        p.handler.resolve(response);
-      } catch (e) {
-        p.handler.next(e is DioException ? e : DioException(requestOptions: p.options));
-      }
-    }
-  }
-
-  void _failPending(DioException err) {
-    final pending = List.of(_pendingRequests);
-    _pendingRequests.clear();
-    for (final p in pending) {
-      p.handler.next(DioException(
-        requestOptions: p.options,
-        response: err.response,
-        type: err.type,
-        error: err.error,
-      ));
-    }
   }
 }
 
@@ -196,13 +96,8 @@ class _AuthInterceptor extends Interceptor {
 class ApiException implements Exception {
   final String message;
   final int? statusCode;
-  final String? code;
 
-  const ApiException({
-    required this.message,
-    this.statusCode,
-    this.code,
-  });
+  const ApiException({required this.message, this.statusCode});
 
   factory ApiException.fromDioError(DioException error) {
     final statusCode = error.response?.statusCode;
@@ -226,12 +121,12 @@ class ApiException implements Exception {
           403 => 'You do not have permission to do this.',
           404 => 'Not found.',
           429 => 'Too many requests. Please slow down.',
-          500 || 502 || 503 => 'Server error. Please try again shortly.',
+          500 || 502 || 503 =>
+            'Server error. Please try again shortly.',
           _ => 'Something went wrong. Please try again.',
-        }
+        },
       };
     }
-
     return ApiException(message: message, statusCode: statusCode);
   }
 
@@ -239,6 +134,4 @@ class ApiException implements Exception {
   String toString() => 'ApiException($statusCode): $message';
 }
 
-// ── Riverpod providers ──────────────────────────────────────────────────────
-
-final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());
+final apiClientProvider = Provider<ApiClient>((_) => ApiClient());

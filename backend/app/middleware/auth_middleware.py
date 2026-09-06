@@ -1,5 +1,8 @@
 """
-JWT Authentication Middleware + Dependencies.
+JWT Authentication Middleware.
+Validates Supabase-issued JWTs using the project's JWT secret.
+Supabase signs tokens with HS256 using the project's jwt_secret (found in
+Project Settings → API → JWT Secret in the Supabase dashboard).
 """
 from datetime import datetime, timezone
 from typing import Optional
@@ -9,7 +12,7 @@ from fastapi import Depends, HTTPException, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, text
+from sqlalchemy import text
 
 from app.config import get_settings
 from app.database import get_db
@@ -19,28 +22,34 @@ _bearer = HTTPBearer(auto_error=False)
 
 
 class AuthenticatedUser:
-    """Represents a verified, active user from JWT."""
+    """Represents a verified, active user extracted from a Supabase JWT."""
 
     def __init__(
         self,
         user_id: UUID,
-        phone_normalized: str,
+        email: Optional[str],
         account_status: str,
         onboarding_completed: bool,
     ):
         self.user_id = user_id
-        self.phone_normalized = phone_normalized
+        self.email = email
         self.account_status = account_status
         self.onboarding_completed = onboarding_completed
 
 
-def _decode_token(token: str) -> dict:
-    """Decode and validate JWT. Raises HTTPException on failure."""
+def _decode_supabase_token(token: str) -> dict:
+    """
+    Decode and validate a Supabase JWT.
+    Supabase uses HS256 with the project JWT secret.
+    The secret is in Supabase dashboard → Project Settings → API → JWT Secret.
+    Store it as SUPABASE_JWT_SECRET in backend .env.
+    """
     try:
         payload = jwt.decode(
             token,
-            settings.jwt_secret_key,
-            algorithms=[settings.jwt_algorithm],
+            settings.supabase_jwt_secret,
+            algorithms=["HS256"],
+            options={"verify_aud": False},  # Supabase tokens have aud="authenticated"
         )
         return payload
     except JWTError as exc:
@@ -56,8 +65,13 @@ async def get_current_user(
     db: AsyncSession = Depends(get_db),
 ) -> AuthenticatedUser:
     """
-    FastAPI dependency — extracts user from JWT.
-    Validates token, checks expiry, checks account status.
+    FastAPI dependency — validates Supabase JWT and returns active user.
+
+    Flow:
+      1. Decode + verify JWT signature with SUPABASE_JWT_SECRET
+      2. Extract sub (= Supabase Auth user UUID = our users.id)
+      3. Load user from DB — never trust token claims for account status
+      4. Reject suspended / banned / deleted accounts
     """
     if credentials is None:
         raise HTTPException(
@@ -66,20 +80,18 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    payload = _decode_token(credentials.credentials)
+    payload = _decode_supabase_token(credentials.credentials)
 
-    # Extract claims
+    # Supabase puts the user UUID in "sub"
     user_id_str: Optional[str] = payload.get("sub")
-    token_type: Optional[str] = payload.get("type")
-    exp: Optional[int] = payload.get("exp")
-
-    if not user_id_str or token_type != "access":
+    if not user_id_str:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token claims",
+            detail="Invalid token: missing subject",
         )
 
-    # Check expiry explicitly (jose already does this, but belt & suspenders)
+    # Belt-and-suspenders expiry check (jose already validates this)
+    exp: Optional[int] = payload.get("exp")
     if exp and datetime.fromtimestamp(exp, tz=timezone.utc) < datetime.now(tz=timezone.utc):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -94,40 +106,38 @@ async def get_current_user(
             detail="Invalid token subject",
         )
 
-    # Fetch user from DB — DO NOT trust token claims for status
+    # Load from DB — account status is authoritative here, not in the token
     result = await db.execute(
         text("""
-            SELECT id, phone_normalized, account_status, onboarding_completed
+            SELECT id, email, account_status, onboarding_completed
             FROM users
-            WHERE id = :user_id AND deleted_at IS NULL
+            WHERE id = :uid AND deleted_at IS NULL
         """),
-        {"user_id": user_id},
+        {"uid": user_id},
     )
     row = result.fetchone()
 
     if row is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found",
+            detail="User not found. Please complete registration.",
         )
 
-    account_status = row.account_status
-
-    if account_status in ("suspended", "banned"):
+    if row.account_status in ("suspended", "banned"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Account is {account_status}. Contact support.",
+            detail=f"Account is {row.account_status}. Contact support.",
         )
 
-    if account_status == "deleted":
+    if row.account_status == "deleted":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Account has been deleted",
+            detail="Account has been deleted.",
         )
 
     return AuthenticatedUser(
         user_id=row.id,
-        phone_normalized=row.phone_normalized,
+        email=row.email,
         account_status=row.account_status,
         onboarding_completed=row.onboarding_completed,
     )

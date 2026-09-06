@@ -1,32 +1,21 @@
 """
 Authentication endpoints.
-POST /auth/send-otp
-POST /auth/verify-otp
-POST /auth/refresh
-POST /auth/logout
-GET  /auth/me
+
+POST /auth/register  — create users row after Supabase Auth signup (idempotent)
+POST /auth/logout    — best-effort audit log; session revoked by Supabase
+GET  /auth/me        — return current user identity
+
+WhatsApp / OTP endpoints removed in migration 005.
+Session management is fully handled by Supabase Auth SDK on the client.
 """
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.middleware import (
-    get_current_user, AuthenticatedUser, limiter
-)
-from app.schemas.auth import (
-    SendOTPRequest, SendOTPResponse,
-    VerifyOTPRequest, VerifyOTPResponse,
-    RefreshTokenRequest, TokenResponse,
-    MeResponse,
-)
-from app.services.auth_service import (
-    AuthError,
-    send_otp,
-    verify_otp_and_login,
-    refresh_access_token,
-    logout,
-)
-from app.utils.phone import mask_phone
+from app.middleware import get_current_user, AuthenticatedUser
+from app.schemas.auth import RegisterRequest, MeResponse
+from app.services.auth_service import AuthError, get_or_create_user
+from app.utils.audit import log_action
 from app.config import get_settings
 
 settings = get_settings()
@@ -40,113 +29,65 @@ def _get_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
-@router.post("/send-otp", response_model=SendOTPResponse)
-@limiter.limit("5/hour")
-async def send_otp_endpoint(
-    request: Request,
-    body: SendOTPRequest,
+@router.post("/register", status_code=status.HTTP_200_OK)
+async def register(
+    body: RegisterRequest,
+    current_user: AuthenticatedUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    request: Request = None,
 ):
     """
-    Send OTP to a WhatsApp number.
-    Rate limited: 5 per hour per IP.
+    Called by the Flutter app immediately after Supabase Auth signUp/signIn.
+    Creates a users row if it doesn't exist yet (idempotent).
+    Returns onboarding state so the client can route correctly.
+
+    The Supabase JWT is already validated by get_current_user — the user_id
+    in the token IS the authoritative identity. We never accept user_id from
+    the request body.
     """
     try:
-        result = await send_otp(
+        result = await get_or_create_user(
             db=db,
-            phone=body.phone,
-            ip_address=_get_ip(request),
-            user_agent=request.headers.get("User-Agent"),
+            user_id=current_user.user_id,
+            email=current_user.email or body.email,
         )
-        return SendOTPResponse(**result)
     except AuthError as exc:
-        code_to_status = {
-            "invalid_phone": status.HTTP_422_UNPROCESSABLE_ENTITY,
-            "account_restricted": status.HTTP_403_FORBIDDEN,
-            "daily_limit_exceeded": status.HTTP_429_TOO_MANY_REQUESTS,
-            "resend_cooldown": status.HTTP_429_TOO_MANY_REQUESTS,
-            "whatsapp_unavailable": status.HTTP_503_SERVICE_UNAVAILABLE,
-        }
-        raise HTTPException(
-            status_code=code_to_status.get(exc.code, status.HTTP_400_BAD_REQUEST),
-            detail=str(exc),
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
 
+    await log_action(
+        db, "user", current_user.user_id, "register_or_login",
+        details={"is_new": result["is_new_user"], "ip": _get_ip(request) if request else None},
+    )
 
-@router.post("/verify-otp", response_model=VerifyOTPResponse)
-@limiter.limit("10/hour")
-async def verify_otp_endpoint(
-    request: Request,
-    body: VerifyOTPRequest,
-    db: AsyncSession = Depends(get_db),
-):
-    """
-    Verify OTP and return JWT tokens.
-    Creates user if first-time login.
-    """
-    try:
-        result = await verify_otp_and_login(
-            db=db,
-            phone=body.phone,
-            otp=body.otp,
-            device_info=body.device_info,
-            ip_address=_get_ip(request),
-        )
-        return VerifyOTPResponse(**result)
-    except AuthError as exc:
-        code_to_status = {
-            "invalid_phone": status.HTTP_422_UNPROCESSABLE_ENTITY,
-            "no_active_otp": status.HTTP_400_BAD_REQUEST,
-            "otp_expired": status.HTTP_400_BAD_REQUEST,
-            "max_attempts_exceeded": status.HTTP_429_TOO_MANY_REQUESTS,
-            "invalid_otp": status.HTTP_400_BAD_REQUEST,
-            "account_restricted": status.HTTP_403_FORBIDDEN,
-        }
-        raise HTTPException(
-            status_code=code_to_status.get(exc.code, status.HTTP_400_BAD_REQUEST),
-            detail=str(exc),
-        )
-
-
-@router.post("/refresh", response_model=TokenResponse)
-async def refresh_token_endpoint(
-    body: RefreshTokenRequest,
-    db: AsyncSession = Depends(get_db),
-):
-    """Exchange refresh token for new access token."""
-    try:
-        result = await refresh_access_token(db=db, refresh_token=body.refresh_token)
-        return TokenResponse(**result)
-    except AuthError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=str(exc),
-        )
+    return result
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
-async def logout_endpoint(
-    request: Request,
+async def logout(
     current_user: AuthenticatedUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    request: Request = None,
 ):
-    """Revoke current session."""
-    # Extract refresh token from body if provided
-    body = await request.json() if request.headers.get("content-type") == "application/json" else {}
-    refresh_token = body.get("refresh_token") if body else None
-
-    await logout(db=db, user_id=current_user.user_id, refresh_token=refresh_token)
+    """
+    Audit-log the logout. The actual session revocation is done by
+    Supabase Auth on the client (supabase.auth.signOut()).
+    This endpoint is best-effort — the client should call it but a failure
+    here must never block the local signOut.
+    """
+    await log_action(
+        db, "user", current_user.user_id, "logout",
+        details={"ip": _get_ip(request) if request else None},
+    )
 
 
 @router.get("/me", response_model=MeResponse)
-async def me_endpoint(
+async def me(
     current_user: AuthenticatedUser = Depends(get_current_user),
 ):
-    """Get current user identity from JWT."""
+    """Return current user identity from validated JWT."""
     return MeResponse(
         user_id=str(current_user.user_id),
-        phone_normalized=current_user.phone_normalized,
+        email=current_user.email,
         account_status=current_user.account_status,
         onboarding_completed=current_user.onboarding_completed,
-        masked_phone=mask_phone(current_user.phone_normalized),
     )

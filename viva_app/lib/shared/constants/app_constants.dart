@@ -2,37 +2,36 @@
 class AppConstants {
   AppConstants._();
 
+  // Supabase project credentials (anon/publishable key — safe to embed in client)
+  // Set via --dart-define at build time; defaults to your project values.
+  static const String supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: 'https://qzjxluqbqlziqimgadgl.supabase.co',
+  );
+  static const String supabaseAnonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+    defaultValue:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6anhsdXFicWx6aXFpbWdhZGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwODM1MzYsImV4cCI6MjEwMzY1OTUzNn0.yqCDkPZ7sLHCzWMVZ5ksWX3DkWhtVV9IhW9XxcLz5Os',
+  );
+
   // API base URL. Override at build time for staging/other environments:
   //   flutter build apk --dart-define=API_BASE_URL=https://staging.example.com/api/v1
-  //
-  // Defaults to production. For local dev pass:
-  //   --dart-define=API_BASE_URL=http://10.0.2.2:8000/api/v1
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
     defaultValue: 'https://vivamatrimony.onrender.com/api/v1',
   );
-  // Timeouts — both generous to handle Render free-tier cold start (~30-50s)
+
+  // Timeouts — generous to handle Render free-tier cold start (~30-50s)
   static const int connectTimeoutMs = 60000;
   static const int receiveTimeoutMs = 60000;
 
-  // Storage keys
-  static const String accessTokenKey = 'viva_access_token';
-  static const String refreshTokenKey = 'viva_refresh_token';
-  static const String userIdKey = 'viva_user_id';
+  // Storage keys (app-level only — Supabase SDK manages its own session keys)
   static const String memberIdKey = 'viva_member_id';
   static const String onboardingCompletedKey = 'viva_onboarding_done';
 
   // Photo limits
   static const int maxPhotos = 10;
   static const int maxPhotoSizeMB = 10;
-
-  // Message limits
-  static const int maxMessageLength = 5000;
-
-  // OTP
-  static const int otpLength = 6;
-  static const int otpResendCooldownSec = 60;
-  static const int otpValidityMin = 10;
 
   // Pagination
   static const int defaultPageSize = 20;
@@ -45,7 +44,14 @@ class AppConstants {
   static const int minAge = 18;
   static const int maxAge = 70;
 
-  // India country code
+  // Document size limit (certificates, biodata uploads)
+  static const int maxCertSizeMB = 20;
+
+  // Verification SLA strings
+  static const String verificationSlaDays = '1-2 business days';
+  static const String reportReviewHours = '24-48 hours';
+
+  // India country code — used by reference verification phone field
   static const String indiaCode = '+91';
 
   // Onboarding step labels (matches AppRoutes onboarding order)
@@ -60,13 +66,6 @@ class AppConstants {
     'Preferences',
     'Photos',
   ];
-
-  // Document size limit (certificates, biodata uploads)
-  static const int maxCertSizeMB = 20;
-
-  // Verification SLA strings — update here if SLAs change
-  static const String verificationSlaDays = '1-2 business days';
-  static const String reportReviewHours = '24-48 hours';
 
   // App info
   static const String appName = 'Viva';
@@ -83,7 +82,8 @@ class AppRoutes {
 
   static const String splash = '/';
   static const String login = '/login';
-  static const String otp = '/otp';
+  static const String register = '/register';
+  static const String forgotPassword = '/forgot-password';
   static const String welcome = '/welcome';
 
   // Onboarding
@@ -107,7 +107,7 @@ class AppRoutes {
   static const String home = '/home';
   static const String search = '/search';
   static const String interests = '/interests';
-  static const String connections = '/connections';   // replaced messaging
+  static const String connections = '/connections';
   static const String myProfile = '/profile/me';
 
   // Detail screens
