@@ -4,7 +4,6 @@ import { api } from '@/services/api';
 import { useTitle } from '@/hooks/useTitle';
 import type { AdminSummary, AdminsResponse } from '@/types';
 import { apiErrorMessage } from '@/app/AuthContext';
-import StatusBadge from '@/components/StatusBadge';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import TableSkeleton from '@/components/TableSkeleton';
 import ErrorAlert from '@/components/ErrorAlert';

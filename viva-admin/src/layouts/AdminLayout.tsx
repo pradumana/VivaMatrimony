@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '@/app/AuthContext';
 
 interface NavItem {
@@ -29,7 +29,6 @@ const BOTTOM_ITEMS: NavItem[] = [
 
 export default function AdminLayout() {
   const { admin, logout, can } = useAuth();
-  const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const isSuperAdmin = admin?.role === 'super_admin';
