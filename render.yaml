@@ -1,0 +1,16 @@
+services:
+  # ── Viva Admin Panel — Static Site ────────────────────────────────────────
+  - type: web
+    name: viva-admin
+    runtime: static
+    rootDir: viva-admin
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    pullRequestPreviewsEnabled: false
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://vivamatrimony.onrender.com/api/v1
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
