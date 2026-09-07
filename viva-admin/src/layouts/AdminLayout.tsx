@@ -72,7 +72,11 @@ export default function AdminLayout() {
       {/* Sidebar */}
       <nav className={sidebarCls} aria-label="Main navigation">
         <div className="sidebar-logo">
-          <span style={{ color: 'var(--c-red)', fontWeight: 900, fontSize: 20 }}>V</span>
+          <img
+            src="/app_icon.png"
+            alt="Viva"
+            style={{ width: 28, height: 28, objectFit: 'contain', flexShrink: 0 }}
+          />
           {!collapsed && (
             <>
               <span style={{ color: 'var(--c-red)', fontWeight: 800 }}>IVA</span>

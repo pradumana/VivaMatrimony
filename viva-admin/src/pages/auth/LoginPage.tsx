@@ -33,10 +33,11 @@ export default function LoginPage() {
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            width: 56, height: 56, borderRadius: '50%',
-            background: 'var(--c-red)', marginBottom: 14,
+            width: 72, height: 72, borderRadius: '50%',
+            background: '#fff', boxShadow: '0 2px 12px rgba(0,0,0,0.10)',
+            marginBottom: 14, overflow: 'hidden',
           }}>
-            <span style={{ color: '#fff', fontWeight: 900, fontSize: 22 }}>V</span>
+            <img src="/app_icon.png" alt="Viva" style={{ width: 56, height: 56, objectFit: 'contain' }} />
           </div>
           <h1 style={{ fontSize: 26, fontWeight: 800, color: 'var(--c-red)', letterSpacing: '-0.5px' }}>
             VIVA
