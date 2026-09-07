@@ -271,7 +271,7 @@ async def restore_user(
 async def list_pending_certificates(
     status_filter: Optional[str] = Query("pending"),
     page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=50),
+    page_size: int = Query(20, ge=1, le=100),
     admin: AdminUser = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
