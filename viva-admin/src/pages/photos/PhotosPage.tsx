@@ -206,7 +206,7 @@ export default function PhotosPage() {
               <button className="btn btn-ghost" onClick={() => setAction(null)} disabled={acting}>
                 Cancel
               </button>
-              <button className="btn btn-danger" onClick={handleConfirm} disabled={acting}>
+              <button className="btn btn-danger" onClick={() => handleConfirm()} disabled={acting}>
                 {acting ? <Spinner size={16} /> : 'Flag Photo'}
               </button>
             </div>
