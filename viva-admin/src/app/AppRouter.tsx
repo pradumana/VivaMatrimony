@@ -14,6 +14,7 @@ const VerificationDetail   = lazy(() => import('@/pages/verification/Verificatio
 const ReferencesPage       = lazy(() => import('@/pages/references/ReferencesPage'));
 const ReportsPage          = lazy(() => import('@/pages/reports/ReportsPage'));
 const ReportDetailPage     = lazy(() => import('@/pages/reports/ReportDetailPage'));
+const PhotosPage           = lazy(() => import('@/pages/photos/PhotosPage'));
 const AdminsPage           = lazy(() => import('@/pages/admins/AdminsPage'));
 const CreateAdminPage      = lazy(() => import('@/pages/admins/CreateAdminPage'));
 const AuditLogsPage        = lazy(() => import('@/pages/audit/AuditLogsPage'));
@@ -70,6 +71,7 @@ export default function AppRouter() {
           <Route path="references"   element={<ReferencesPage />} />
           <Route path="reports"      element={<ReportsPage />} />
           <Route path="reports/:id"  element={<ReportDetailPage />} />
+          <Route path="photos"       element={<PhotosPage />} />
           <Route path="settings"     element={<SettingsPage />} />
 
           {/* Super admin only */}

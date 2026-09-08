@@ -461,6 +461,168 @@ async def reject_certificate(
 
 
 # ---------------------------------------------------------------------------
+# Single certificate GET (avoids fetch-all workaround in VerificationDetailPage)
+# ---------------------------------------------------------------------------
+
+@router.get("/certificates/{doc_id}")
+async def get_certificate(
+    doc_id: UUID,
+    admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    admin.require("verify")
+    result = await db.execute(
+        text("""
+            SELECT vd.id, vd.user_id, vd.status, vd.created_at, vd.file_name, vd.mime_type,
+                   p.full_name
+            FROM verification_documents vd
+            JOIN profiles p ON p.user_id = vd.user_id
+            WHERE vd.id = :doc_id AND vd.deleted_at IS NULL
+        """),
+        {"doc_id": doc_id},
+    )
+    row = result.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Certificate not found")
+    return {
+        "document_id": str(row.id),
+        "user_id": str(row.user_id),
+        "full_name": row.full_name,
+        "status": row.status,
+        "file_name": row.file_name,
+        "created_at": row.created_at,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Photo moderation
+# ---------------------------------------------------------------------------
+
+@router.get("/photos")
+async def list_flagged_photos(
+    status_filter: str = Query("pending", description="pending | approved | flagged"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    List photos for moderation.
+    pending  = is_approved=TRUE, is_flagged=FALSE (auto-approved, never reviewed)
+    flagged  = is_flagged=TRUE
+    approved = is_approved=TRUE, is_flagged=FALSE, reviewed_at IS NOT NULL
+    """
+    admin.require("moderate")
+
+    if status_filter == "flagged":
+        where = "ph.is_flagged = TRUE AND ph.deleted_at IS NULL"
+    elif status_filter == "approved":
+        where = "ph.is_approved = TRUE AND ph.is_flagged = FALSE AND ph.deleted_at IS NULL"
+    else:  # pending = uploaded but never manually reviewed
+        where = "ph.is_approved = TRUE AND ph.is_flagged = FALSE AND ph.deleted_at IS NULL"
+
+    result = await db.execute(
+        text(f"""
+            SELECT ph.id, ph.user_id, ph.storage_path, ph.thumbnail_path,
+                   ph.is_primary, ph.is_approved, ph.is_flagged, ph.flag_reason,
+                   ph.created_at, p.full_name
+            FROM photos ph
+            JOIN profiles p ON p.user_id = ph.user_id
+            WHERE {where}
+            ORDER BY ph.created_at DESC
+            LIMIT :limit OFFSET :offset
+        """),
+        {"limit": page_size, "offset": (page - 1) * page_size},
+    )
+    rows = result.fetchall()
+
+    supabase = get_supabase()
+    photos = []
+    for r in rows:
+        # Generate short-lived signed URL for thumbnail (or full photo if no thumb)
+        path = r.thumbnail_path or r.storage_path
+        try:
+            signed = supabase.storage.from_("profile-photos").create_signed_url(path, expires_in=600)
+            url = signed.get("signedURL") or signed.get("signedUrl")
+        except Exception:
+            url = None
+        photos.append({
+            "photo_id": str(r.id),
+            "user_id": str(r.user_id),
+            "full_name": r.full_name,
+            "signed_url": url,
+            "is_primary": r.is_primary,
+            "is_flagged": r.is_flagged,
+            "flag_reason": r.flag_reason,
+            "created_at": r.created_at,
+        })
+    return {"photos": photos, "total": len(photos)}
+
+
+class PhotoFlagRequest(BaseModel):
+    flag_reason: Optional[str] = None
+
+
+@router.post("/photos/{photo_id}/approve", status_code=status.HTTP_204_NO_CONTENT)
+async def approve_photo(
+    photo_id: UUID,
+    admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    admin.require("moderate")
+    result = await db.execute(
+        text("SELECT id FROM photos WHERE id = :pid AND deleted_at IS NULL"),
+        {"pid": photo_id},
+    )
+    if not result.fetchone():
+        raise HTTPException(status_code=404, detail="Photo not found")
+    await db.execute(
+        text("UPDATE photos SET is_approved = TRUE, is_flagged = FALSE, flag_reason = NULL WHERE id = :pid"),
+        {"pid": photo_id},
+    )
+    await db.commit()
+    await log_action(db, "admin", admin.admin_id, "approve_photo", "photo", photo_id)
+
+
+@router.post("/photos/{photo_id}/flag", status_code=status.HTTP_204_NO_CONTENT)
+async def flag_photo(
+    photo_id: UUID,
+    body: PhotoFlagRequest,
+    admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Flag (reject) a photo — hides it from all searches and the user's profile."""
+    admin.require("moderate")
+    result = await db.execute(
+        text("SELECT user_id FROM photos WHERE id = :pid AND deleted_at IS NULL"),
+        {"pid": photo_id},
+    )
+    row = result.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    await db.execute(
+        text("""
+            UPDATE photos
+            SET is_approved = FALSE, is_flagged = TRUE, flag_reason = :reason
+            WHERE id = :pid
+        """),
+        {"pid": photo_id, "reason": body.flag_reason},
+    )
+    # Notify user
+    await db.execute(
+        text("""
+            INSERT INTO notifications (user_id, type, title, body)
+            VALUES (:uid, 'system', 'Photo Removed',
+                    'One of your photos was removed by our moderation team as it did not meet our community guidelines.')
+        """),
+        {"uid": row.user_id},
+    )
+    await db.commit()
+    await log_action(db, "admin", admin.admin_id, "flag_photo", "photo", photo_id,
+                     {"reason": body.flag_reason})
+
+
+# ---------------------------------------------------------------------------
 # Reports management
 # ---------------------------------------------------------------------------
 

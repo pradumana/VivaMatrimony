@@ -32,27 +32,8 @@ export default function VerificationDetailPage() {
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    // Fetch list and find the cert — backend has no single-cert GET; use list
-    api.getCertificates('pending', 1, 100)
-      .then(r => {
-        const all = (r.data as { certificates: CertificateSummary[] }).certificates;
-        const found = all.find(c => c.document_id === id);
-        if (!found) {
-          // Try approved/rejected
-          return Promise.all([
-            api.getCertificates('approved', 1, 100),
-            api.getCertificates('rejected', 1, 100),
-          ]).then(([a, b]) => {
-            const combined = [
-              ...(a.data as { certificates: CertificateSummary[] }).certificates,
-              ...(b.data as { certificates: CertificateSummary[] }).certificates,
-            ];
-            return combined.find(c => c.document_id === id) ?? null;
-          });
-        }
-        return found;
-      })
-      .then(c => { if (c) setCert(c as CertificateSummary); else setError('Certificate not found.'); })
+    api.getCertificate(id)
+      .then(r => setCert(r.data as CertificateSummary))
       .catch(err => setError(apiErrorMessage(err)))
       .finally(() => setLoading(false));
   }, [id]);

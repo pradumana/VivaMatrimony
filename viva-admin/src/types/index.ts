@@ -103,6 +103,24 @@ export interface SignedUrlResponse {
   expires_in_seconds: number;
 }
 
+// ─── Photos moderation ────────────────────────────────────────────────────────
+
+export interface PhotoSummary {
+  photo_id: string;
+  user_id: string;
+  full_name: string;
+  signed_url: string | null;
+  is_primary: boolean;
+  is_flagged: boolean;
+  flag_reason: string | null;
+  created_at: string;
+}
+
+export interface PhotosResponse {
+  photos: PhotoSummary[];
+  total: number;
+}
+
 // ─── References ──────────────────────────────────────────────────────────────
 
 export type ReferenceStatus = 'pending' | 'confirmed' | 'rejected' | 'revoked';

@@ -80,6 +80,38 @@ async def update_profile(
     return result
 
 
+@router.delete("", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_account(
+    current_user: AuthenticatedUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Soft-delete the current user's account.
+    Sets deleted_at and account_status = 'deleted'.
+    Supabase Auth session remains valid until it expires — the client
+    must call supabase.auth.signOut() immediately after this succeeds.
+    """
+    result = await db.execute(
+        text("SELECT id FROM users WHERE id = :uid AND deleted_at IS NULL"),
+        {"uid": current_user.user_id},
+    )
+    if not result.fetchone():
+        raise HTTPException(status_code=404, detail="Account not found")
+
+    # Soft-delete: mark deleted, clear sensitive fields
+    await db.execute(
+        text("""
+            UPDATE users
+            SET deleted_at = NOW(),
+                account_status = 'deleted',
+                fcm_token = NULL
+            WHERE id = :uid
+        """),
+        {"uid": current_user.user_id},
+    )
+    await db.commit()
+
+
 # ---------------------------------------------------------------------------
 # Shared upsert helper (used by sub-resource routes below)
 # ---------------------------------------------------------------------------

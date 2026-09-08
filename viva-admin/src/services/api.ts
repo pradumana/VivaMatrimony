@@ -91,12 +91,22 @@ export const api = {
   // Certificates
   getCertificates: (status_filter: string, page = 1, page_size = 20) =>
     http.get('/admin/certificates', { params: { status_filter, page, page_size } }),
+  getCertificate: (docId: string) =>
+    http.get(`/admin/certificates/${docId}`),
   viewCertificate: (docId: string) =>
     http.get(`/admin/certificates/${docId}/view`),
   approveCertificate: (docId: string) =>
     http.post(`/admin/certificates/${docId}/approve`),
   rejectCertificate: (docId: string, rejection_reason: string) =>
     http.post(`/admin/certificates/${docId}/reject`, { rejection_reason }),
+
+  // Photo moderation
+  getPhotos: (status_filter = 'pending', page = 1, page_size = 20) =>
+    http.get('/admin/photos', { params: { status_filter, page, page_size } }),
+  approvePhoto: (photoId: string) =>
+    http.post(`/admin/photos/${photoId}/approve`),
+  flagPhoto: (photoId: string, flag_reason?: string) =>
+    http.post(`/admin/photos/${photoId}/flag`, { flag_reason }),
 
   // References
   getReferences: (status?: string, page = 1, page_size = 20) =>
