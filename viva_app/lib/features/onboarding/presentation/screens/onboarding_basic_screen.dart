@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/network/api_client.dart';
+import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/constants/app_constants.dart';
 import '../../../../shared/widgets/viva_text_field.dart';
@@ -149,7 +150,11 @@ class _OnboardingBasicScreenState
       isLoading: state.isLoading,
       error: state.error,
       onNext: _next,
-      showBack: false,
+      showBack: true,
+      onBack: () async {
+        await ref.read(authProvider.notifier).logout();
+        if (mounted) context.go(AppRoutes.login);
+      },
       showSkip: false,
       child: Form(
         key: _formKey,
