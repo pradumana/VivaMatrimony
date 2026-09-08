@@ -1,12 +1,17 @@
 """
 JWT Authentication Middleware.
-Validates Supabase-issued JWTs using the project's JWT secret.
-Supabase signs tokens with HS256 using the project's jwt_secret (found in
-Project Settings → API → JWT Secret in the Supabase dashboard).
+Validates Supabase-issued JWTs.
+
+Supabase projects created before mid-2024 sign tokens with HS256 using the
+project JWT secret. Newer projects use ES256 with a keypair — the public key
+is served at <supabase_url>/auth/v1/.well-known/jwks.json.
+
+We support both: try JWKS (ES256) first, fall back to HS256 shared secret.
 """
 from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID
+import httpx
 
 from fastapi import Depends, HTTPException, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -19,6 +24,23 @@ from app.database import get_db
 
 settings = get_settings()
 _bearer = HTTPBearer(auto_error=False)
+
+# ---------------------------------------------------------------------------
+# JWKS cache — fetched once on first request, held in memory
+# ---------------------------------------------------------------------------
+_jwks_cache: Optional[dict] = None
+
+
+async def _get_jwks() -> dict:
+    global _jwks_cache
+    if _jwks_cache is not None:
+        return _jwks_cache
+    url = f"{settings.supabase_url}/auth/v1/.well-known/jwks.json"
+    async with httpx.AsyncClient(timeout=5) as client:
+        resp = await client.get(url)
+        resp.raise_for_status()
+        _jwks_cache = resp.json()
+    return _jwks_cache
 
 
 class AuthenticatedUser:
@@ -37,19 +59,52 @@ class AuthenticatedUser:
         self.onboarding_completed = onboarding_completed
 
 
-def _decode_supabase_token(token: str) -> dict:
+async def _decode_supabase_token(token: str) -> dict:
     """
     Decode and validate a Supabase JWT.
-    Supabase uses HS256 with the project JWT secret.
-    The secret is in Supabase dashboard → Project Settings → API → JWT Secret.
-    Store it as SUPABASE_JWT_SECRET in backend .env.
+    Tries ES256 via JWKS first; falls back to HS256 shared secret.
     """
+    # Peek at the header to pick the right algorithm
+    header = jwt.get_unverified_header(token)
+    alg = header.get("alg", "HS256")
+
+    if alg == "ES256":
+        try:
+            jwks = await _get_jwks()
+            kid = header.get("kid")
+            # Find matching key
+            key = None
+            for k in jwks.get("keys", []):
+                if kid is None or k.get("kid") == kid:
+                    key = k
+                    break
+            if key is None:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Token signing key not found",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            payload = jwt.decode(
+                token,
+                key,
+                algorithms=["ES256"],
+                options={"verify_aud": False},
+            )
+            return payload
+        except JWTError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired token",
+                headers={"WWW-Authenticate": "Bearer"},
+            ) from exc
+
+    # HS256 path (legacy projects)
     try:
         payload = jwt.decode(
             token,
             settings.supabase_jwt_secret,
             algorithms=["HS256"],
-            options={"verify_aud": False},  # Supabase tokens have aud="authenticated"
+            options={"verify_aud": False},
         )
         return payload
     except JWTError as exc:
@@ -80,7 +135,7 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    payload = _decode_supabase_token(credentials.credentials)
+    payload = await _decode_supabase_token(credentials.credentials)
 
     # Supabase puts the user UUID in "sub"
     user_id_str: Optional[str] = payload.get("sub")
