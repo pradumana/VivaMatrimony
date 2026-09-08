@@ -78,14 +78,14 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
             event == AuthChangeEvent.tokenRefreshed ||
             event == AuthChangeEvent.initialSession) {
           // signedIn fires after email confirmation (deep-link callback) as
-          // well as direct login. Ensure the users row exists in both paths —
-          // _postRegister is idempotent (ON CONFLICT DO UPDATE on the backend).
+          // well as direct login. Ensure the users row exists BEFORE we set
+          // auth state — the router will redirect to onboarding screens which
+          // immediately call /profile, so the row must exist first.
           if (event == AuthChangeEvent.signedIn) {
-            await _ensureUserRow();
+            await _ensureUserRow(session);
+            // _ensureUserRow already calls onLoginSuccess which sets state.
+            return;
           }
-          // Re-derive state from the fresh session without a network call
-          // so navigation is instant. The onboarding flag comes from local
-          // storage; we trust it until the user explicitly clears it.
           final newState = await _stateFromSession(session);
           state = AsyncValue.data(newState);
         }
@@ -100,23 +100,28 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     return _stateFromSession(session);
   }
 
-  /// Ensures the users row exists in the backend DB.
-  /// Called on every signedIn event (email confirmation or direct login).
-  /// Safe to call multiple times — backend does ON CONFLICT DO UPDATE.
-  Future<void> _ensureUserRow() async {
+  /// Ensures the users row exists in the backend DB, then sets auth state.
+  /// Called on signedIn — blocks navigation until the row is confirmed.
+  Future<void> _ensureUserRow(Session session) async {
     try {
       final response = await ref.read(apiClientProvider).post('/auth/register');
       final data = response.data as Map<String, dynamic>?;
+      final storage = ref.read(secureStorageProvider);
       if (data != null) {
-        await onLoginSuccess(
-          onboardingCompleted: data['onboarding_completed'] as bool? ?? false,
-          memberId: data['member_id'] as String?,
-        );
+        final onboardingDone = data['onboarding_completed'] as bool? ?? false;
+        final memberId = data['member_id'] as String?;
+        if (memberId != null) await storage.saveMemberId(memberId);
+        await storage.setOnboardingCompleted(onboardingDone);
       }
     } catch (_) {
-      // Non-fatal — if the row already exists the next request will succeed.
-      // If the network is down the user will get a 401 and be asked to retry.
+      // Registration failed — leave existing local storage values as-is.
+      // The row may already exist (returning user), so we proceed.
+      // If it truly doesn't exist the next API call will 401 and the user
+      // will be prompted to retry.
     }
+    // Always set state after register attempt so navigation can proceed.
+    final newState = await _stateFromSession(session);
+    state = AsyncValue.data(newState);
   }
 
   /// Build AuthState from a live Supabase session.
