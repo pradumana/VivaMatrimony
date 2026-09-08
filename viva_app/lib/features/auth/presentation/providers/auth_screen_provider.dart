@@ -40,6 +40,7 @@ class AuthScreenNotifier extends Notifier<AuthScreenState> {
       final response = await Supabase.instance.client.auth.signUp(
         email: email.trim().toLowerCase(),
         password: password,
+        emailRedirectTo: 'https://vivamatrimony.in/auth/callback',
       );
 
       // Email confirmation required — Supabase returns a session=null user
@@ -104,6 +105,7 @@ class AuthScreenNotifier extends Notifier<AuthScreenState> {
     try {
       await Supabase.instance.client.auth.resetPasswordForEmail(
         email.trim().toLowerCase(),
+        redirectTo: 'https://vivamatrimony.in/auth/callback',
       );
       state = state.copyWith(isLoading: false);
       onSuccess();

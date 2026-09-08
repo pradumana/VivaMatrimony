@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:app_links/app_links.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
@@ -30,6 +31,21 @@ void main() async {
     url: AppConstants.supabaseUrl,
     publishableKey: AppConstants.supabaseAnonKey,
   );
+
+  // Handle deep links (email confirmation, password reset, magic link).
+  // supabase_flutter v2 no longer intercepts URIs automatically — we do it here.
+  final appLinks = AppLinks();
+
+  // Handle the link that cold-started the app
+  final initialUri = await appLinks.getInitialLink();
+  if (initialUri != null) {
+    await Supabase.instance.client.auth.getSessionFromUrl(initialUri);
+  }
+
+  // Handle links while the app is already running
+  appLinks.uriLinkStream.listen((uri) {
+    Supabase.instance.client.auth.getSessionFromUrl(uri);
+  });
 
   try {
     SystemChrome.setPreferredOrientations([

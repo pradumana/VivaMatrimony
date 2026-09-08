@@ -67,7 +67,7 @@ export default function LoginPage() {
                 className="input"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="admin@viva.app"
+                placeholder="admin@vivamatrimony.in"
                 required
                 autoComplete="email"
                 autoFocus

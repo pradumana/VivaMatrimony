@@ -76,7 +76,7 @@ META_WHATSAPP_VERIFY_TOKEN=random_string_for_webhook
 
 ### Webhook Setup
 
-Point Meta webhook to: `https://api.yourdomain.com/webhook/whatsapp`
+Point Meta webhook to: `https://api.vivamatrimony.in/webhook/whatsapp`
 
 This handles delivery receipts and message status updates.
 

@@ -46,7 +46,7 @@ sudo apt install nginx certbot python3-certbot-nginx -y
 ## Step 2 — SSL Certificate
 
 ```bash
-sudo certbot --nginx -d api.yourdomain.com
+sudo certbot --nginx -d api.vivamatrimony.in
 # Certbot auto-renews via systemd timer
 ```
 
@@ -86,7 +86,7 @@ sudo nginx -t && sudo systemctl reload nginx
 ## Step 7 — Verify Deployment
 
 ```bash
-curl https://api.yourdomain.com/health
+curl https://api.vivamatrimony.in/health
 # Should return: {"status":"ok","version":"1.0.0"}
 ```
 

@@ -70,7 +70,7 @@ export default function CreateAdminPage() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
-                placeholder="admin@viva.app"
+                placeholder="admin@vivamatrimony.in"
                 disabled={loading}
                 autoComplete="off"
               />

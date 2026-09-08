@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Confirm your email — Viva Matrimony</title>
+  <style>
+    body { margin: 0; padding: 0; background-color: #FAF7F5; font-family: Georgia, 'Times New Roman', serif; }
+    table { border-collapse: collapse; }
+    .wrapper { width: 100%; background-color: #FAF7F5; padding: 40px 0; }
+    .container { max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+
+    /* Header */
+    .header { background: linear-gradient(135deg, #8B1A1A 0%, #C0392B 60%, #8B1A1A 100%); padding: 36px 40px 28px; text-align: center; }
+    .logo-mark { font-size: 32px; margin-bottom: 6px; }
+    .brand-name { color: #ffffff; font-size: 26px; font-weight: normal; letter-spacing: 2px; margin: 0; }
+    .brand-tagline { color: rgba(255,255,255,0.78); font-size: 12px; letter-spacing: 3px; text-transform: uppercase; margin: 6px 0 0; }
+
+    /* Gold divider */
+    .divider { height: 3px; background: linear-gradient(90deg, #8B1A1A, #D4A017, #C0392B, #D4A017, #8B1A1A); }
+
+    /* Body */
+    .body { padding: 40px 40px 32px; }
+    .greeting { font-size: 20px; color: #2c1810; margin: 0 0 16px; font-weight: normal; }
+    .message { font-size: 15px; color: #5D4037; line-height: 1.7; margin: 0 0 28px; font-family: Arial, sans-serif; }
+
+    /* CTA button */
+    .btn-wrap { text-align: center; margin: 0 0 32px; }
+    .btn { display: inline-block; padding: 16px 44px; background: linear-gradient(135deg, #8B1A1A, #C0392B); color: #ffffff !important; text-decoration: none; border-radius: 8px; font-size: 15px; font-family: Arial, sans-serif; font-weight: bold; letter-spacing: 0.5px; }
+
+    /* Fallback link */
+    .fallback { background: #FDF0EC; border-radius: 8px; padding: 16px 20px; margin-bottom: 28px; }
+    .fallback p { font-size: 12px; color: #8B5A4A; font-family: Arial, sans-serif; margin: 0 0 6px; }
+    .fallback a { font-size: 11px; color: #C0392B; word-break: break-all; font-family: Arial, sans-serif; }
+
+    /* Footer */
+    .footer { border-top: 1px solid #EDE0DB; padding: 24px 40px; text-align: center; }
+    .footer p { font-size: 12px; color: #9E9E9E; font-family: Arial, sans-serif; margin: 4px 0; line-height: 1.6; }
+    .footer a { color: #C0392B; text-decoration: none; }
+
+    /* Gold accent line */
+    .gold-accent { width: 48px; height: 2px; background: linear-gradient(90deg, #D4A017, #E8C547); margin: 0 auto 20px; border-radius: 2px; }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+  <table class="container" width="560" align="center" cellpadding="0" cellspacing="0">
+    <!-- Header -->
+    <tr>
+      <td class="header">
+        <div class="logo-mark">🪷</div>
+        <h1 class="brand-name">Viva Matrimony</h1>
+        <p class="brand-tagline">Finding Your Perfect Match</p>
+      </td>
+    </tr>
+
+    <!-- Gold divider -->
+    <tr><td class="divider"></td></tr>
+
+    <!-- Body -->
+    <tr>
+      <td class="body">
+        <div class="gold-accent"></div>
+        <h2 class="greeting">Welcome to Viva Matrimony 🙏</h2>
+        <p class="message">
+          Thank you for registering. You are just one step away from beginning your journey to finding a life partner.
+          <br /><br />
+          Please confirm your email address by clicking the button below. This link is valid for <strong>24 hours</strong>.
+        </p>
+
+        <div class="btn-wrap">
+          <a href="{{ .ConfirmationURL }}" class="btn">Confirm My Email</a>
+        </div>
+
+        <div class="fallback">
+          <p>If the button doesn't work, copy and paste this link into your browser:</p>
+          <a href="{{ .ConfirmationURL }}">{{ .ConfirmationURL }}</a>
+        </div>
+
+        <p class="message" style="font-size:13px; color:#9E9E9E;">
+          If you did not create a Viva Matrimony account, you can safely ignore this email.
+        </p>
+      </td>
+    </tr>
+
+    <!-- Footer -->
+    <tr>
+      <td class="footer">
+        <p>© 2026 Viva Matrimony (vivamatrimony.in). All rights reserved.</p>
+        <p>This is an automated email — please do not reply.</p>
+      </td>
+    </tr>
+  </table>
+</div>
+</body>
+</html>

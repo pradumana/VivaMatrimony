@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Email Verified — Viva Matrimony</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: #FAF7F5;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      max-width: 420px;
+      width: 100%;
+      overflow: hidden;
+      text-align: center;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #8B1A1A 0%, #C0392B 60%, #8B1A1A 100%);
+      padding: 32px 24px 24px;
+    }
+    .logo { font-size: 36px; margin-bottom: 6px; }
+    .brand { color: #fff; font-size: 22px; letter-spacing: 2px; font-family: Georgia, serif; }
+    .tagline { color: rgba(255,255,255,0.75); font-size: 11px; letter-spacing: 3px; text-transform: uppercase; margin-top: 4px; }
+
+    .gold-bar { height: 3px; background: linear-gradient(90deg, #8B1A1A, #D4A017, #C0392B, #D4A017, #8B1A1A); }
+
+    .body { padding: 36px 28px 32px; }
+
+    /* success state (default) */
+    .icon-wrap {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: #E8F8EF;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 36px;
+    }
+    .icon-wrap.error { background: #FDF0EC; }
+
+    h1 { font-size: 22px; color: #2c1810; font-family: Georgia, serif; font-weight: normal; margin-bottom: 10px; }
+    p  { font-size: 14px; color: #5D4037; line-height: 1.7; margin-bottom: 20px; }
+
+    .btn {
+      display: inline-block;
+      padding: 14px 36px;
+      background: linear-gradient(135deg, #8B1A1A, #C0392B);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: bold;
+      letter-spacing: 0.4px;
+      cursor: pointer;
+      border: none;
+    }
+
+    .desktop-note {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #9E9E9E;
+      line-height: 1.6;
+    }
+
+    /* spinner shown while we attempt the deep link */
+    .spinner-wrap { display: none; flex-direction: column; align-items: center; gap: 16px; padding: 20px 0; }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid #EDE0DB;
+      border-top-color: #C0392B;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #state-success  { display: block; }
+    #state-mobile   { display: none; }
+    #state-error    { display: none; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <div class="logo">🪷</div>
+    <div class="brand">Viva Matrimony</div>
+    <div class="tagline">Finding Your Perfect Match</div>
+  </div>
+  <div class="gold-bar"></div>
+  <div class="body">
+
+    <!-- State: success (PC or after deep link fires) -->
+    <div id="state-success">
+      <div class="icon-wrap">✅</div>
+      <h1>Email Verified!</h1>
+      <p>Your email address has been confirmed.<br>Open the Viva Matrimony app on your phone to continue.</p>
+      <div class="desktop-note">If you're on your phone, the app should open automatically.<br>You can now close this tab.</div>
+    </div>
+
+    <!-- State: mobile — attempting to open app -->
+    <div id="state-mobile">
+      <div class="spinner-wrap" style="display:flex;">
+        <div class="spinner"></div>
+        <p style="margin:0;">Opening Viva Matrimony app…</p>
+      </div>
+      <div class="desktop-note" style="margin-top:0;">
+        App didn't open?
+        <button class="btn" style="margin-top:12px; font-size:13px; padding:10px 24px;" onclick="triggerDeepLink()">
+          Open App
+        </button>
+      </div>
+    </div>
+
+    <!-- State: error -->
+    <div id="state-error">
+      <div class="icon-wrap error">⚠️</div>
+      <h1>Link Expired</h1>
+      <p>This verification link has expired or has already been used.<br>Please register again to get a new link.</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Parse both hash fragments (#access_token=...) and query params (?error=...)
+  function getParams() {
+    const hash = Object.fromEntries(
+      location.hash.replace('#', '').split('&').filter(Boolean)
+        .map(p => p.split('=').map(decodeURIComponent))
+    );
+    const query = Object.fromEntries(new URLSearchParams(location.search));
+    return { ...query, ...hash };
+  }
+
+  const params = getParams();
+
+  // Detect mobile
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  // Build the deep link — forward ALL params so the app can call getSessionFromUrl()
+  function buildDeepLink() {
+    const base = 'com.vivamatrimony.viva_app://login-callback';
+    // Re-encode params as hash fragment (matches what Supabase sends)
+    const fragment = Object.entries(params)
+      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+      .join('&');
+    return fragment ? `${base}#${fragment}` : base;
+  }
+
+  function triggerDeepLink() {
+    window.location.href = buildDeepLink();
+  }
+
+  function show(id) {
+    ['state-success', 'state-mobile', 'state-error'].forEach(s => {
+      document.getElementById(s).style.display = s === id ? 'block' : 'none';
+    });
+  }
+
+  // Error from Supabase (e.g. otp_expired)
+  if (params.error || params.error_code) {
+    show('state-error');
+  } else if (isMobile && (params.access_token || params.type)) {
+    // Mobile + valid token — fire deep link immediately
+    show('state-mobile');
+    triggerDeepLink();
+    // After 3s if app didn't open, keep showing the "Open App" button
+  } else {
+    // PC or no token — just show success message
+    show('state-success');
+  }
+</script>
+</body>
+</html>

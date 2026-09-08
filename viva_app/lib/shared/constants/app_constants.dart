@@ -18,7 +18,7 @@ class AppConstants {
   //   flutter build apk --dart-define=API_BASE_URL=https://staging.example.com/api/v1
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://vivamatrimony.onrender.com/api/v1',
+    defaultValue: 'https://api.vivamatrimony.in/api/v1',
   );
 
   // Timeouts — generous to handle Render free-tier cold start (~30-50s)
@@ -70,9 +70,9 @@ class AppConstants {
   // App info
   static const String appName = 'Viva';
   static const String appTagline = 'Find someone who feels like home.';
-  static const String supportEmail = 'support@viva.app';
-  static const String privacyPolicyUrl = 'https://viva.app/privacy';
-  static const String termsUrl = 'https://viva.app/terms';
+  static const String supportEmail = 'support@vivamatrimony.in';
+  static const String privacyPolicyUrl = 'https://vivamatrimony.in/privacy';
+  static const String termsUrl = 'https://vivamatrimony.in/terms';
   static const String appVersion = '1.0.0';
 }
 

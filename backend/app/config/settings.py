@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     app_host: str = "0.0.0.0"
     app_port: int = 8000
     app_version: str = "1.0.0"
-    allowed_origins: str = "http://localhost:3000"
+    allowed_origins: str = "http://localhost:3000,https://admin.vivamatrimony.in"
 
     @property
     def cors_origins(self) -> List[str]:
@@ -91,7 +91,7 @@ class Settings(BaseSettings):
     # -------------------------------------------------------------------------
     # Admin
     # -------------------------------------------------------------------------
-    admin_email: str = "admin@viva.app"
+    admin_email: str = "admin@vivamatrimony.in"
 
     # -------------------------------------------------------------------------
     # PDF

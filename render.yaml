@@ -9,4 +9,4 @@ services:
     pullRequestPreviewsEnabled: false
     envVars:
       - key: VITE_API_BASE_URL
-        value: https://vivamatrimony.onrender.com/api/v1
+        value: https://api.vivamatrimony.in/api/v1
