@@ -52,7 +52,7 @@ class _State extends ConsumerState<OnboardingFamilyScreen> {
       if (widget.isEditing) {
         context.pop();
       } else {
-        context.go(AppRoutes.onboardingLifestyle);
+        context.push(AppRoutes.onboardingLifestyle);
       }
     }
   }
@@ -156,3 +156,4 @@ class _CounterField extends StatelessWidget {
     );
   }
 }
+

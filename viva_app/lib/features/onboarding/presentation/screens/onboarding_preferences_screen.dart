@@ -38,7 +38,7 @@ class _State extends ConsumerState<OnboardingPreferencesScreen> {
       if (widget.isEditing) {
         context.pop();
       } else {
-        context.go(AppRoutes.onboardingPhotos);
+        context.push(AppRoutes.onboardingPhotos);
       }
     }
   }
@@ -47,7 +47,7 @@ class _State extends ConsumerState<OnboardingPreferencesScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(onboardingProvider);
     return OnboardingScaffold(
-      currentStep: 6,
+      currentStep: 7,
       title: 'Partner Preferences',
       subtitle: 'Tell us what you\'re looking for. These help find better matches.',
       isLoading: state.isLoading,
@@ -193,3 +193,4 @@ class _ImportanceRow extends StatelessWidget {
     );
   }
 }
+

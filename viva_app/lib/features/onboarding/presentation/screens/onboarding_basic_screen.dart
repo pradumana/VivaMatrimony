@@ -133,7 +133,7 @@ class _OnboardingBasicScreenState
       if (widget.isEditing) {
         context.pop();
       } else {
-        context.go(AppRoutes.onboardingBio);
+        context.push(AppRoutes.onboardingBio);
       }
     }
   }
@@ -348,3 +348,4 @@ class _GenderChip extends StatelessWidget {
     );
   }
 }
+

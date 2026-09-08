@@ -37,7 +37,7 @@ class _State extends ConsumerState<OnboardingLifestyleScreen> {
       if (widget.isEditing) {
         context.pop();
       } else {
-        context.go(AppRoutes.onboardingNativePlace);
+        context.push(AppRoutes.onboardingNativePlace);
       }
     }
   }
@@ -148,3 +148,4 @@ class _SelectChip extends StatelessWidget {
     );
   }
 }
+

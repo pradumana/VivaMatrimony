@@ -32,7 +32,7 @@ class _State extends ConsumerState<OnboardingBioScreen> {
       if (widget.isEditing) {
         context.pop();
       } else {
-        context.go(AppRoutes.onboardingEducation);
+        context.push(AppRoutes.onboardingEducation);
       }
     }
   }
@@ -95,3 +95,4 @@ class _State extends ConsumerState<OnboardingBioScreen> {
     );
   }
 }
+

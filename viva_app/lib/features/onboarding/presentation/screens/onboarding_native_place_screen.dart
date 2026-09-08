@@ -68,7 +68,7 @@ class _State extends ConsumerState<OnboardingNativePlaceScreen> {
       if (widget.isEditing) {
         context.pop();
       } else {
-        context.go(AppRoutes.onboardingPreferences);
+        context.push(AppRoutes.onboardingPreferences);
       }
     }
   }
@@ -138,3 +138,4 @@ class _State extends ConsumerState<OnboardingNativePlaceScreen> {
     ));
   }
 }
+

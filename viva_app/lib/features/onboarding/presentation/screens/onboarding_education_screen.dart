@@ -41,7 +41,7 @@ class _State extends ConsumerState<OnboardingEducationScreen> {
       if (widget.isEditing) {
         context.pop();
       } else {
-        context.go(AppRoutes.onboardingCareer);
+        context.push(AppRoutes.onboardingCareer);
       }
     }
   }
@@ -94,3 +94,4 @@ class _State extends ConsumerState<OnboardingEducationScreen> {
     );
   }
 }
+
