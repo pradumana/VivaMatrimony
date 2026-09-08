@@ -46,6 +46,24 @@ async def generate_biodata_pdf(
     # Fetch primary photo URL
     primary_photo_url = profile_data.get("primary_photo_url")
 
+    # Fetch all approved photos for the photos page
+    supabase = get_supabase()
+    photos_result = await db.execute(
+        text("""
+            SELECT storage_path FROM photos
+            WHERE user_id = :uid AND deleted_at IS NULL AND is_approved = TRUE
+            ORDER BY is_primary DESC, display_order ASC
+        """),
+        {"uid": user_id},
+    )
+    all_photo_urls = []
+    for p in photos_result.fetchall():
+        try:
+            url = supabase.storage.from_(settings.storage_bucket_profile_photos).get_public_url(p.storage_path)
+            all_photo_urls.append(url)
+        except Exception:
+            pass
+
     # Build template context — NO sensitive data
     context = {
         "full_name": profile.get("full_name", ""),
@@ -58,6 +76,7 @@ async def generate_biodata_pdf(
         "caste": profile.get("caste", ""),
         "about_me": profile.get("about_me", ""),
         "photo_url": primary_photo_url,
+        "all_photo_urls": all_photo_urls,
         "is_verified": profile.get("is_verified", False),
 
         # Location

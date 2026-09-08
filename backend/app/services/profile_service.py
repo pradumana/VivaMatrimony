@@ -17,7 +17,7 @@ from sqlalchemy import text
 
 from app.config import get_settings
 from app.database import get_supabase
-from app.utils import compute_age, safe_filename as _safe_filename
+from app.utils import compute_age, safe_photo_filename as _safe_photo_filename
 
 settings = get_settings()
 logger = structlog.get_logger()
@@ -497,8 +497,34 @@ async def upload_photo(
 
     # Upload to Supabase Storage
     supabase = get_supabase()
-    safe_filename = f"{user_id}/{_safe_filename(filename)}"
-    thumb_filename = f"{user_id}/thumb_{_safe_filename(filename)}"
+    safe_name = _safe_photo_filename()
+    safe_filename = f"{user_id}/{safe_name}"
+    thumb_filename = f"{user_id}/thumb_{safe_name}"
+
+    # Clean up orphaned storage files from soft-deleted rows (best-effort)
+    try:
+        orphans = await db.execute(
+            text("""
+                SELECT storage_path, thumbnail_path FROM photos
+                WHERE user_id = :uid AND deleted_at IS NOT NULL
+                  AND storage_path IS NOT NULL
+            """),
+            {"uid": user_id},
+        )
+        paths_to_remove = []
+        for row in orphans.fetchall():
+            if row.storage_path:
+                paths_to_remove.append(row.storage_path)
+            if row.thumbnail_path:
+                paths_to_remove.append(row.thumbnail_path)
+        if paths_to_remove:
+            supabase.storage.from_(settings.storage_bucket_profile_photos).remove(paths_to_remove)
+            await db.execute(
+                text("UPDATE photos SET storage_path = NULL, thumbnail_path = NULL WHERE user_id = :uid AND deleted_at IS NOT NULL"),
+                {"uid": user_id},
+            )
+    except Exception as exc:
+        logger.warning("orphaned_storage_cleanup_failed", error=str(exc), user_id=str(user_id))
 
     try:
         supabase.storage.from_(settings.storage_bucket_profile_photos).upload(

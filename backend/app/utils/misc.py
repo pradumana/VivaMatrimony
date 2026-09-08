@@ -13,6 +13,11 @@ def compute_age(dob: date) -> int:
 
 
 def safe_filename(filename: str) -> str:
-    """Return a collision-safe filename: <uuid4hex><original_ext>."""
+    """Return a collision-safe filename with the original extension."""
     ext = os.path.splitext(filename)[1].lower() or ".bin"
     return f"{uuid.uuid4().hex}{ext}"
+
+
+def safe_photo_filename() -> str:
+    """Return a collision-safe .jpg filename (all uploaded photos are compressed to JPEG)."""
+    return f"{uuid.uuid4().hex}.jpg"
