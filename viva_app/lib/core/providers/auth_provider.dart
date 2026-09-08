@@ -77,6 +77,12 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
         if (event == AuthChangeEvent.signedIn ||
             event == AuthChangeEvent.tokenRefreshed ||
             event == AuthChangeEvent.initialSession) {
+          // signedIn fires after email confirmation (deep-link callback) as
+          // well as direct login. Ensure the users row exists in both paths —
+          // _postRegister is idempotent (ON CONFLICT DO UPDATE on the backend).
+          if (event == AuthChangeEvent.signedIn) {
+            await _ensureUserRow();
+          }
           // Re-derive state from the fresh session without a network call
           // so navigation is instant. The onboarding flag comes from local
           // storage; we trust it until the user explicitly clears it.
@@ -92,6 +98,25 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     final session = Supabase.instance.client.auth.currentSession;
     if (session == null) return const AuthState.unauthenticated();
     return _stateFromSession(session);
+  }
+
+  /// Ensures the users row exists in the backend DB.
+  /// Called on every signedIn event (email confirmation or direct login).
+  /// Safe to call multiple times — backend does ON CONFLICT DO UPDATE.
+  Future<void> _ensureUserRow() async {
+    try {
+      final response = await ref.read(apiClientProvider).post('/auth/register');
+      final data = response.data as Map<String, dynamic>?;
+      if (data != null) {
+        await onLoginSuccess(
+          onboardingCompleted: data['onboarding_completed'] as bool? ?? false,
+          memberId: data['member_id'] as String?,
+        );
+      }
+    } catch (_) {
+      // Non-fatal — if the row already exists the next request will succeed.
+      // If the network is down the user will get a 401 and be asked to retry.
+    }
   }
 
   /// Build AuthState from a live Supabase session.
