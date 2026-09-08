@@ -2,16 +2,14 @@
 JWT Authentication Middleware.
 Validates Supabase-issued JWTs.
 
-Supabase projects created before mid-2024 sign tokens with HS256 using the
-project JWT secret. Newer projects use ES256 with a keypair — the public key
-is served at <supabase_url>/auth/v1/.well-known/jwks.json.
+This project uses ES256. The public key is embedded directly from the
+project's JWKS endpoint to avoid a runtime HTTP call on every request.
 
-We support both: try JWKS (ES256) first, fall back to HS256 shared secret.
+Key source: https://qzjxluqbqlziqimgadgl.supabase.co/auth/v1/.well-known/jwks.json
 """
 from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID
-import httpx
 
 from fastapi import Depends, HTTPException, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -26,21 +24,20 @@ settings = get_settings()
 _bearer = HTTPBearer(auto_error=False)
 
 # ---------------------------------------------------------------------------
-# JWKS cache — fetched once on first request, held in memory
+# Embedded public key — avoids a runtime JWKS fetch on every request.
+# Rotate this if Supabase rotates the signing key (rare; check the dashboard).
 # ---------------------------------------------------------------------------
-_jwks_cache: Optional[dict] = None
-
-
-async def _get_jwks() -> dict:
-    global _jwks_cache
-    if _jwks_cache is not None:
-        return _jwks_cache
-    url = f"{settings.supabase_url}/auth/v1/.well-known/jwks.json"
-    async with httpx.AsyncClient(timeout=5) as client:
-        resp = await client.get(url)
-        resp.raise_for_status()
-        _jwks_cache = resp.json()
-    return _jwks_cache
+_SUPABASE_JWK = {
+    "alg": "ES256",
+    "crv": "P-256",
+    "ext": True,
+    "key_ops": ["verify"],
+    "kid": "9317f634-951b-448c-9314-fd41d1ead105",
+    "kty": "EC",
+    "use": "sig",
+    "x": "FVddjP8mJ_wxxpYEcKolV-JViefKC25_ORQFaF4i9P4",
+    "y": "GTpTgF_YSbYR64SYj4sLRkVU83bLtBzfkCajnk06oGA",
+}
 
 
 class AuthenticatedUser:
@@ -61,49 +58,14 @@ class AuthenticatedUser:
 
 async def _decode_supabase_token(token: str) -> dict:
     """
-    Decode and validate a Supabase JWT.
-    Tries ES256 via JWKS first; falls back to HS256 shared secret.
+    Decode and validate a Supabase JWT using the embedded ES256 public key.
+    Raises HTTP 401 on any validation failure.
     """
-    # Peek at the header to pick the right algorithm
-    header = jwt.get_unverified_header(token)
-    alg = header.get("alg", "HS256")
-
-    if alg == "ES256":
-        try:
-            jwks = await _get_jwks()
-            kid = header.get("kid")
-            # Find matching key
-            key = None
-            for k in jwks.get("keys", []):
-                if kid is None or k.get("kid") == kid:
-                    key = k
-                    break
-            if key is None:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Token signing key not found",
-                    headers={"WWW-Authenticate": "Bearer"},
-                )
-            payload = jwt.decode(
-                token,
-                key,
-                algorithms=["ES256"],
-                options={"verify_aud": False},
-            )
-            return payload
-        except JWTError as exc:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid or expired token",
-                headers={"WWW-Authenticate": "Bearer"},
-            ) from exc
-
-    # HS256 path (legacy projects)
     try:
         payload = jwt.decode(
             token,
-            settings.supabase_jwt_secret,
-            algorithms=["HS256"],
+            _SUPABASE_JWK,
+            algorithms=["ES256"],
             options={"verify_aud": False},
         )
         return payload
