@@ -196,3 +196,55 @@ async def get_current_user(
         account_status=row.account_status,
         onboarding_completed=row.onboarding_completed,
     )
+
+
+async def get_jwt_user(
+    credentials: Optional[HTTPAuthorizationCredentials] = Security(_bearer),
+) -> AuthenticatedUser:
+    """
+    Lightweight dependency — validates the Supabase JWT signature only.
+    Does NOT require a users row in the DB.
+
+    Use ONLY for endpoints whose job is to CREATE that row (e.g. /auth/register).
+    All other protected endpoints must use get_current_user.
+    """
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    payload = await _decode_supabase_token(credentials.credentials)
+
+    user_id_str: Optional[str] = payload.get("sub")
+    if not user_id_str:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token: missing subject",
+        )
+
+    exp: Optional[int] = payload.get("exp")
+    if exp and datetime.fromtimestamp(exp, tz=timezone.utc) < datetime.now(tz=timezone.utc):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token expired",
+        )
+
+    try:
+        user_id = UUID(user_id_str)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token subject",
+        )
+
+    # Extract email from token claims (Supabase puts it in "email")
+    email: Optional[str] = payload.get("email")
+
+    return AuthenticatedUser(
+        user_id=user_id,
+        email=email,
+        account_status="pending_verification",  # unknown until row created
+        onboarding_completed=False,
+    )

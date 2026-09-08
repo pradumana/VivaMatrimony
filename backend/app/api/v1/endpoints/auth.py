@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.middleware import get_current_user, AuthenticatedUser
+from app.middleware import get_current_user, get_jwt_user, AuthenticatedUser
 from app.schemas.auth import RegisterRequest, MeResponse
 from app.services.auth_service import AuthError, get_or_create_user
 from app.utils.audit import log_action
@@ -32,7 +32,7 @@ def _get_ip(request: Request) -> str:
 @router.post("/register", status_code=status.HTTP_200_OK)
 async def register(
     body: RegisterRequest,
-    current_user: AuthenticatedUser = Depends(get_current_user),
+    current_user: AuthenticatedUser = Depends(get_jwt_user),  # no DB lookup — row may not exist yet
     db: AsyncSession = Depends(get_db),
     request: Request = None,
 ):
