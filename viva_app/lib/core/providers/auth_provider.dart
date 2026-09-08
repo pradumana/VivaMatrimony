@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -113,11 +114,20 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
         if (memberId != null) await storage.saveMemberId(memberId);
         await storage.setOnboardingCompleted(onboardingDone);
       }
+    } on DioException catch (e) {
+      // If register itself 401s the token is invalid — sign out.
+      // For any other network error, proceed with local state (row may
+      // already exist for returning users).
+      final status = e.response?.statusCode;
+      if (status == 401) {
+        await Supabase.instance.client.auth.signOut();
+        state = const AsyncValue.data(AuthState.unauthenticated());
+        return;
+      }
+      // Non-401 error (500, network timeout, etc.) — proceed anyway;
+      // the row likely already exists for returning users.
     } catch (_) {
-      // Registration failed — leave existing local storage values as-is.
-      // The row may already exist (returning user), so we proceed.
-      // If it truly doesn't exist the next API call will 401 and the user
-      // will be prompted to retry.
+      // Non-fatal unexpected error — proceed with local state.
     }
     // Always set state after register attempt so navigation can proceed.
     final newState = await _stateFromSession(session);
