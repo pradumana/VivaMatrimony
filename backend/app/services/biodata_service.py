@@ -25,12 +25,13 @@ logger = structlog.get_logger()
 async def generate_biodata_pdf(
     db: AsyncSession,
     user_id: UUID,
+    template: str = "traditional",
 ) -> bytes:
     """
     Generate matrimonial biodata PDF for a user.
+    template: 'traditional' | 'floral' | 'half_photo'
     - Respects privacy settings
     - Never includes certificates, admin notes, phone numbers
-    - Supports Unicode/Hindi
     Returns raw PDF bytes.
     """
     # Fetch full profile (own view — all fields)
@@ -74,6 +75,8 @@ async def generate_biodata_pdf(
         "mother_tongue": profile.get("mother_tongue", ""),
         "religion": profile.get("religion", ""),
         "caste": profile.get("caste", ""),
+        "sub_caste": profile.get("sub_caste", ""),
+        "gotra": profile.get("gotra", ""),
         "about_me": profile.get("about_me", ""),
         "photo_url": primary_photo_url,
         "all_photo_urls": all_photo_urls,
@@ -101,7 +104,7 @@ async def generate_biodata_pdf(
 
     # Try WeasyPrint; fallback message on failure
     try:
-        pdf_bytes = _render_pdf(context)
+        pdf_bytes = _render_pdf(context, template=template)
     except Exception as exc:
         logger.error("biodata_pdf_generation_failed", error=str(exc), user_id=str(user_id))
         raise ValueError("We couldn't generate your biodata. Please try again.")
@@ -159,17 +162,24 @@ async def generate_biodata_pdf(
     return pdf_bytes
 
 
-def _render_pdf(context: dict) -> bytes:
+def _render_pdf(context: dict, template: str = "traditional") -> bytes:
     """Render HTML template and convert to PDF via WeasyPrint."""
     import os
     template_dir = os.path.join(os.path.dirname(__file__), "..", "utils", "templates")
+
+    _template_files = {
+        "traditional": "biodata.html",
+        "floral": "biodata_floral.html",
+        "half_photo": "biodata_half_photo.html",
+    }
+    template_file = _template_files.get(template, "biodata.html")
 
     env = Environment(
         loader=FileSystemLoader(template_dir),
         autoescape=select_autoescape(["html", "xml"]),
     )
-    template = env.get_template("biodata.html")
-    html_content = template.render(**context)
+    tmpl = env.get_template(template_file)
+    html_content = tmpl.render(**context)
 
     from weasyprint import HTML, CSS
     font_css = CSS(string="""

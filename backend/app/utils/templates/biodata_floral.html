@@ -14,13 +14,13 @@
     body {
       font-family: 'Noto Sans', 'Noto Sans Devanagari', Arial, sans-serif;
       font-size: 10.5pt;
-      color: #2c1810;
-      background: #fff;
+      color: #2c1025;
+      background: #FDF8FB;
     }
 
     /* ── Header ─────────────────────────────────── */
     .header {
-      background: linear-gradient(135deg, #8B1A1A 0%, #C0392B 60%, #8B1A1A 100%);
+      background: linear-gradient(135deg, #6B2F5E 0%, #9B4F8A 60%, #6B2F5E 100%);
       color: white;
       padding: 18px 22px;
       border-radius: 8px;
@@ -85,8 +85,8 @@
     /* ── Ornament ────────────────────────────────── */
     .ornament {
       text-align: center;
-      color: #C0392B;
-      font-size: 13pt;
+      color: #C68BB7;
+      font-size: 14pt;
       letter-spacing: 8px;
       margin: 4px 0 10px;
     }
@@ -99,10 +99,10 @@
     .section-title {
       font-size: 10pt;
       font-weight: 700;
-      color: #8B1A1A;
+      color: #7B3F6E;
       text-transform: uppercase;
       letter-spacing: 1px;
-      border-bottom: 1.5px solid #C0392B;
+      border-bottom: 1.5px solid #C68BB7;
       padding-bottom: 3px;
       margin-bottom: 9px;
     }
@@ -116,18 +116,18 @@
     .field { margin-bottom: 3px; }
     .field-label {
       font-size: 8pt;
-      color: #8B4513;
+      color: #9B4F8A;
       text-transform: uppercase;
       letter-spacing: 0.4px;
       font-weight: 600;
     }
     .field-value {
       font-size: 10pt;
-      color: #2c1810;
+      color: #2c1025;
       font-weight: 500;
     }
     .field-empty {
-      color: #bbb;
+      color: #ccc;
       font-style: italic;
       font-size: 9pt;
     }
@@ -137,18 +137,18 @@
       font-size: 10pt;
       line-height: 1.6;
       color: #333;
-      background: #fdf8f5;
+      background: #FDF0F7;
       padding: 9px 13px;
-      border-left: 3px solid #C0392B;
+      border-left: 3px solid #C68BB7;
       border-radius: 0 4px 4px 0;
     }
 
     /* ── Tags ────────────────────────────────────── */
     .tag-list { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
     .tag {
-      background: #fdf0ec;
-      border: 1px solid #e8c5b8;
-      color: #8B1A1A;
+      background: #FDF0F7;
+      border: 1px solid #E8C5D9;
+      color: #7B3F6E;
       padding: 2px 8px;
       border-radius: 10px;
       font-size: 8.5pt;
@@ -157,7 +157,7 @@
     /* ── Divider ─────────────────────────────────── */
     .divider {
       height: 1.5px;
-      background: linear-gradient(90deg, transparent, #C0392B, transparent);
+      background: linear-gradient(90deg, transparent, #C68BB7, transparent);
       margin: 8px 0;
     }
 
@@ -167,10 +167,10 @@
       text-align: center;
       font-size: 8pt;
       color: #999;
-      border-top: 1px solid #f0d9d0;
+      border-top: 1px solid #E8C5D9;
       padding-top: 8px;
     }
-    .footer-brand { font-size: 9.5pt; font-weight: 700; color: #C0392B; }
+    .footer-brand { font-size: 9.5pt; font-weight: 700; color: #7B3F6E; }
     .footer-tagline { font-style: italic; margin-bottom: 3px; }
   </style>
 </head>
@@ -195,7 +195,7 @@
     </div>
   </div>
 
-  <div class="ornament">❧ ❦ ❧</div>
+  <div class="ornament">❀ ✿ ❀</div>
 
   <!-- Personal Details -->
   <div class="section">
@@ -423,7 +423,7 @@
       <img
         src="{{ url }}"
         alt="Photo {{ loop.index }}"
-        style="width: 120px; height: 150px; object-fit: cover; border-radius: 6px; border: 2px solid #e8c5b8;"
+        style="width: 120px; height: 150px; object-fit: cover; border-radius: 6px; border: 2px solid #E8C5D9;"
       >
       {% endfor %}
     </div>

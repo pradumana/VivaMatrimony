@@ -87,6 +87,7 @@ class VivaDropdownField<T> extends StatelessWidget {
   final List<DropdownMenuItem<T>> items;
   final void Function(T?) onChanged;
   final String? Function(T?)? validator;
+  final String? hint;
 
   const VivaDropdownField({
     super.key,
@@ -95,6 +96,7 @@ class VivaDropdownField<T> extends StatelessWidget {
     required this.items,
     required this.onChanged,
     this.validator,
+    this.hint,
   });
 
   @override
@@ -104,7 +106,7 @@ class VivaDropdownField<T> extends StatelessWidget {
       items: items,
       onChanged: onChanged,
       validator: validator,
-      decoration: InputDecoration(labelText: label),
+      decoration: InputDecoration(labelText: label, hintText: hint),
       style: const TextStyle(
         fontSize: 14,
         color: AppTheme.textPrimary,

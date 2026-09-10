@@ -33,6 +33,10 @@ class ProfileSummary {
   final String? profession;
   final bool isVerified;
   final int? compatibilityScore;
+  // Community — public matrimonial fields
+  final String? caste;
+  final String? subCaste;
+  final String? gotra;
 
   const ProfileSummary({
     required this.userId,
@@ -45,19 +49,26 @@ class ProfileSummary {
     this.profession,
     this.isVerified = false,
     this.compatibilityScore,
+    this.caste,
+    this.subCaste,
+    this.gotra,
   });
 
   factory ProfileSummary.fromJson(Map<String, dynamic> json) => ProfileSummary(
         userId: json['user_id'] as String,
         memberId: json['member_id'] as String?,
-        fullName: json['full_name'] as String,
-        age: json['age'] as int,
+        fullName: json['full_name'] as String? ?? '',
+        // age may be null when a profile has no date_of_birth — guard the cast
+        age: (json['age'] as num?)?.toInt() ?? 0,
         location: json['location'] as String?,
         photoUrl: json['primary_photo_url'] as String?,
         qualification: json['highest_qualification'] as String?,
         profession: json['profession'] as String?,
         isVerified: json['is_verified'] as bool? ?? false,
-        compatibilityScore: json['compatibility_score'] as int?,
+        compatibilityScore: (json['compatibility_score'] as num?)?.toInt(),
+        caste: json['caste'] as String?,
+        subCaste: json['sub_caste'] as String?,
+        gotra: json['gotra'] as String?,
       );
 }
 

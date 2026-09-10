@@ -4,7 +4,7 @@ GET  /biodata          — biodata status
 POST /biodata/generate — generate fresh PDF
 GET  /biodata/pdf      — download PDF
 """
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
@@ -47,12 +47,15 @@ async def get_biodata_status(
 
 @router.post("/generate")
 async def generate_biodata(
+    template: str = Body("traditional", embed=True),
     current_user: AuthenticatedUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Generate or regenerate biodata PDF."""
+    """Generate or regenerate biodata PDF. Body: {template: traditional|floral|half_photo}"""
+    if template not in ("traditional", "floral", "half_photo"):
+        template = "traditional"
     try:
-        pdf_bytes = await generate_biodata_pdf(db, current_user.user_id)
+        pdf_bytes = await generate_biodata_pdf(db, current_user.user_id, template=template)
         return {
             "success": True,
             "message": "Biodata generated successfully.",
@@ -66,10 +69,13 @@ async def generate_biodata(
 
 @router.get("/pdf")
 async def download_biodata(
+    template: str = Query("traditional"),
     current_user: AuthenticatedUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Download biodata as PDF. Generates fresh if stale."""
+    """Download biodata as PDF. ?template=traditional|floral|half_photo"""
+    if template not in ("traditional", "floral", "half_photo"):
+        template = "traditional"
     # Check if fresh PDF exists
     result = await db.execute(
         text("""
@@ -82,15 +88,13 @@ async def download_biodata(
     row = result.fetchone()
 
     if not row or row.is_stale or row.status != "ready" or not row.storage_path:
-        # Generate fresh PDF
-        pdf_bytes = await generate_biodata_pdf(db, current_user.user_id)
+        pdf_bytes = await generate_biodata_pdf(db, current_user.user_id, template=template)
     else:
-        # Download from storage
         supabase = get_supabase()
         try:
             pdf_bytes = supabase.storage.from_(settings.storage_bucket_biodata).download(row.storage_path)
         except Exception:
-            pdf_bytes = await generate_biodata_pdf(db, current_user.user_id)
+            pdf_bytes = await generate_biodata_pdf(db, current_user.user_id, template=template)
 
     name_result = await db.execute(
         text("SELECT full_name FROM profiles WHERE user_id = :uid"),

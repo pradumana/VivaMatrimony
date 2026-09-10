@@ -73,6 +73,7 @@ class ProfileCreateRequest(BaseModel):
     religion: Optional[str] = None
     caste: Optional[str] = None
     sub_caste: Optional[str] = None
+    gotra: Optional[str] = None
     about_me: Optional[str] = None
     whatsapp_phone: Optional[str] = None
 
@@ -152,6 +153,7 @@ class ProfileResponse(BaseModel):
     religion: Optional[str]
     caste: Optional[str]
     sub_caste: Optional[str]
+    gotra: Optional[str]
     about_me: Optional[str]
     profile_visibility: str
     photo_visibility: str
@@ -367,6 +369,8 @@ class PartnerPreferencesRequest(BaseModel):
     preferred_mother_tongues: Optional[List[str]] = None
     preferred_religions: Optional[List[str]] = None
     preferred_castes: Optional[List[str]] = None
+    preferred_subcastes: Optional[List[str]] = None
+    preferred_gotras: Optional[List[str]] = None
     preferred_diet: Optional[List[DietEnum]] = None
     smoking_preference: Optional[str] = None
     drinking_preference: Optional[str] = None
@@ -375,7 +379,25 @@ class PartnerPreferencesRequest(BaseModel):
     preferred_family_values: Optional[List[FamilyValuesEnum]] = None
     open_to_relocation: bool = True
     want_children: Optional[bool] = None
+    want_children_timeline: Optional[str] = None
+    career_preference: Optional[str] = None
     other_expectations: Optional[str] = None
+
+    @field_validator("want_children_timeline")
+    @classmethod
+    def validate_children_timeline(cls, v: Optional[str]) -> Optional[str]:
+        allowed = {"soon", "1_3_years", "later", "not_decided", None}
+        if v not in allowed:
+            raise ValueError(f"want_children_timeline must be one of: {allowed - {None}}")
+        return v
+
+    @field_validator("career_preference")
+    @classmethod
+    def validate_career_preference(cls, v: Optional[str]) -> Optional[str]:
+        allowed = {"may_work", "should_work", "no_preference", None}
+        if v not in allowed:
+            raise ValueError(f"career_preference must be one of: {allowed - {None}}")
+        return v
 
     @model_validator(mode="after")
     def validate_age_range(self) -> "PartnerPreferencesRequest":

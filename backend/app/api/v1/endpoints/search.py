@@ -44,6 +44,8 @@ async def search_profiles(
     gender: Optional[str] = Query(None),
     religion: Optional[str] = Query(None),
     caste: Optional[str] = Query(None),
+    sub_caste: Optional[str] = Query(None),
+    gotra: Optional[str] = Query(None),
     mother_tongue: Optional[str] = Query(None),
     marital_status: Optional[str] = Query(None),
     # Education
@@ -107,7 +109,7 @@ async def search_profiles(
             "results": [{
                 "user_id": str(row.user_id),
                 "member_id": row.member_id,
-                "full_name": row.full_name,
+                "full_name": row.full_name or "",
                 "age": compute_age(row.date_of_birth) if row.date_of_birth else None,
                 "height_cm": row.height_cm,
                 "religion": row.religion,
@@ -118,7 +120,7 @@ async def search_profiles(
                 "profession": row.profession,
                 "is_verified": row.verification_status == "verified",
                 "primary_photo_url": photo_url,
-                "last_active_at": row.last_active_at,
+                "last_active_at": row.last_active_at.isoformat() if row.last_active_at else None,
             }],
             "total": 1,
             "page": 1,
@@ -158,6 +160,12 @@ async def search_profiles(
     if caste:
         conditions.append("LOWER(p.caste) LIKE LOWER(:caste)")
         params["caste"] = f"%{caste}%"
+    if sub_caste:
+        conditions.append("LOWER(p.sub_caste) LIKE LOWER(:sub_caste)")
+        params["sub_caste"] = f"%{sub_caste}%"
+    if gotra:
+        conditions.append("LOWER(p.gotra) LIKE LOWER(:gotra)")
+        params["gotra"] = f"%{gotra}%"
     if mother_tongue:
         conditions.append("LOWER(p.mother_tongue) = LOWER(:mother_tongue)")
         params["mother_tongue"] = mother_tongue
@@ -211,7 +219,8 @@ async def search_profiles(
         text(f"""
             SELECT DISTINCT u.id as user_id,
                    p.full_name, p.date_of_birth, p.height_cm, p.religion, p.mother_tongue,
-                   p.marital_status, u.verification_status,
+                   p.marital_status, p.caste, p.sub_caste, p.gotra,
+                   u.verification_status,
                    cl.state, cl.city,
                    ph.storage_path as photo_path, ph.thumbnail_path,
                    e.highest_qualification, em.profession,
@@ -249,10 +258,13 @@ async def search_profiles(
         profiles.append({
             "user_id": str(row.user_id),
             "member_id": row.member_id,
-            "full_name": row.full_name,
-            "age": age,
+            "full_name": row.full_name or "",
+            "age": age,          # may be null for profiles without DOB
             "height_cm": row.height_cm,
             "religion": row.religion,
+            "caste": row.caste,
+            "sub_caste": row.sub_caste,
+            "gotra": row.gotra,
             "mother_tongue": row.mother_tongue,
             "marital_status": row.marital_status,
             "location": f"{row.city}, {row.state}" if row.city and row.state else (row.state or ""),
@@ -260,7 +272,7 @@ async def search_profiles(
             "profession": row.profession,
             "is_verified": row.verification_status == "verified",
             "primary_photo_url": photo_url,
-            "last_active_at": row.last_active_at,
+            "last_active_at": row.last_active_at.isoformat() if row.last_active_at else None,
         })
 
     return {

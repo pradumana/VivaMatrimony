@@ -90,6 +90,7 @@ async def get_profile(
         text("""
             SELECT p.*,
                    u.account_status, u.verification_status, u.last_active_at, u.member_id,
+                   u.privacy_policy_accepted, u.terms_accepted, u.onboarding_step,
                    cl.country as cl_country, cl.state as cl_state, cl.district as cl_district, cl.city as cl_city,
                    np.country as np_country, np.state as np_state, np.district as np_district, np.city as np_city, np.is_visible as np_visible,
                    e.highest_qualification, e.degree, e.field_of_study, e.college_university, e.graduation_year, e.additional_qualifications,
@@ -190,6 +191,7 @@ async def get_profile(
         "religion": row.religion,
         "caste": row.caste,
         "sub_caste": row.sub_caste,
+        "gotra": row.gotra,
         "about_me": row.about_me,
         "profile_visibility": row.profile_visibility,
         "photo_visibility": row.photo_visibility,
@@ -200,6 +202,10 @@ async def get_profile(
         # For other users it is resolved by the social layer (get_whatsapp_contact).
         # Here we expose it for own profile only so the edit screen can pre-fill it.
         "whatsapp_phone": row.whatsapp_phone if is_own else None,
+        # Consent & onboarding state — own view only (no value exposing to other users)
+        "privacy_policy_accepted": row.privacy_policy_accepted if is_own else None,
+        "terms_accepted": row.terms_accepted if is_own else None,
+        "onboarding_step": row.onboarding_step if is_own else None,
     }
 
     current_location = {
@@ -322,6 +328,7 @@ async def upsert_profile(
                   religion = COALESCE(:religion, religion),
                   caste = COALESCE(:caste, caste),
                   sub_caste = COALESCE(:sub_caste, sub_caste),
+                  gotra = COALESCE(:gotra, gotra),
                   about_me = COALESCE(:about_me, about_me),
                   whatsapp_phone = COALESCE(:whatsapp_phone, whatsapp_phone),
                   updated_at = NOW()
@@ -341,6 +348,7 @@ async def upsert_profile(
                 "religion": data.get("religion"),
                 "caste": data.get("caste"),
                 "sub_caste": data.get("sub_caste"),
+                "gotra": data.get("gotra"),
                 "about_me": data.get("about_me"),
                 "whatsapp_phone": data.get("whatsapp_phone"),
             },
@@ -352,12 +360,12 @@ async def upsert_profile(
                   user_id, full_name, gender, date_of_birth, height_cm,
                   marital_status, have_children, children_count,
                   mother_tongue, languages_known, religion, caste, sub_caste,
-                  about_me, whatsapp_phone
+                  gotra, about_me, whatsapp_phone
                 ) VALUES (
                   :user_id, :full_name, :gender, :dob, :height,
                   :marital_status, :have_children, :children_count,
                   :mother_tongue, :languages, :religion, :caste, :sub_caste,
-                  :about_me, :whatsapp_phone
+                  :gotra, :about_me, :whatsapp_phone
                 )
             """),
             {
@@ -374,6 +382,7 @@ async def upsert_profile(
                 "religion": data.get("religion"),
                 "caste": data.get("caste"),
                 "sub_caste": data.get("sub_caste"),
+                "gotra": data.get("gotra"),
                 "about_me": data.get("about_me"),
                 "whatsapp_phone": data.get("whatsapp_phone"),
             },

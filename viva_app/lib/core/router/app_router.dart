@@ -59,11 +59,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       final authAsync = ref.read(authProvider);
       final auth = authAsync.valueOrNull;
 
-      debugPrint(
-          '[Router] redirect — status=${auth?.status} location=${state.matchedLocation}');
-
       if (authAsync is AsyncError) return AppRoutes.login;
-      if (auth == null) return null; // still loading
+      // Still loading — always show splash, never stay on a stale route
+      if (authAsync is AsyncLoading || auth == null) return AppRoutes.splash;
 
       final loc = state.matchedLocation;
       final isSplash = loc == AppRoutes.splash;

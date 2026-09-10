@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @page { size: A4; margin: 0; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Noto Sans', Arial, sans-serif; font-size: 10pt; }
+    .page { display: flex; min-height: 297mm; width: 210mm; }
+    .photo-col { width: 40%; background: #f0e8e5; flex-shrink: 0; }
+    .photo-col img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .photo-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(160deg, #8B1A1A, #C0392B); color: white; font-size: 10pt; text-align: center; padding: 20px; }
+    .info-col { flex: 1; padding: 22px 18px 18px 18px; display: flex; flex-direction: column; }
+    .brand { font-size: 8pt; color: #C0392B; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+    .name { font-size: 22pt; font-weight: 800; color: #1a1a1a; letter-spacing: -0.5px; line-height: 1.1; }
+    .tagline { font-size: 9pt; color: #888; margin-top: 3px; margin-bottom: 14px; font-style: italic; }
+    .verified-badge { display: inline-block; background: #27AE60; color: white; padding: 2px 8px; border-radius: 10px; font-size: 7.5pt; margin-bottom: 10px; }
+    .divider { height: 2px; background: linear-gradient(90deg, #C0392B, transparent); margin: 10px 0; }
+    .section-title { font-size: 7.5pt; font-weight: 700; color: #C0392B; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 7px; margin-top: 10px; }
+    .field { margin-bottom: 5px; }
+    .field-label { font-size: 7pt; color: #999; text-transform: uppercase; letter-spacing: 0.3px; }
+    .field-value { font-size: 9.5pt; color: #1a1a1a; font-weight: 500; }
+    .about-text { font-size: 8.5pt; color: #444; line-height: 1.5; background: #fdf8f5; padding: 7px 10px; border-left: 2px solid #C0392B; margin-top: 4px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; }
+    .tag-list { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
+    .tag { background: #fdf0ec; border: 1px solid #e8c5b8; color: #8B1A1A; padding: 1px 6px; border-radius: 8px; font-size: 7.5pt; }
+    .footer { margin-top: auto; padding-top: 10px; border-top: 1px solid #f0d9d0; font-size: 7.5pt; color: #bbb; text-align: center; }
+    .footer span { color: #C0392B; font-weight: 700; }
+  </style>
+</head>
+<body>
+<div class="page">
+  <div class="photo-col">
+    {% if photo_url %}
+      <img src="{{ photo_url }}" alt="{{ full_name }}">
+    {% else %}
+      <div class="photo-placeholder">
+        <div>
+          <div style="font-size:28pt; margin-bottom:8px;">☺</div>
+          <div>{{ full_name }}</div>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+  <div class="info-col">
+    <div class="brand">Viva Matrimony</div>
+    <div class="name">{{ full_name }}</div>
+    <div class="tagline">"Find someone who feels like home."</div>
+    {% if is_verified %}<div class="verified-badge">✓ Verified Profile</div>{% endif %}
+    <div class="divider"></div>
+
+    <div class="section-title">Personal</div>
+    <div class="grid">
+      {% if age %}<div class="field"><div class="field-label">Age</div><div class="field-value">{{ age }} years</div></div>{% endif %}
+      {% if height %}<div class="field"><div class="field-label">Height</div><div class="field-value">{{ height }}</div></div>{% endif %}
+      <div class="field"><div class="field-label">Marital Status</div><div class="field-value">{{ marital_status or '—' }}</div></div>
+      {% if mother_tongue %}<div class="field"><div class="field-label">Mother Tongue</div><div class="field-value">{{ mother_tongue }}</div></div>{% endif %}
+      {% if religion %}<div class="field"><div class="field-label">Religion</div><div class="field-value">{{ religion }}</div></div>{% endif %}
+      {% if caste %}<div class="field"><div class="field-label">Caste</div><div class="field-value">{{ caste }}</div></div>{% endif %}
+      {% if sub_caste %}<div class="field"><div class="field-label">Sub-caste</div><div class="field-value">{{ sub_caste }}</div></div>{% endif %}
+      {% if gotra %}<div class="field"><div class="field-label">Gotra</div><div class="field-value">{{ gotra }}</div></div>{% endif %}
+      {% if current_location %}<div class="field"><div class="field-label">Location</div><div class="field-value">{{ current_location }}</div></div>{% endif %}
+      {% if native_place %}<div class="field"><div class="field-label">Native Place</div><div class="field-value">{{ native_place }}</div></div>{% endif %}
+    </div>
+
+    {% if education or employment %}
+    <div class="section-title">Education &amp; Career</div>
+    <div class="grid">
+      {% if education and education.degree %}<div class="field"><div class="field-label">Degree</div><div class="field-value">{{ education.degree }}</div></div>{% endif %}
+      {% if education and education.field_of_study %}<div class="field"><div class="field-label">Field</div><div class="field-value">{{ education.field_of_study }}</div></div>{% endif %}
+      {% if employment and employment.profession %}<div class="field"><div class="field-label">Profession</div><div class="field-value">{{ employment.profession }}</div></div>{% endif %}
+      {% if employment and employment.company %}<div class="field"><div class="field-label">Company</div><div class="field-value">{{ employment.company }}</div></div>{% endif %}
+    </div>
+    {% endif %}
+
+    {% if family %}
+    <div class="section-title">Family</div>
+    <div class="grid">
+      {% if family.family_type %}<div class="field"><div class="field-label">Family Type</div><div class="field-value">{{ family.family_type | replace('_',' ') | title }}</div></div>{% endif %}
+      <div class="field"><div class="field-label">Siblings</div><div class="field-value">{{ family.brothers_count }}B / {{ family.sisters_count }}S</div></div>
+    </div>
+    {% endif %}
+
+    {% if about_me %}
+    <div class="section-title">About</div>
+    <div class="about-text">{{ about_me }}</div>
+    {% endif %}
+
+    {% if lifestyle and lifestyle.hobbies %}
+    <div class="section-title">Hobbies</div>
+    <div class="tag-list">{% for h in lifestyle.hobbies %}<span class="tag">{{ h }}</span>{% endfor %}</div>
+    {% endif %}
+
+    <div class="footer"><span>Viva</span> — {{ app_tagline }}</div>
+  </div>
+</div>
+</body>
+</html>

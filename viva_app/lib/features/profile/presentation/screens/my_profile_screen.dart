@@ -127,25 +127,29 @@ class _SkeletonScreen extends StatelessWidget {
 
 // ── Body ──────────────────────────────────────────────────────────────────────
 
-class _ProfileBody extends ConsumerWidget {
+class _ProfileBody extends ConsumerStatefulWidget {
   final Map<String, dynamic> data;
   const _ProfileBody({required this.data});
 
+  @override
+  ConsumerState<_ProfileBody> createState() => _ProfileBodyState();
+}
+
+class _ProfileBodyState extends ConsumerState<_ProfileBody> {
   Map<String, dynamic> get profile =>
-      (data['profile'] as Map<String, dynamic>?) ?? {};
+      (widget.data['profile'] as Map<String, dynamic>?) ?? {};
   Map<String, dynamic>? get location =>
-      data['current_location'] as Map<String, dynamic>?;
-  String? get photoUrl => data['primary_photo_url'] as String?;
-  int get photoCount => data['photo_count'] as int? ?? 0;
+      widget.data['current_location'] as Map<String, dynamic>?;
+  String? get photoUrl => widget.data['primary_photo_url'] as String?;
+  int get photoCount => widget.data['photo_count'] as int? ?? 0;
   // Backend completion_percentage; never hardcode.
   int get completion => profile['completion_percentage'] as int? ?? 0;
   bool get isVerified => profile['is_verified'] as bool? ?? false;
 
   // ── Navigation helpers that invalidate the profile cache on return ──────────
-  Future<void> _goAndRefresh(
-      BuildContext context, WidgetRef ref, String route,
-      {Object? extra}) async {
+  Future<void> _goAndRefresh(String route, {Object? extra}) async {
     await context.push(route, extra: extra);
+    if (!mounted) return;
     // Invalidate so the profile reflects any changes made in the sub-screen.
     ref.invalidate(_myProfileProvider);
     ref.invalidate(_verificationStatusProvider);
@@ -153,7 +157,7 @@ class _ProfileBody extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final name = (profile['full_name'] as String?)?.trim();
     final age = profile['age'] as int?;
     final memberId = ref.watch(authProvider).valueOrNull?.memberId;
@@ -178,7 +182,7 @@ class _ProfileBody extends ConsumerWidget {
             actions: [
               _AppBarAction(
                 icon: Icons.edit_outlined,
-                onTap: () => _goAndRefresh(context, ref, AppRoutes.editProfile),
+                onTap: () => _goAndRefresh(AppRoutes.editProfile),
               ),
               const SizedBox(width: 4),
               _AppBarAction(
@@ -388,7 +392,7 @@ class _ProfileBody extends ConsumerWidget {
                         VivaButton(
                           label: 'Complete Profile',
                           onPressed: () => _goAndRefresh(
-                              context, ref, AppRoutes.editProfile),
+                              AppRoutes.editProfile),
                           height: 42,
                         ),
                       ],
@@ -412,7 +416,7 @@ class _ProfileBody extends ConsumerWidget {
                               ? '1 photo'
                               : '$photoCount photos',
                       onTap: () => _goAndRefresh(
-                          context, ref, AppRoutes.onboardingPhotos,
+                          AppRoutes.onboardingPhotos,
                           extra: true),
                     ),
                     const SizedBox(width: 10),
@@ -424,21 +428,21 @@ class _ProfileBody extends ConsumerWidget {
                         label: 'Biodata',
                         value: '…',
                         onTap: () => _goAndRefresh(
-                            context, ref, AppRoutes.biodata),
+                            AppRoutes.biodata),
                       ),
                       error: (_, __) => _QuickAction(
                         icon: Icons.picture_as_pdf_outlined,
                         label: 'Biodata',
                         value: 'Tap to create',
                         onTap: () => _goAndRefresh(
-                            context, ref, AppRoutes.biodata),
+                            AppRoutes.biodata),
                       ),
                       data: (s) => _QuickAction(
                         icon: Icons.picture_as_pdf_outlined,
                         label: 'Biodata',
                         value: s == 'ready' ? 'PDF ready' : 'Not generated',
                         onTap: () => _goAndRefresh(
-                            context, ref, AppRoutes.biodata),
+                            AppRoutes.biodata),
                         color: s == 'ready' ? AppTheme.success : null,
                       ),
                     ),
@@ -451,14 +455,14 @@ class _ProfileBody extends ConsumerWidget {
                         label: 'Verified',
                         value: '…',
                         onTap: () => _goAndRefresh(
-                            context, ref, AppRoutes.verificationStatus),
+                            AppRoutes.verificationStatus),
                       ),
                       error: (_, __) => _QuickAction(
                         icon: Icons.verified_user_outlined,
                         label: 'Verified',
                         value: 'Check status',
                         onTap: () => _goAndRefresh(
-                            context, ref, AppRoutes.verificationStatus),
+                            AppRoutes.verificationStatus),
                       ),
                       data: (status) {
                         final (icon, label, color) = _verificationDisplay(status);
@@ -467,7 +471,7 @@ class _ProfileBody extends ConsumerWidget {
                           label: 'Verified',
                           value: label,
                           onTap: () => _goAndRefresh(
-                              context, ref, AppRoutes.verificationStatus),
+                              AppRoutes.verificationStatus),
                           color: color,
                         );
                       },
@@ -482,6 +486,10 @@ class _ProfileBody extends ConsumerWidget {
                     title: 'Personal',
                     icon: Icons.person_outline_rounded,
                     items: _buildPersonal()),
+                _ProfileSection(
+                    title: 'Community',
+                    icon: Icons.diversity_3_outlined,
+                    items: _buildCommunity()),
                 _ProfileSection(
                     title: 'Education & Career',
                     icon: Icons.school_outlined,
@@ -523,6 +531,8 @@ class _ProfileBody extends ConsumerWidget {
                       );
                       if (confirm == true) {
                         await ref.read(authProvider.notifier).logout();
+                        // Router redirect handles navigation once state → unauthenticated.
+                        // No manual navigation needed here.
                       }
                     },
                   ),
@@ -614,9 +624,23 @@ class _ProfileBody extends ConsumerWidget {
     return items;
   }
 
+  List<_InfoItem> _buildCommunity() {
+    final items = <_InfoItem>[];
+    if (profile['caste'] != null) {
+      items.add(_InfoItem('Caste', profile['caste'] as String));
+    }
+    if (profile['sub_caste'] != null) {
+      items.add(_InfoItem('Sub-caste', profile['sub_caste'] as String));
+    }
+    if (profile['gotra'] != null) {
+      items.add(_InfoItem('Gotra', profile['gotra'] as String));
+    }
+    return items;
+  }
+
   List<_InfoItem> _buildEducation() {
-    final edu = data['education'] as Map<String, dynamic>?;
-    final emp = data['employment'] as Map<String, dynamic>?;
+    final edu = widget.data['education'] as Map<String, dynamic>?;
+    final emp = widget.data['employment'] as Map<String, dynamic>?;
     final items = <_InfoItem>[];
     if (edu?['degree'] != null) {
       items.add(_InfoItem('Degree', edu!['degree'] as String));
@@ -631,7 +655,7 @@ class _ProfileBody extends ConsumerWidget {
   }
 
   List<_InfoItem> _buildFamily() {
-    final fam = data['family'] as Map<String, dynamic>?;
+    final fam = widget.data['family'] as Map<String, dynamic>?;
     if (fam == null) return [];
     return [
       if (fam['family_type'] != null)

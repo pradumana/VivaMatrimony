@@ -25,12 +25,13 @@ from app.utils import compute_age
 
 WEIGHTS = {
     "age": 0.20,
-    "location": 0.15,
-    "education": 0.15,
-    "profession": 0.15,
-    "lifestyle": 0.10,
-    "preferences": 0.15,
-    "family": 0.10,
+    "location": 0.12,
+    "education": 0.12,
+    "profession": 0.12,
+    "lifestyle": 0.09,
+    "preferences": 0.12,
+    "family": 0.08,
+    "community": 0.15,
 }
 
 
@@ -121,6 +122,16 @@ async def calculate_compatibility(
         candidate_data.get("family_values"),
     )
 
+    # Community (15%) — only use explicitly stored values, never inferred
+    scores["community"] = _score_community(
+        user_prefs.get("preferred_castes", []),
+        user_prefs.get("preferred_subcastes", []),
+        user_prefs.get("preferred_gotras", []),
+        candidate_data.get("caste"),
+        candidate_data.get("sub_caste"),
+        candidate_data.get("gotra"),
+    )
+
     # Weighted total
     total = sum(scores[k] * WEIGHTS[k] for k in WEIGHTS)
     total_pct = round(total * 100)
@@ -164,7 +175,7 @@ async def get_recommended_matches(
     result = await db.execute(
         text("""
             SELECT DISTINCT u.id as user_id, p.full_name, p.date_of_birth,
-                   p.height_cm, p.religion, p.caste, p.mother_tongue,
+                   p.height_cm, p.religion, p.caste, p.sub_caste, p.gotra, p.mother_tongue,
                    u.verification_status,
                    cl.state, cl.city,
                    ph.storage_path as primary_photo_path,
@@ -377,6 +388,47 @@ def _score_family(
     return score
 
 
+def _score_community(
+    preferred_castes: list, preferred_subcastes: list, preferred_gotras: list,
+    candidate_caste: Optional[str], candidate_subcaste: Optional[str], candidate_gotra: Optional[str],
+) -> float:
+    """
+    Score community compatibility.
+    Only explicit preferences matter — never infer from name/location.
+    No preference (empty list) = neutral (0.7).
+    """
+    if not preferred_castes and not preferred_subcastes and not preferred_gotras:
+        return 0.7  # No community preference = mostly compatible
+
+    score = 0.0
+    checks = 0
+
+    if preferred_castes and candidate_caste:
+        match = any(p.lower() in candidate_caste.lower() or candidate_caste.lower() in p.lower()
+                    for p in preferred_castes)
+        score += 1.0 if match else 0.2
+        checks += 1
+    elif preferred_castes and not candidate_caste:
+        score += 0.5  # Unknown caste = neutral
+        checks += 1
+
+    if preferred_subcastes and candidate_subcaste:
+        match = any(p.lower() in candidate_subcaste.lower() or candidate_subcaste.lower() in p.lower()
+                    for p in preferred_subcastes)
+        score += 1.0 if match else 0.3
+        checks += 1
+    elif preferred_subcastes and not candidate_subcaste:
+        score += 0.5
+        checks += 1
+
+    if preferred_gotras and candidate_gotra:
+        match = any(p.lower() == candidate_gotra.lower() for p in preferred_gotras)
+        score += 1.0 if match else 0.4
+        checks += 1
+
+    return (score / checks) if checks > 0 else 0.7
+
+
 def _score_message(score: int) -> str:
     if score >= 85:
         return "Highly compatible based on your preferences."
@@ -391,7 +443,7 @@ def _score_message(score: int) -> str:
 async def _fetch_user_data(db: AsyncSession, user_id: UUID) -> Optional[dict]:
     result = await db.execute(
         text("""
-            SELECT p.date_of_birth, p.gender, p.religion, p.caste, p.mother_tongue,
+            SELECT p.date_of_birth, p.gender, p.religion, p.caste, p.sub_caste, p.gotra, p.mother_tongue,
                    cl.state, cl.city,
                    e.highest_qualification,
                    em.profession, em.income_max_lpa,
@@ -419,6 +471,8 @@ async def _fetch_user_data(db: AsyncSession, user_id: UUID) -> Optional[dict]:
         "gender": row.gender,
         "religion": row.religion,
         "caste": row.caste,
+        "sub_caste": row.sub_caste,
+        "gotra": row.gotra,
         "mother_tongue": row.mother_tongue,
         "state": row.state,
         "city": row.city,

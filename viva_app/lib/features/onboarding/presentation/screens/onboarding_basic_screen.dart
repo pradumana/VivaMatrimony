@@ -25,6 +25,10 @@ class _OnboardingBasicScreenState
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _whatsappController = TextEditingController();
+  final _religionController = TextEditingController();
+  final _casteController = TextEditingController();
+  final _subcasteController = TextEditingController();
+  final _gotraController = TextEditingController();
   String? _gender;
   DateTime? _dob;
   int? _heightCm;
@@ -35,6 +39,10 @@ class _OnboardingBasicScreenState
   void dispose() {
     _nameController.dispose();
     _whatsappController.dispose();
+    _religionController.dispose();
+    _casteController.dispose();
+    _subcasteController.dispose();
+    _gotraController.dispose();
     super.dispose();
   }
 
@@ -61,6 +69,10 @@ class _OnboardingBasicScreenState
         _motherTongue = profile['mother_tongue'] as String?;
         final wa = profile['whatsapp_phone'] as String?;
         if (wa != null) _whatsappController.text = wa;
+        _religionController.text = (profile['religion'] as String?) ?? '';
+        _casteController.text    = (profile['caste']    as String?) ?? '';
+        _subcasteController.text = (profile['sub_caste'] as String?) ?? '';
+        _gotraController.text    = (profile['gotra']    as String?) ?? '';
       });
     } catch (_) {
       // pre-fill is best-effort — user can enter manually
@@ -125,6 +137,10 @@ class _OnboardingBasicScreenState
       'height_cm': _heightCm,
       'marital_status': _maritalStatus ?? 'never_married',
       'mother_tongue': _motherTongue,
+      'religion': _religionController.text.trim().isEmpty ? null : _religionController.text.trim(),
+      'caste': _casteController.text.trim().isEmpty ? null : _casteController.text.trim(),
+      'sub_caste': _subcasteController.text.trim().isEmpty ? null : _subcasteController.text.trim(),
+      'gotra': _gotraController.text.trim().isEmpty ? null : _gotraController.text.trim(),
       'whatsapp_phone': _whatsappController.text.trim().isEmpty
           ? null
           : _whatsappController.text.trim(),
@@ -153,7 +169,8 @@ class _OnboardingBasicScreenState
       showBack: true,
       onBack: () async {
         await ref.read(authProvider.notifier).logout();
-        if (mounted) context.go(AppRoutes.login);
+        // Router redirect handles navigation to /login when state → unauthenticated.
+        // No manual router.go needed — doing so causes double-navigation freeze.
       },
       showSkip: false,
       child: Form(
@@ -303,6 +320,57 @@ class _OnboardingBasicScreenState
                 }
                 return null;
               },
+            ),
+            const SizedBox(height: 24),
+
+            // Community & Traditions
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppTheme.secondaryContainer,
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                border: Border.all(color: AppTheme.secondary.withValues(alpha: 0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(children: [
+                    Icon(Icons.diversity_3_outlined, size: 16, color: AppTheme.secondary),
+                    SizedBox(width: 8),
+                    Text('Community & Traditions',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+                  ]),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'These are public matrimonial details and may appear on your profile and biodata. All optional.',
+                    style: TextStyle(fontSize: 11, color: AppTheme.textSecondary, height: 1.4),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            VivaTextField(
+              label: 'Religion (optional)',
+              hint: 'e.g. Hindu, Muslim, Sikh…',
+              controller: _religionController,
+            ),
+            const SizedBox(height: 12),
+            VivaTextField(
+              label: 'Caste (optional)',
+              hint: 'e.g. Brahmin, Rajput, Jat, Patel…',
+              controller: _casteController,
+            ),
+            const SizedBox(height: 12),
+            VivaTextField(
+              label: 'Sub-caste (optional)',
+              hint: 'e.g. Kanyakubj, Anavil…',
+              controller: _subcasteController,
+            ),
+            const SizedBox(height: 12),
+            VivaTextField(
+              label: 'Gotra (optional)',
+              hint: 'Leave blank if not known or not applicable',
+              controller: _gotraController,
             ),
           ],
         ),

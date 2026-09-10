@@ -369,33 +369,43 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                     child: _Grid([
                       if (age != null && age > 0) _Field('Age', '$age years'),
                       if (profile['height_display'] != null)
-                        _Field('Height',
-                            profile['height_display'] as String),
+                        _Field('Height', profile['height_display'] as String),
                       _Field(
                           'Marital Status',
                           (profile['marital_status'] as String? ?? '')
                               .replaceAll('_', ' ')
                               .toUpperCase()
                               .split(' ')
-                              .map((w) => w.isEmpty
-                                  ? w
-                                  : '${w[0]}${w.substring(1).toLowerCase()}')
+                              .map((w) => w.isEmpty ? w : '${w[0]}${w.substring(1).toLowerCase()}')
                               .join(' ')),
                       if (profile['mother_tongue'] != null)
-                        _Field('Mother Tongue',
-                            profile['mother_tongue'] as String),
+                        _Field('Mother Tongue', profile['mother_tongue'] as String),
                       if (profile['religion'] != null)
                         _Field('Religion', profile['religion'] as String),
-                      if (profile['caste'] != null)
-                        _Field('Community', profile['caste'] as String),
                       if (nativePlace != null)
-                        _Field(
-                            'Native Place',
+                        _Field('Native Place',
                             '${nativePlace!['city'] ?? ''}, ${nativePlace!['state'] ?? ''}'
                                 .trim()
                                 .removePrefix(', ')),
                     ]),
                   ),
+
+                  // Community — public matrimonial information
+                  if (profile['caste'] != null ||
+                      profile['sub_caste'] != null ||
+                      profile['gotra'] != null)
+                    _Section(
+                      title: 'Community',
+                      icon: Icons.diversity_3_outlined,
+                      child: _Grid([
+                        if (profile['caste'] != null)
+                          _Field('Caste', profile['caste'] as String),
+                        if (profile['sub_caste'] != null)
+                          _Field('Sub-caste', profile['sub_caste'] as String),
+                        if (profile['gotra'] != null)
+                          _Field('Gotra', profile['gotra'] as String),
+                      ]),
+                    ),
 
                   if (education != null)
                     _Section(
