@@ -8,6 +8,7 @@ import 'package:shimmer/shimmer.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/constants/app_constants.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../../../../shared/widgets/verified_badge.dart';
@@ -158,6 +159,7 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final name = (profile['full_name'] as String?)?.trim();
     final age = profile['age'] as int?;
     final memberId = ref.watch(authProvider).valueOrNull?.memberId;
@@ -517,9 +519,9 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                     icon: Icons.person_outline_rounded,
                     items: _buildPersonal()),
                 _ProfileSection(
-                    title: 'Community',
+                    title: l.community,
                     icon: Icons.diversity_3_outlined,
-                    items: _buildCommunity()),
+                    items: _buildCommunity(l)),
                 _ProfileSection(
                     title: 'Education & Career',
                     icon: Icons.school_outlined,
@@ -654,16 +656,16 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
     return items;
   }
 
-  List<_InfoItem> _buildCommunity() {
+  List<_InfoItem> _buildCommunity(AppLocalizations l) {
     final items = <_InfoItem>[];
     if (profile['caste'] != null) {
-      items.add(_InfoItem('Caste', profile['caste'] as String));
+      items.add(_InfoItem(l.caste, profile['caste'] as String));
     }
     if (profile['sub_caste'] != null) {
-      items.add(_InfoItem('Sub-caste', profile['sub_caste'] as String));
+      items.add(_InfoItem(l.subCaste, profile['sub_caste'] as String));
     }
     if (profile['gotra'] != null) {
-      items.add(_InfoItem('Gotra', profile['gotra'] as String));
+      items.add(_InfoItem(l.gotra, profile['gotra'] as String));
     }
     return items;
   }

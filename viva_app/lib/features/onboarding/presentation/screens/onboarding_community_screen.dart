@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/constants/app_constants.dart';
 import '../../../../shared/widgets/viva_text_field.dart';
 import '../providers/onboarding_provider.dart';
@@ -67,6 +68,7 @@ class _State extends ConsumerState<OnboardingCommunityScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final state = ref.watch(onboardingProvider);
     return OnboardingScaffold(
       currentStep: 7,
@@ -105,19 +107,19 @@ class _State extends ConsumerState<OnboardingCommunityScreen> {
           ),
           const SizedBox(height: 14),
           VivaTextField(
-            label: 'Caste (optional)',
+            label: '${l.caste} (optional)',
             hint: 'e.g. Brahmin, Rajput, Jat, Patel, Kayastha…',
             controller: _casteCtrl,
           ),
           const SizedBox(height: 14),
           VivaTextField(
-            label: 'Sub-caste (optional)',
+            label: '${l.subCaste} (optional)',
             hint: 'e.g. Kanyakubj, Anavil, Iyengar…',
             controller: _subcasteCtrl,
           ),
           const SizedBox(height: 14),
           VivaTextField(
-            label: 'Gotra (optional)',
+            label: '${l.gotra} (optional)',
             hint: 'Leave blank if not known or not applicable',
             controller: _gotraCtrl,
           ),

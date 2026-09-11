@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../../../../shared/widgets/verified_badge.dart';
 
@@ -19,10 +20,11 @@ class WhoViewedMeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final async = ref.watch(_viewersProvider);
     return Scaffold(
       backgroundColor: AppTheme.background,
-      appBar: AppBar(title: const Text('Who Viewed My Profile')),
+      appBar: AppBar(title: Text(l.whoViewedMe)),
       body: async.when(
         loading: () => const Center(
             child: CircularProgressIndicator(color: AppTheme.primary)),

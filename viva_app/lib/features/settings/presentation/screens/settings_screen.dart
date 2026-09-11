@@ -8,6 +8,7 @@ import '../../../../core/network/api_client.dart';
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/constants/app_constants.dart';
+import '../../../../main.dart' show setAppLocale;
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -33,6 +34,13 @@ class SettingsScreen extends ConsumerWidget {
                 title: 'Notification Preferences',
                 onTap: () => _showComingSoon(context),
               ),
+            ],
+          ),
+
+          const _SettingsGroup(
+            label: 'Language',
+            children: [
+              _LanguageTile(),
             ],
           ),
 
@@ -93,10 +101,10 @@ class SettingsScreen extends ConsumerWidget {
           ),
 
           const SizedBox(height: 8),
-          Center(
+          const Center(
             child: Text(
               'Viva v${AppConstants.appVersion}',
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 11, color: AppTheme.textTertiary),
             ),
           ),
@@ -149,9 +157,9 @@ class SettingsScreen extends ConsumerWidget {
                 color: AppTheme.primaryContainer,
                 borderRadius: BorderRadius.circular(AppRadius.md),
               ),
-              child: Text(
+              child: const Text(
                 '"${AppConstants.appTagline}"',
-                style: const TextStyle(
+                style: TextStyle(
                   fontStyle: FontStyle.italic,
                   color: AppTheme.primary,
                   fontWeight: FontWeight.w600,
@@ -164,8 +172,8 @@ class SettingsScreen extends ConsumerWidget {
               style: TextStyle(fontSize: 13, height: 1.5),
             ),
             const SizedBox(height: 8),
-            Text('Version ${AppConstants.appVersion}',
-                style: const TextStyle(
+            const Text('Version ${AppConstants.appVersion}',
+                style: TextStyle(
                     fontSize: 12, color: AppTheme.textSecondary)),
           ],
         ),
@@ -344,5 +352,106 @@ class _DeleteAccountDialogState
     if (!mounted) return;
     Navigator.pop(context);
     await ref.read(authProvider.notifier).logout();
+  }
+}
+
+// ── Language tile ─────────────────────────────────────────────────────────────
+
+class _LanguageTile extends ConsumerWidget {
+  const _LanguageTile();
+
+  static const _options = [
+    (Locale('en', 'IN'), 'English', 'English'),
+    (Locale('hi', 'IN'), 'हिंदी', 'Hindi'),
+  ];
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ListTile(
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      leading: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceVariant,
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+        ),
+        child: const Icon(Icons.translate_rounded,
+            size: 18, color: AppTheme.textPrimary),
+      ),
+      title: const Text('Language / भाषा',
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+      trailing: const Icon(Icons.chevron_right_rounded,
+          size: 18, color: AppTheme.textTertiary),
+      onTap: () => _showPicker(context, ref),
+    );
+  }
+
+  void _showPicker(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(24, 0, 24, 12),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('Select Language / भाषा चुनें',
+                      style: TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w700)),
+                ),
+              ),
+              ..._options.map((opt) {
+                final (locale, label, sublabel) = opt;
+                return ListTile(
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 24),
+                  title: Text(label,
+                      style: const TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.w600)),
+                  subtitle: Text(sublabel,
+                      style: const TextStyle(
+                          fontSize: 12, color: AppTheme.textSecondary)),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await setAppLocale(ref, locale);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(
+                            locale.languageCode == 'hi'
+                                ? 'भाषा बदली गई'
+                                : 'Language changed'),
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                      ));
+                    }
+                  },
+                );
+              }),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

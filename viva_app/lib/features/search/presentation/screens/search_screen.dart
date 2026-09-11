@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/constants/app_constants.dart';
 import '../../../../shared/models/user_model.dart';
 import '../../../../shared/widgets/error_view.dart';
@@ -153,6 +154,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
@@ -197,7 +199,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 builder: (context, value, _) => TextField(
                   controller: _searchCtrl,
                   decoration: InputDecoration(
-                    hintText: 'Name or Member ID (e.g. VIVA001234)',
+                    hintText: l.searchHint,
                     hintStyle: const TextStyle(fontSize: 13, color: AppTheme.textTertiary),
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
@@ -282,10 +284,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           child: _error != null
               ? ErrorView(message: _error, onRetry: _search)
               : _results.isEmpty && !_loading
-                  ? const EmptyStateView(
+                  ? EmptyStateView(
                       icon: Icons.search_off_rounded,
-                      title: 'No profiles found',
-                      subtitle: 'Try adjusting your filters to see more results.',
+                      title: l.noProfilesFound,
+                      subtitle: l.tryAdjustingFilters,
                     )
                   : NotificationListener<ScrollNotification>(
                       onNotification: (n) {

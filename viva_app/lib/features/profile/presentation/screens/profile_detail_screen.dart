@@ -7,6 +7,7 @@ import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../../../../shared/extensions/string_extensions.dart';
 import '../../../../shared/widgets/verified_badge.dart';
@@ -155,6 +156,7 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final name = (profile['full_name'] as String?)?.trim() ?? '';
     final age = profile['age'] as int?;
     final isVerified = profile['is_verified'] as bool? ?? false;
@@ -395,15 +397,15 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                       profile['sub_caste'] != null ||
                       profile['gotra'] != null)
                     _Section(
-                      title: 'Community',
+                      title: l.community,
                       icon: Icons.diversity_3_outlined,
                       child: _Grid([
                         if (profile['caste'] != null)
-                          _Field('Caste', profile['caste'] as String),
+                          _Field(l.caste, profile['caste'] as String),
                         if (profile['sub_caste'] != null)
-                          _Field('Sub-caste', profile['sub_caste'] as String),
+                          _Field(l.subCaste, profile['sub_caste'] as String),
                         if (profile['gotra'] != null)
-                          _Field('Gotra', profile['gotra'] as String),
+                          _Field(l.gotra, profile['gotra'] as String),
                       ]),
                     ),
 

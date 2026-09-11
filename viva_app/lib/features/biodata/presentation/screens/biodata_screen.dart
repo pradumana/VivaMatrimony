@@ -8,6 +8,7 @@ import 'package:dio/dio.dart';
 
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/widgets/viva_button.dart';
 
 // ── Providers ────────────────────────────────────────────────────────────────
@@ -102,10 +103,11 @@ class _BiodataScreenState extends ConsumerState<BiodataScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final statusAsync = ref.watch(_biodataProvider);
     return Scaffold(
       backgroundColor: AppTheme.background,
-      appBar: AppBar(title: const Text('Matrimonial Biodata')),
+      appBar: AppBar(title: Text(l.biodata)),
       body: statusAsync.when(
         loading: () => const Center(child: CircularProgressIndicator(color: AppTheme.primary)),
         error: (_, __) => const Center(
@@ -219,15 +221,15 @@ class _BiodataScreenState extends ConsumerState<BiodataScreen> {
               // Actions
               VivaButton(
                 label: status['status'] == 'not_generated' || (status['is_stale'] as bool? ?? true)
-                    ? 'Generate Biodata'
-                    : 'Regenerate Biodata',
+                    ? l.generate
+                    : l.generate,
                 icon: Icons.refresh_rounded,
                 isLoading: _generating,
                 onPressed: _generate,
               ),
               const SizedBox(height: 12),
               VivaButton(
-                label: 'Download PDF',
+                label: l.download,
                 icon: Icons.download_rounded,
                 isLoading: _downloading,
                 isOutlined: status['status'] != 'ready',
@@ -237,7 +239,7 @@ class _BiodataScreenState extends ConsumerState<BiodataScreen> {
               ),
               const SizedBox(height: 12),
               VivaButton(
-                label: 'Share',
+                label: l.share,
                 icon: Icons.share_outlined,
                 isOutlined: true,
                 onPressed: (status['has_pdf'] as bool? ?? false) || status['status'] == 'ready'

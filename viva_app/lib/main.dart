@@ -5,23 +5,58 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:app_links/app_links.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
+import 'l10n/generated/app_localizations.dart';
 import 'shared/constants/app_constants.dart';
+import 'firebase_options.dart';
+
+// ── Locale provider ───────────────────────────────────────────────────────────
+// Persisted in SharedPreferences so the choice survives restarts.
+
+final _localeProvider = StateNotifierProvider<_LocaleNotifier, Locale>((ref) {
+  return _LocaleNotifier();
+});
+
+class _LocaleNotifier extends StateNotifier<Locale> {
+  static const _key = 'viva_locale';
+
+  _LocaleNotifier() : super(const Locale('en', 'IN')) {
+    _load();
+  }
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    final code = prefs.getString(_key);
+    if (code != null) state = Locale(code, 'IN');
+  }
+
+  Future<void> setLocale(Locale locale) async {
+    state = locale;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_key, locale.languageCode);
+  }
+}
+
+/// Call from any widget to switch the app language.
+Future<void> setAppLocale(WidgetRef ref, Locale locale) =>
+    ref.read(_localeProvider.notifier).setLocale(locale);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Catch Flutter framework errors
-  FlutterError.onError = (FlutterErrorDetails details) {
-    FlutterError.presentError(details);
-    debugPrint('VIVA: Flutter error: ${details.exception}');
-  };
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Catch async errors outside the Flutter framework
+  // Catch Flutter framework errors → Crashlytics
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+
+  // Catch async errors outside the Flutter framework → Crashlytics
   PlatformDispatcher.instance.onError = (error, stack) {
-    debugPrint('VIVA: Platform error: $error');
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
     return true;
   };
 
@@ -52,9 +87,7 @@ void main() async {
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
-  } catch (e) {
-    debugPrint('VIVA: SystemChrome error: $e');
-  }
+  } catch (_) {}
 
   runApp(const ProviderScope(child: VivaApp()));
 }
@@ -65,21 +98,21 @@ class VivaApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    final locale = ref.watch(_localeProvider);
 
     return MaterialApp.router(
       title: 'Viva',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       routerConfig: router,
+      locale: locale,
       localizationsDelegates: const [
+        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('en', 'IN'),
-        Locale('hi', 'IN'),
-      ],
+      supportedLocales: AppLocalizations.supportedLocales,
     );
   }
 }
