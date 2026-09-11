@@ -22,6 +22,14 @@ from fastapi import Request
 router = APIRouter(tags=["Search & Matching"])
 
 
+def _build_order_clause(sort_by: Optional[str]) -> str:
+    return {
+        "age_asc":  "p.date_of_birth DESC NULLS LAST",   # youngest = largest DOB
+        "age_desc": "p.date_of_birth ASC NULLS LAST",    # oldest = smallest DOB
+        "newest":   "u.created_at DESC NULLS LAST",
+    }.get(sort_by or "", "u.last_active_at DESC NULLS LAST")
+
+
 @router.get("/search")
 @limiter.limit("30/minute")
 async def search_profiles(
@@ -57,6 +65,8 @@ async def search_profiles(
     # Verification
     verified_only: bool = Query(False),
     has_photo: bool = Query(False),
+    # Sorting
+    sort_by: Optional[str] = Query("last_active", pattern="^(last_active|age_asc|age_desc|newest)$"),
     # Pagination
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=50),
@@ -198,6 +208,37 @@ async def search_profiles(
         conditions.append("p.full_name ILIKE :q")
         params["q"] = f"%{q.strip()}%"
 
+    # Apply must_have preferences from the requesting user's stored preferences
+    # Only hard-filter on fields where importance = 'must_have'
+    prefs_result = await db.execute(
+        text("SELECT * FROM partner_preferences WHERE user_id = :uid"),
+        {"uid": current_user.user_id},
+    )
+    prefs_row = prefs_result.fetchone()
+    if prefs_row:
+        prefs = prefs_row._asdict()
+        if prefs.get("age_importance") == "must_have":
+            if prefs.get("min_age") and "get_age(p.date_of_birth) >= :min_age" not in " ".join(conditions):
+                conditions.append("get_age(p.date_of_birth) >= :pref_min_age")
+                params["pref_min_age"] = prefs["min_age"]
+            if prefs.get("max_age") and "get_age(p.date_of_birth) <= :max_age" not in " ".join(conditions):
+                conditions.append("get_age(p.date_of_birth) <= :pref_max_age")
+                params["pref_max_age"] = prefs["max_age"]
+        if prefs.get("location_importance") == "must_have":
+            pref_states = prefs.get("preferred_states") or []
+            if pref_states and not state:
+                placeholders = ", ".join(f":pref_state_{i}" for i in range(len(pref_states)))
+                conditions.append(f"LOWER(cl.state) IN ({placeholders})")
+                for i, s in enumerate(pref_states):
+                    params[f"pref_state_{i}"] = s.lower()
+        if prefs.get("lifestyle_importance") == "must_have":
+            pref_diets = prefs.get("preferred_diet") or []
+            if pref_diets and not diet:
+                placeholders = ", ".join(f":pref_diet_{i}" for i in range(len(pref_diets)))
+                conditions.append(f"ls.diet IN ({placeholders})")
+                for i, d in enumerate(pref_diets):
+                    params[f"pref_diet_{i}"] = d
+
     where_clause = " AND ".join(conditions)
 
     count_result = await db.execute(
@@ -234,7 +275,7 @@ async def search_profiles(
             LEFT JOIN employment em ON em.user_id = u.id
             LEFT JOIN lifestyle ls ON ls.user_id = u.id
             WHERE {where_clause}
-            ORDER BY u.last_active_at DESC NULLS LAST
+            ORDER BY {_build_order_clause(sort_by)}
             LIMIT :limit OFFSET :offset
         """),
         params,

@@ -16,6 +16,9 @@ import '../../features/onboarding/presentation/screens/onboarding_lifestyle_scre
 import '../../features/onboarding/presentation/screens/onboarding_native_place_screen.dart';
 import '../../features/onboarding/presentation/screens/onboarding_preferences_screen.dart';
 import '../../features/onboarding/presentation/screens/onboarding_photos_screen.dart';
+import '../../features/onboarding/presentation/screens/onboarding_community_screen.dart';
+import '../../features/profile/presentation/screens/who_viewed_me_screen.dart';
+import '../../features/interests/presentation/screens/mutual_matches_screen.dart';
 import '../../features/verification/presentation/screens/verification_select_screen.dart';
 import '../../features/verification/presentation/screens/verification_reference_screen.dart';
 import '../../features/verification/presentation/screens/verification_certificate_screen.dart';
@@ -105,6 +108,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.onboardingNativePlace, builder: (_, s) => OnboardingNativePlaceScreen(isEditing: s.extra == true)),
       GoRoute(path: AppRoutes.onboardingPreferences, builder: (_, s) => OnboardingPreferencesScreen(isEditing: s.extra == true)),
       GoRoute(path: AppRoutes.onboardingPhotos, builder: (_, s) => OnboardingPhotosScreen(isEditing: s.extra == true)),
+      GoRoute(path: AppRoutes.onboardingCommunity, builder: (_, s) => OnboardingCommunityScreen(isEditing: s.extra == true)),
 
       // Verification
       GoRoute(path: AppRoutes.verificationSelect, builder: (_, __) => const VerificationSelectScreen()),
@@ -153,6 +157,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) =>
             ReportScreen(reportedUserId: state.pathParameters['userId']!),
       ),
+      GoRoute(path: AppRoutes.whoViewedMe, builder: (_, __) => const WhoViewedMeScreen()),
+      GoRoute(path: AppRoutes.mutualMatches, builder: (_, __) => const MutualMatchesScreen()),
     ],
     errorBuilder: (context, state) => Scaffold(
       body: Center(

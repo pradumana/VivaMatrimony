@@ -20,6 +20,8 @@ class ProfileCard extends StatelessWidget {
   final VoidCallback? onInterest;
   final VoidCallback? onShortlist;
   final bool isShortlisted;
+  final String? heightDisplay;
+  final String? lastActiveAt;
 
   const ProfileCard({
     super.key,
@@ -36,6 +38,8 @@ class ProfileCard extends StatelessWidget {
     this.onInterest,
     this.onShortlist,
     this.isShortlisted = false,
+    this.heightDisplay,
+    this.lastActiveAt,
   });
 
   @override
@@ -86,6 +90,24 @@ class ProfileCard extends StatelessWidget {
                   if (compatibilityScore != null) ...[
                     _buildCompatibility(compatibilityScore!),
                     const SizedBox(height: 12),
+                  ],
+
+                  // Last active
+                  if (lastActiveAt != null) ...[
+                    const SizedBox(height: 6),
+                    Row(children: [
+                      Container(width: 6, height: 6,
+                          decoration: BoxDecoration(
+                            color: _isRecentlyActive(lastActiveAt!) ? AppTheme.success : AppTheme.border,
+                            shape: BoxShape.circle)),
+                      const SizedBox(width: 5),
+                      Text(_formatLastActive(lastActiveAt!),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: _isRecentlyActive(lastActiveAt!) ? AppTheme.success : AppTheme.textTertiary,
+                          )),
+                    ]),
+                    const SizedBox(height: 4),
                   ],
 
                   // Action buttons
@@ -195,21 +217,20 @@ class ProfileCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 4),
-              Row(
-                children: [
-                  const Icon(Icons.location_on_rounded,
-                      size: 12, color: Colors.white70),
-                  const SizedBox(width: 3),
-                  Text(
-                    location,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.white70,
-                      height: 1.2,
-                    ),
-                  ),
+              Row(children: [
+                const Icon(Icons.location_on_rounded, size: 12, color: Colors.white70),
+                const SizedBox(width: 3),
+                Flexible(child: Text(location,
+                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 12, color: Colors.white70, height: 1.2))),
+                if (heightDisplay != null) ...[
+                  const SizedBox(width: 8),
+                  const Icon(Icons.height_rounded, size: 12, color: Colors.white70),
+                  const SizedBox(width: 2),
+                  Text(heightDisplay!,
+                      style: const TextStyle(fontSize: 12, color: Colors.white70, height: 1.2)),
                 ],
-              ),
+              ]),
             ],
           ),
         ),
@@ -273,6 +294,23 @@ class ProfileCard extends StatelessWidget {
         ],
       ),
     );
+  }
+  static bool _isRecentlyActive(String isoDate) {
+    final dt = DateTime.tryParse(isoDate);
+    if (dt == null) return false;
+    return DateTime.now().difference(dt).inDays < 7;
+  }
+
+  static String _formatLastActive(String isoDate) {
+    final dt = DateTime.tryParse(isoDate);
+    if (dt == null) return 'Recently active';
+    final diff = DateTime.now().difference(dt);
+    if (diff.inMinutes < 60) return 'Active today';
+    if (diff.inHours < 24) return 'Active today';
+    if (diff.inDays == 1) return 'Active yesterday';
+    if (diff.inDays < 7) return 'Active this week';
+    if (diff.inDays < 30) return 'Active this month';
+    return 'Active recently';
   }
 }
 

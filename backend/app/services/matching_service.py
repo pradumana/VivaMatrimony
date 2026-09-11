@@ -153,40 +153,52 @@ async def get_recommended_matches(
     offset: int = 0,
 ) -> list:
     """
-    Get recommended matches for a user.
-    Filters out:
-    - Same user
-    - Blocked users
-    - Already interacted users
-    - Deleted/suspended/banned users
-    Then sorts by compatibility.
+    Get recommended matches for a user, sorted by compatibility.
+
+    ponytail: previously had an N+1 — one calculate_compatibility() call per
+    candidate, each making 3 DB round-trips. Now uses two batch queries:
+    one for candidate profile data, one for user's own preferences, then
+    scores entirely in-memory. Upgrade path: materialise scores in a
+    pre-computed column if the list grows beyond ~200 candidates.
     """
-    # Get user's gender to find opposite gender
-    user_result = await db.execute(
-        text("SELECT gender FROM profiles WHERE user_id = :uid"), {"uid": user_id}
-    )
-    user_row = user_result.fetchone()
-    if not user_row:
+    # 1. Fetch requesting user's data + preferences in parallel
+    user_data = await _fetch_user_data(db, user_id)
+    user_prefs = await _fetch_preferences(db, user_id)
+
+    if not user_data:
         return []
 
-    # Simple opposite gender logic (configurable later)
-    opposite_gender = "female" if user_row.gender == "male" else "male"
+    opposite_gender = "female" if user_data.get("gender") == "male" else "male"
 
+    # 2. Fetch all candidates in a single query — includes everything needed
+    #    for both display and scoring (no secondary per-row queries).
     result = await db.execute(
         text("""
-            SELECT DISTINCT u.id as user_id, p.full_name, p.date_of_birth,
-                   p.height_cm, p.religion, p.caste, p.sub_caste, p.gotra, p.mother_tongue,
+            SELECT DISTINCT
+                   u.id            AS user_id,
+                   p.full_name,    p.date_of_birth, p.height_cm,
+                   p.religion,     p.caste,         p.sub_caste, p.gotra,
+                   p.mother_tongue,
+                   -- scoring fields
+                   cl.state,        cl.city,
+                   e.highest_qualification,
+                   em.profession,   em.income_max_lpa,
+                   ls.diet,         ls.smoking,      ls.drinking,
+                   fd.family_type,  fd.family_values,
+                   -- display fields
                    u.verification_status,
-                   cl.state, cl.city,
-                   ph.storage_path as primary_photo_path,
-                   e.highest_qualification, em.profession,
+                   ph.storage_path AS primary_photo_path,
                    u.last_active_at
             FROM users u
             JOIN profiles p ON p.user_id = u.id
-            LEFT JOIN current_locations cl ON cl.user_id = u.id
-            LEFT JOIN photos ph ON ph.user_id = u.id AND ph.is_primary = TRUE AND ph.deleted_at IS NULL
-            LEFT JOIN education e ON e.user_id = u.id
-            LEFT JOIN employment em ON em.user_id = u.id
+            LEFT JOIN current_locations cl  ON cl.user_id  = u.id
+            LEFT JOIN photos ph             ON ph.user_id  = u.id
+                                           AND ph.is_primary = TRUE
+                                           AND ph.deleted_at IS NULL
+            LEFT JOIN education e           ON e.user_id   = u.id
+            LEFT JOIN employment em         ON em.user_id  = u.id
+            LEFT JOIN lifestyle ls          ON ls.user_id  = u.id
+            LEFT JOIN family_details fd     ON fd.user_id  = u.id
             WHERE u.id != :uid
               AND u.account_status = 'active'
               AND u.deleted_at IS NULL
@@ -203,42 +215,143 @@ async def get_recommended_matches(
         {"uid": user_id, "gender": opposite_gender, "limit": limit, "offset": offset},
     )
     rows = result.fetchall()
+    if not rows:
+        return []
+
+    # 3. Batch-fetch all candidate preferences in a single query.
+    candidate_ids = [row.user_id for row in rows]
+    placeholders = ", ".join(f":id{i}" for i in range(len(candidate_ids)))
+    prefs_result = await db.execute(
+        text(f"SELECT * FROM partner_preferences WHERE user_id IN ({placeholders})"),
+        {f"id{i}": cid for i, cid in enumerate(candidate_ids)},
+    )
+    prefs_by_user = {row.user_id: row._asdict() for row in prefs_result.fetchall()}
 
     supabase = get_supabase()
     cfg = get_settings()
 
     matches = []
     for row in rows:
-        dob = row.date_of_birth
-        age = compute_age(dob) if dob else None
+        age = compute_age(row.date_of_birth) if row.date_of_birth else None
 
-        # Get photo URL
         photo_url = None
         if row.primary_photo_path:
             try:
-                photo_url = supabase.storage.from_(cfg.storage_bucket_profile_photos).get_public_url(row.primary_photo_path)
+                photo_url = supabase.storage.from_(
+                    cfg.storage_bucket_profile_photos
+                ).get_public_url(row.primary_photo_path)
             except Exception:
                 pass
 
-        # Quick compatibility (simplified for list view)
-        compat = await calculate_compatibility(db, user_id, row.user_id)
+        # Build candidate data dict from the single row — no extra DB call
+        candidate_data = {
+            "age": age,
+            "gender": opposite_gender,
+            "caste": row.caste,
+            "sub_caste": row.sub_caste,
+            "gotra": row.gotra,
+            "state": row.state,
+            "city": row.city,
+            "highest_qualification": row.highest_qualification,
+            "profession": row.profession,
+            "income_max_lpa": row.income_max_lpa,
+            "diet": row.diet,
+            "smoking": row.smoking,
+            "drinking": row.drinking,
+            "family_type": row.family_type,
+            "family_values": row.family_values,
+        }
+        candidate_prefs = prefs_by_user.get(row.user_id)
+
+        # Score in-memory — no DB calls
+        score, breakdown = _score_pair(user_data, user_prefs, candidate_data, candidate_prefs)
 
         matches.append({
             "user_id": str(row.user_id),
-            "full_name": row.full_name,
+            "full_name": row.full_name or "",
             "age": age,
-            "location": f"{row.city}, {row.state}" if row.city and row.state else row.state or row.city or "India",
+            "height_cm": row.height_cm,
+            "location": (
+                f"{row.city}, {row.state}" if row.city and row.state
+                else row.state or row.city or "India"
+            ),
             "highest_qualification": row.highest_qualification,
             "profession": row.profession,
             "is_verified": row.verification_status == "verified",
             "primary_photo_url": photo_url,
-            "compatibility_score": compat.get("score"),
-            "last_active_at": row.last_active_at,
+            "compatibility_score": score,
+            "compatibility_breakdown": breakdown,
+            "last_active_at": row.last_active_at.isoformat() if row.last_active_at else None,
         })
 
-    # Sort by compatibility score descending
     matches.sort(key=lambda x: x.get("compatibility_score") or 0, reverse=True)
     return matches
+
+
+def _score_pair(
+    user_data: dict,
+    user_prefs: Optional[dict],
+    candidate_data: dict,
+    candidate_prefs: Optional[dict],
+) -> tuple[Optional[int], dict]:
+    """
+    Pure in-memory compatibility scoring for a (user, candidate) pair.
+    Returns (score_pct: int|None, breakdown: dict).
+    """
+    if not user_prefs:
+        return None, {}
+
+    scores = {
+        "age": _score_age(
+            user_prefs.get("min_age"), user_prefs.get("max_age"),
+            candidate_data.get("age"),
+            candidate_prefs.get("min_age") if candidate_prefs else None,
+            candidate_prefs.get("max_age") if candidate_prefs else None,
+            user_data.get("age"),
+        ),
+        "location": _score_location(
+            user_prefs.get("preferred_states") or [],
+            user_prefs.get("preferred_cities") or [],
+            candidate_data.get("state"),
+            candidate_data.get("city"),
+        ),
+        "education": _score_education(
+            user_prefs.get("min_education"),
+            candidate_data.get("highest_qualification"),
+        ),
+        "profession": _score_profession(
+            user_prefs.get("preferred_professions") or [],
+            candidate_data.get("profession"),
+            user_prefs.get("min_income_lpa"),
+            candidate_data.get("income_max_lpa"),
+        ),
+        "lifestyle": _score_lifestyle(
+            user_prefs.get("preferred_diet") or [],
+            user_prefs.get("smoking_preference"),
+            user_prefs.get("drinking_preference"),
+            candidate_data.get("diet"),
+            candidate_data.get("smoking"),
+            candidate_data.get("drinking"),
+        ),
+        "preferences": _score_preferences_alignment(user_data, candidate_prefs or {}),
+        "family": _score_family(
+            user_prefs.get("preferred_family_types") or [],
+            user_prefs.get("preferred_family_values") or [],
+            candidate_data.get("family_type"),
+            candidate_data.get("family_values"),
+        ),
+        "community": _score_community(
+            user_prefs.get("preferred_castes") or [],
+            user_prefs.get("preferred_subcastes") or [],
+            user_prefs.get("preferred_gotras") or [],
+            candidate_data.get("caste"),
+            candidate_data.get("sub_caste"),
+            candidate_data.get("gotra"),
+        ),
+    }
+    total = round(sum(scores[k] * WEIGHTS[k] for k in WEIGHTS) * 100)
+    breakdown = {k: round(v * 100) for k, v in scores.items()}
+    return total, breakdown
 
 
 # ---------------------------------------------------------------------------

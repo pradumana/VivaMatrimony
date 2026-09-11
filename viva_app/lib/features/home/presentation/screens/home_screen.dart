@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/network/api_client.dart';
+import '../../../../core/storage/cache_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/constants/app_constants.dart';
 import '../../../../shared/models/user_model.dart';
@@ -13,13 +14,43 @@ import '../../../../shared/widgets/viva_logo.dart';
 
 final _matchesProvider =
     FutureProvider.autoDispose<List<ProfileSummary>>((ref) async {
-  final client = ref.read(apiClientProvider);
-  final response =
-      await client.get('/matches', queryParameters: {'limit': 10});
-  final data = response.data as Map<String, dynamic>;
-  return (data['matches'] as List)
-      .map((e) => ProfileSummary.fromJson(e as Map<String, dynamic>))
-      .toList();
+  const cacheKey = 'matches_home';
+  // Serve stale data immediately while we revalidate in the background
+  final cached = await CacheService.get(cacheKey);
+  final fresh = await CacheService.isFresh(cacheKey);
+
+  List<ProfileSummary>? cachedList;
+  if (cached != null) {
+    try {
+      cachedList = (cached as List)
+          .map((e) => ProfileSummary.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (_) {
+      cachedList = null;
+    }
+  }
+
+  // If fresh cache exists, return it immediately — no network call
+  if (cachedList != null && fresh) return cachedList;
+
+  // Fetch from network
+  try {
+    final client = ref.read(apiClientProvider);
+    final response =
+        await client.get('/matches', queryParameters: {'limit': 10});
+    final data = response.data as Map<String, dynamic>;
+    final list = (data['matches'] as List)
+        .map((e) => ProfileSummary.fromJson(e as Map<String, dynamic>))
+        .toList();
+    // Cache for 5 minutes
+    await CacheService.set(cacheKey, data['matches'],
+        ttl: const Duration(minutes: 5));
+    return list;
+  } catch (_) {
+    // Network failed — return stale cache if available
+    if (cachedList != null) return cachedList;
+    rethrow;
+  }
 });
 
 final _userNameProvider = FutureProvider.autoDispose<String?>((ref) async {
@@ -63,9 +94,9 @@ class HomeScreen extends ConsumerWidget {
                     shape: BoxShape.circle,
                     color: AppTheme.primaryContainer,
                   ),
-                  child: Center(
+                  child: const Center(
                     child: Padding(
-                      padding: const EdgeInsets.all(5),
+                      padding: EdgeInsets.all(5),
                       child: VivaLogo(size: 26, variant: VivaLogoVariant.gradient),
                     ),
                   ),

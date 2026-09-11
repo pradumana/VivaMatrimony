@@ -1,0 +1,32 @@
+{
+  "@@locale": "en",
+  "appName": "Viva",
+  "appTagline": "Find someone who feels like home.",
+  "searchHint": "Name or Member ID (e.g. VIVA001234)",
+  "noProfilesFound": "No profiles found",
+  "tryAdjustingFilters": "Try adjusting your filters to see more results.",
+  "sendInterest": "Send Interest",
+  "interestSent": "Interest Sent",
+  "shortlisted": "Shortlisted",
+  "verified": "Verified",
+  "community": "Community",
+  "caste": "Caste",
+  "subCaste": "Sub-caste",
+  "gotra": "Gotra",
+  "religion": "Religion",
+  "profileComplete": "Profile Complete",
+  "profileCompletion": "Profile Completion",
+  "whoViewedMe": "Who Viewed My Profile",
+  "mutualMatches": "Mutual Matches",
+  "biodata": "Matrimonial Biodata",
+  "generate": "Generate Biodata",
+  "download": "Download PDF",
+  "share": "Share",
+  "lastActive": "Last active",
+  "compatibilityScore": "{score}% Compatible",
+  "@compatibilityScore": {
+    "placeholders": {
+      "score": {"type": "int"}
+    }
+  }
+}

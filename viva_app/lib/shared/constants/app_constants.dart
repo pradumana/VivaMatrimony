@@ -122,4 +122,7 @@ class AppRoutes {
   static const String editProfile = '/profile/edit';
   static const String notifications = '/notifications';
   static const String shortlist = '/shortlist';
+  static const String whoViewedMe = '/profile/viewers';
+  static const String mutualMatches = '/interests/mutual';
+  static const String onboardingCommunity = '/onboarding/community';
 }

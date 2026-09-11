@@ -96,20 +96,21 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
               const SizedBox(height: 12),
 
               Expanded(
-                child: ListView(children: [
-                  ..._reasons.map((r) => InkWell(
-                    onTap: () => setState(() => _selectedReason = r.$1),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
-                        children: [
-                          Radio<String>(
-                            value: r.$1,
-                            groupValue: _selectedReason,
-                            onChanged: (v) => setState(() => _selectedReason = v),
-                            activeColor: AppTheme.primary,
-                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
+                child: RadioGroup<String>(
+                  groupValue: _selectedReason ?? '',
+                  onChanged: (v) { if (v != null) setState(() => _selectedReason = v); },
+                  child: ListView(children: [
+                    ..._reasons.map((r) => InkWell(
+                      onTap: () => setState(() => _selectedReason = r.$1),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Row(
+                          children: [
+                            Radio<String>(
+                              value: r.$1,
+                              activeColor: AppTheme.primary,
+                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
                           Expanded(
                             child: Text(r.$2,
                                 style: const TextStyle(fontSize: 14)),
@@ -128,6 +129,7 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
                     decoration: const InputDecoration(hintText: 'Describe what happened...'),
                   ),
                 ]),
+                ),
               ),
               const SizedBox(height: 16),
               VivaButton(label: 'Submit Report', isLoading: _loading, onPressed: _submit),
@@ -155,7 +157,7 @@ class _SuccessView extends StatelessWidget {
             const SizedBox(height: 20),
             const Text('Report Submitted', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
-            Text('Thank you. Our team will review your report within ${AppConstants.reportReviewHours} and take appropriate action.', textAlign: TextAlign.center,
+            const Text('Thank you. Our team will review your report within ${AppConstants.reportReviewHours} and take appropriate action.', textAlign: TextAlign.center,
               style: TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.5)),
             const SizedBox(height: 32),
             VivaButton(label: 'Go Back', onPressed: onDone),

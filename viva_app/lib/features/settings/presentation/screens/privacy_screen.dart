@@ -107,16 +107,28 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
             const SizedBox(height: 14),
           ],
           _card('Profile Visibility', 'Who can see your profile', [
-            _radio('Public (everyone)', 'public', _profileVisibility, (v) => setState(() => _profileVisibility = v!)),
-            _radio('Members only (registered users)', 'members_only', _profileVisibility, (v) => setState(() => _profileVisibility = v!)),
-            _radio('Hidden (no one — pause profile)', 'hidden', _profileVisibility, (v) => setState(() => _profileVisibility = v!)),
+            RadioGroup<String>(
+              groupValue: _profileVisibility,
+              onChanged: (v) { if (v != null) setState(() => _profileVisibility = v); },
+              child: Column(children: [
+                _radio('Public (everyone)', 'public'),
+                _radio('Members only (registered users)', 'members_only'),
+                _radio('Hidden (no one — pause profile)', 'hidden'),
+              ]),
+            ),
           ]),
           const SizedBox(height: 14),
           _card('Photo Visibility', 'Who can see your photos', [
-            _radio('Public', 'public', _photoVisibility, (v) => setState(() => _photoVisibility = v!)),
-            _radio('Members only', 'members_only', _photoVisibility, (v) => setState(() => _photoVisibility = v!)),
-            _radio('On interest acceptance', 'on_interest', _photoVisibility, (v) => setState(() => _photoVisibility = v!)),
-            _radio('Private (hidden)', 'private', _photoVisibility, (v) => setState(() => _photoVisibility = v!)),
+            RadioGroup<String>(
+              groupValue: _photoVisibility,
+              onChanged: (v) { if (v != null) setState(() => _photoVisibility = v); },
+              child: Column(children: [
+                _radio('Public', 'public'),
+                _radio('Members only', 'members_only'),
+                _radio('On interest acceptance', 'on_interest'),
+                _radio('Private (hidden)', 'private'),
+              ]),
+            ),
           ]),
           const SizedBox(height: 14),
           _card('Career Privacy', 'Control sensitive career info', [
@@ -155,12 +167,10 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
     );
   }
 
-  Widget _radio(String label, String value, String groupValue, ValueChanged<String?> onChanged) {
+  Widget _radio(String label, String value) {
     return RadioListTile<String>(
       title: Text(label, style: const TextStyle(fontSize: 13)),
       value: value,
-      groupValue: groupValue,
-      onChanged: onChanged,
       activeColor: AppTheme.primary,
       dense: true,
       contentPadding: EdgeInsets.zero,

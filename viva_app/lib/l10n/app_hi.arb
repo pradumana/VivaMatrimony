@@ -1,0 +1,32 @@
+{
+  "@@locale": "hi",
+  "appName": "विवा",
+  "appTagline": "वो मिले जो घर जैसा लगे।",
+  "searchHint": "नाम या सदस्य ID (जैसे VIVA001234)",
+  "noProfilesFound": "कोई प्रोफ़ाइल नहीं मिली",
+  "tryAdjustingFilters": "अधिक परिणामों के लिए अपने फ़िल्टर बदलें।",
+  "sendInterest": "रुचि भेजें",
+  "interestSent": "रुचि भेजी गई",
+  "shortlisted": "सूचीबद्ध",
+  "verified": "सत्यापित",
+  "community": "समुदाय",
+  "caste": "जाति",
+  "subCaste": "उपजाति",
+  "gotra": "गोत्र",
+  "religion": "धर्म",
+  "profileComplete": "प्रोफ़ाइल पूर्ण",
+  "profileCompletion": "प्रोफ़ाइल पूर्णता",
+  "whoViewedMe": "मेरी प्रोफ़ाइल किसने देखी",
+  "mutualMatches": "आपसी मेल",
+  "biodata": "विवाह बायोडेटा",
+  "generate": "बायोडेटा बनाएं",
+  "download": "PDF डाउनलोड करें",
+  "share": "साझा करें",
+  "lastActive": "अंतिम सक्रिय",
+  "compatibilityScore": "{score}% मेल",
+  "@compatibilityScore": {
+    "placeholders": {
+      "score": {"type": "int"}
+    }
+  }
+}

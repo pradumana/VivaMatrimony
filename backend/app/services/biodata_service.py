@@ -111,7 +111,7 @@ async def generate_biodata_pdf(
 
     # Upload to Supabase Storage
     supabase = get_supabase()
-    storage_path = f"{user_id}/biodata.pdf"
+    storage_path = f"{user_id}/biodata_{template}.pdf"
 
     try:
         # Remove existing if any
@@ -140,22 +140,45 @@ async def generate_biodata_pdf(
             text("""
                 UPDATE biodata_exports SET
                   storage_path = :path,
+                  template_name = :tmpl,
                   status = 'ready',
                   profile_hash = :hash,
                   is_stale = FALSE,
                   generated_at = NOW(),
                   updated_at = NOW()
-                WHERE user_id = :uid
+                WHERE user_id = :uid AND template_name = :tmpl
             """),
-            {"uid": user_id, "path": storage_path, "hash": profile_hash},
+            {"uid": user_id, "path": storage_path, "hash": profile_hash, "tmpl": template},
+        )
+        # If no row matched this template, insert a new one
+        await db.execute(
+            text("""
+                INSERT INTO biodata_exports (user_id, storage_path, template_name, status, profile_hash, generated_at)
+                VALUES (:uid, :path, :tmpl, 'ready', :hash, NOW())
+                ON CONFLICT (user_id, template_name) DO UPDATE SET
+                  storage_path = EXCLUDED.storage_path,
+                  status = 'ready',
+                  profile_hash = EXCLUDED.profile_hash,
+                  is_stale = FALSE,
+                  generated_at = NOW(),
+                  updated_at = NOW()
+            """),
+            {"uid": user_id, "path": storage_path, "hash": profile_hash, "tmpl": template},
         )
     else:
         await db.execute(
             text("""
-                INSERT INTO biodata_exports (user_id, storage_path, status, profile_hash, generated_at)
-                VALUES (:uid, :path, 'ready', :hash, NOW())
+                INSERT INTO biodata_exports (user_id, storage_path, template_name, status, profile_hash, generated_at)
+                VALUES (:uid, :path, :tmpl, 'ready', :hash, NOW())
+                ON CONFLICT (user_id, template_name) DO UPDATE SET
+                  storage_path = EXCLUDED.storage_path,
+                  status = 'ready',
+                  profile_hash = EXCLUDED.profile_hash,
+                  is_stale = FALSE,
+                  generated_at = NOW(),
+                  updated_at = NOW()
             """),
-            {"uid": user_id, "path": storage_path, "hash": profile_hash},
+            {"uid": user_id, "path": storage_path, "hash": profile_hash, "tmpl": template},
         )
     await db.commit()
 

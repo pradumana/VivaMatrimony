@@ -481,6 +481,36 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
 
                 const SizedBox(height: 14),
 
+                // ── Who viewed me ─────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: GestureDetector(
+                    onTap: () => _goAndRefresh(AppRoutes.whoViewedMe),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(AppRadius.lg),
+                        boxShadow: AppShadows.card,
+                      ),
+                      child: const Row(children: [
+                        Icon(Icons.visibility_outlined, size: 20, color: AppTheme.primary),
+                        SizedBox(width: 12),
+                        Expanded(child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Who Viewed My Profile', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                            Text('See who recently visited your profile', style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+                          ],
+                        )),
+                        Icon(Icons.chevron_right_rounded, color: AppTheme.textTertiary, size: 20),
+                      ]),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 14),
+
                 // ── Profile sections ──────────────────────────────────
                 _ProfileSection(
                     title: 'Personal',

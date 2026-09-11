@@ -33,6 +33,9 @@ class ProfileSummary {
   final String? profession;
   final bool isVerified;
   final int? compatibilityScore;
+  final int? heightCm;
+  final String? lastActiveAt;
+  final Map<String, int>? compatibilityBreakdown;
   // Community — public matrimonial fields
   final String? caste;
   final String? subCaste;
@@ -49,6 +52,9 @@ class ProfileSummary {
     this.profession,
     this.isVerified = false,
     this.compatibilityScore,
+    this.heightCm,
+    this.lastActiveAt,
+    this.compatibilityBreakdown,
     this.caste,
     this.subCaste,
     this.gotra,
@@ -66,6 +72,10 @@ class ProfileSummary {
         profession: json['profession'] as String?,
         isVerified: json['is_verified'] as bool? ?? false,
         compatibilityScore: (json['compatibility_score'] as num?)?.toInt(),
+        heightCm: (json['height_cm'] as num?)?.toInt(),
+        lastActiveAt: json['last_active_at'] as String?,
+        compatibilityBreakdown: (json['compatibility_breakdown'] as Map<String, dynamic>?)
+            ?.map((k, v) => MapEntry(k, (v as num).toInt())),
         caste: json['caste'] as String?,
         subCaste: json['sub_caste'] as String?,
         gotra: json['gotra'] as String?,

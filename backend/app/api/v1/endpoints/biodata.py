@@ -20,18 +20,21 @@ router = APIRouter(prefix="/biodata", tags=["Biodata"])
 
 @router.get("")
 async def get_biodata_status(
+    template: str = Query("traditional"),
     current_user: AuthenticatedUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Check biodata generation status and staleness."""
+    """Check biodata generation status for a specific template."""
+    if template not in ("traditional", "floral", "half_photo"):
+        template = "traditional"
     result = await db.execute(
         text("""
             SELECT id, status, is_stale, generated_at, error_message, storage_path
             FROM biodata_exports
-            WHERE user_id = :uid
+            WHERE user_id = :uid AND template_name = :tmpl
             ORDER BY created_at DESC LIMIT 1
         """),
-        {"uid": current_user.user_id},
+        {"uid": current_user.user_id, "tmpl": template},
     )
     row = result.fetchone()
     if not row:
@@ -80,10 +83,10 @@ async def download_biodata(
     result = await db.execute(
         text("""
             SELECT storage_path, is_stale, status
-            FROM biodata_exports WHERE user_id = :uid
+            FROM biodata_exports WHERE user_id = :uid AND template_name = :tmpl
             ORDER BY created_at DESC LIMIT 1
         """),
-        {"uid": current_user.user_id},
+        {"uid": current_user.user_id, "tmpl": template},
     )
     row = result.fetchone()
 

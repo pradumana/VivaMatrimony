@@ -112,7 +112,9 @@ async def accept_interest(db: AsyncSession, interest_id: UUID, user_id: UUID) ->
         text("""
             SELECT i.id, i.sender_id, i.receiver_id, i.status,
                    ps.whatsapp_phone as sender_wa,
-                   pr.whatsapp_phone as receiver_wa
+                   ps.show_whatsapp_phone as sender_show_wa,
+                   pr.whatsapp_phone as receiver_wa,
+                   pr.show_whatsapp_phone as receiver_show_wa
             FROM interests i
             JOIN profiles ps ON ps.user_id = i.sender_id
             JOIN profiles pr ON pr.user_id = i.receiver_id
@@ -141,8 +143,8 @@ async def accept_interest(db: AsyncSession, interest_id: UUID, user_id: UUID) ->
 
     await _notify_interest_accepted(db, user_id, interest.sender_id, str(interest_id))
 
-    # Receiver accepted — other party is the sender
-    other_wa = interest.sender_wa
+    # Receiver accepted — other party is the sender; respect their privacy flag
+    other_wa = interest.sender_wa if interest.sender_show_wa else None
     if other_wa:
         stripped = other_wa.lstrip("+")
         whatsapp_url = f"https://wa.me/{stripped}"
@@ -173,7 +175,9 @@ async def get_whatsapp_contact(
         text("""
             SELECT i.sender_id, i.receiver_id, i.status,
                    ps.whatsapp_phone as sender_wa,
+                   ps.show_whatsapp_phone as sender_show_wa,
                    pr.whatsapp_phone as receiver_wa,
+                   pr.show_whatsapp_phone as receiver_show_wa,
                    ps.full_name as sender_name,
                    pr.full_name as receiver_name
             FROM interests i
@@ -198,10 +202,12 @@ async def get_whatsapp_contact(
         )
 
     if requesting_user_id == row.sender_id:
-        other_wa = row.receiver_wa
+        # Requester is sender — show receiver's contact if they allow it
+        other_wa = row.receiver_wa if row.receiver_show_wa else None
         other_name = row.receiver_name
     else:
-        other_wa = row.sender_wa
+        # Requester is receiver — show sender's contact if they allow it
+        other_wa = row.sender_wa if row.sender_show_wa else None
         other_name = row.sender_name
 
     if not other_wa:
@@ -379,18 +385,31 @@ async def get_shortlist(db: AsyncSession, user_id: UUID, limit: int = 20, offset
         {"uid": user_id, "limit": limit, "offset": offset},
     )
     rows = result.fetchall()
+    if not rows:
+        return []
+    from app.config import get_settings
+    from app.database import get_supabase
+    cfg = get_settings()
+    supabase = get_supabase()
     items = []
     for row in rows:
         dob = row.date_of_birth
         age = compute_age(dob) if dob else None
+        photo_url = None
+        if row.photo_path:
+            try:
+                photo_url = supabase.storage.from_(cfg.storage_bucket_profile_photos).get_public_url(row.photo_path)
+            except Exception:
+                pass
         items.append({
             "user_id": str(row.target_user_id),
-            "full_name": row.full_name,
+            "full_name": row.full_name or "",
             "age": age,
             "location": f"{row.city}, {row.state}" if row.city and row.state else (row.state or ""),
             "is_verified": row.verification_status == "verified",
+            "primary_photo_url": photo_url,
             "private_notes": row.private_notes,  # ONLY visible to owner
-            "shortlisted_at": row.created_at,
+            "shortlisted_at": row.created_at.isoformat() if row.created_at else None,
         })
     return items
 

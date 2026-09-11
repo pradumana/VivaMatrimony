@@ -116,6 +116,70 @@ async def get_received_interests(
     return {"interests": items, "count": len(items)}
 
 
+@router.get("/interests/mutual")
+async def get_mutual_interests(
+    limit: int = Query(20, ge=1, le=50),
+    offset: int = Query(0, ge=0),
+    current_user: AuthenticatedUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Profiles where BOTH parties have sent interest to each other (accepted).
+    These are your connections.
+    """
+    result = await db.execute(
+        text("""
+            SELECT
+                CASE
+                    WHEN i.sender_id = :uid THEN i.receiver_id
+                    ELSE i.sender_id
+                END AS other_user_id,
+                i.accepted_at,
+                p.full_name, p.date_of_birth,
+                ph.storage_path AS photo_path,
+                u.verification_status,
+                cl.city, cl.state
+            FROM interests i
+            JOIN users u ON u.id = CASE WHEN i.sender_id = :uid THEN i.receiver_id ELSE i.sender_id END
+                         AND u.deleted_at IS NULL
+            JOIN profiles p ON p.user_id = CASE WHEN i.sender_id = :uid THEN i.receiver_id ELSE i.sender_id END
+            LEFT JOIN photos ph ON ph.user_id = CASE WHEN i.sender_id = :uid THEN i.receiver_id ELSE i.sender_id END
+                                AND ph.is_primary = TRUE AND ph.deleted_at IS NULL
+            LEFT JOIN current_locations cl ON cl.user_id = CASE WHEN i.sender_id = :uid THEN i.receiver_id ELSE i.sender_id END
+            WHERE (i.sender_id = :uid OR i.receiver_id = :uid)
+              AND i.status = 'accepted'
+            ORDER BY i.accepted_at DESC NULLS LAST
+            LIMIT :limit OFFSET :offset
+        """),
+        {"uid": current_user.user_id, "limit": limit, "offset": offset},
+    )
+    rows = result.fetchall()
+    from app.utils import compute_age
+    from app.config import get_settings
+    from app.database import get_supabase
+    cfg = get_settings()
+    supabase = get_supabase()
+    matches = []
+    for row in rows:
+        age = compute_age(row.date_of_birth) if row.date_of_birth else None
+        photo_url = None
+        if row.photo_path:
+            try:
+                photo_url = supabase.storage.from_(cfg.storage_bucket_profile_photos).get_public_url(row.photo_path)
+            except Exception:
+                pass
+        matches.append({
+            "user_id": str(row.other_user_id),
+            "full_name": row.full_name or "",
+            "age": age,
+            "location": f"{row.city}, {row.state}" if row.city and row.state else (row.state or ""),
+            "is_verified": row.verification_status == "verified",
+            "primary_photo_url": photo_url,
+            "connected_at": row.accepted_at.isoformat() if row.accepted_at else None,
+        })
+    return {"mutual": matches, "count": len(matches)}
+
+
 # ---------------------------------------------------------------------------
 # Shortlist
 # ---------------------------------------------------------------------------

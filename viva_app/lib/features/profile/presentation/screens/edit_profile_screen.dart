@@ -107,6 +107,11 @@ class EditProfileScreen extends ConsumerWidget {
                   onTap: () => context.push(AppRoutes.onboardingNativePlace,
                       extra: true)),
               _EditTile(
+                  icon: Icons.diversity_3_outlined,
+                  title: 'Community & Traditions',
+                  subtitle: 'Religion, caste, sub-caste, gotra',
+                  onTap: () => context.push(AppRoutes.onboardingCommunity, extra: true)),
+              _EditTile(
                   icon: Icons.favorite_border_rounded,
                   title: 'Partner Preferences',
                   subtitle: 'What you\'re looking for',

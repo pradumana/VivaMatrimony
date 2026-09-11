@@ -14,7 +14,7 @@ GET/PUT /preferences
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
@@ -110,6 +110,23 @@ async def delete_account(
         {"uid": current_user.user_id},
     )
     await db.commit()
+
+    # Hard-delete the Supabase Auth user so the email/phone can never be reused
+    # and GDPR right-to-erasure is honoured for the auth layer.
+    # Uses the service-role key which must NEVER be exposed to clients.
+    try:
+        from app.database import get_supabase
+        supabase = get_supabase()
+        supabase.auth.admin.delete_user(str(current_user.user_id))
+    except Exception as exc:
+        import structlog
+        structlog.get_logger().warning(
+            "supabase_auth_delete_failed",
+            user_id=str(current_user.user_id),
+            error=str(exc),
+        )
+        # Non-fatal: DB record is already soft-deleted.
+        # The auth user will be orphaned until manually cleaned.
 
 
 # ---------------------------------------------------------------------------
@@ -426,15 +443,88 @@ async def update_lifestyle(
 
 @router.post("/complete-onboarding", status_code=status.HTTP_204_NO_CONTENT)
 async def complete_onboarding(
+    step: Optional[str] = None,
     current_user: AuthenticatedUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Mark onboarding as completed for the current user."""
-    await db.execute(
-        text("UPDATE users SET onboarding_completed = TRUE WHERE id = :user_id"),
-        {"user_id": current_user.user_id},
-    )
+    """
+    Mark onboarding as completed (or record the current step).
+    Pass ?step=<name> to checkpoint progress without marking fully complete.
+    Omit step (or call without query param) to mark onboarding fully done.
+    """
+    if step:
+        await db.execute(
+            text("UPDATE users SET onboarding_step = :step WHERE id = :user_id"),
+            {"step": step, "user_id": current_user.user_id},
+        )
+    else:
+        await db.execute(
+            text("UPDATE users SET onboarding_completed = TRUE, onboarding_step = NULL WHERE id = :user_id"),
+            {"user_id": current_user.user_id},
+        )
     await db.commit()
+
+
+# ---------------------------------------------------------------------------
+# Profile viewers
+# ---------------------------------------------------------------------------
+
+@router.get("/viewers")
+async def get_profile_viewers(
+    limit: int = Query(20, ge=1, le=50),
+    offset: int = Query(0, ge=0),
+    current_user: AuthenticatedUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Who recently viewed my profile."""
+    result = await db.execute(
+        text("""
+            SELECT pv.viewer_id, pv.viewed_at,
+                   p.full_name, p.date_of_birth,
+                   ph.storage_path AS photo_path,
+                   u.verification_status,
+                   cl.state, cl.city
+            FROM profile_views pv
+            JOIN users u  ON u.id = pv.viewer_id AND u.deleted_at IS NULL
+            JOIN profiles p ON p.user_id = pv.viewer_id
+            LEFT JOIN photos ph ON ph.user_id = pv.viewer_id
+                               AND ph.is_primary = TRUE AND ph.deleted_at IS NULL
+            LEFT JOIN current_locations cl ON cl.user_id = pv.viewer_id
+            WHERE pv.viewed_id = :uid
+              AND NOT EXISTS (
+                SELECT 1 FROM blocks b
+                WHERE (b.blocker_id = :uid AND b.blocked_id = pv.viewer_id)
+                   OR (b.blocker_id = pv.viewer_id AND b.blocked_id = :uid)
+              )
+            ORDER BY pv.viewed_at DESC
+            LIMIT :limit OFFSET :offset
+        """),
+        {"uid": current_user.user_id, "limit": limit, "offset": offset},
+    )
+    rows = result.fetchall()
+    from app.utils import compute_age
+    from app.config import get_settings
+    cfg = get_settings()
+    supabase = get_supabase()
+    viewers = []
+    for row in rows:
+        age = compute_age(row.date_of_birth) if row.date_of_birth else None
+        photo_url = None
+        if row.photo_path:
+            try:
+                photo_url = supabase.storage.from_(cfg.storage_bucket_profile_photos).get_public_url(row.photo_path)
+            except Exception:
+                pass
+        viewers.append({
+            "user_id": str(row.viewer_id),
+            "full_name": row.full_name or "",
+            "age": age,
+            "location": f"{row.city}, {row.state}" if row.city and row.state else (row.state or ""),
+            "is_verified": row.verification_status == "verified",
+            "primary_photo_url": photo_url,
+            "viewed_at": row.viewed_at.isoformat() if row.viewed_at else None,
+        })
+    return {"viewers": viewers, "count": len(viewers)}
 
 
 # ---------------------------------------------------------------------------
