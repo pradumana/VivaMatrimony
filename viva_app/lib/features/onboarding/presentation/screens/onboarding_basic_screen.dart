@@ -331,17 +331,17 @@ class _OnboardingBasicScreenState
                 borderRadius: BorderRadius.circular(AppRadius.md),
                 border: Border.all(color: AppTheme.secondary.withValues(alpha: 0.3)),
               ),
-              child: Column(
+              child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(children: [
+                  Row(children: [
                     Icon(Icons.diversity_3_outlined, size: 16, color: AppTheme.secondary),
                     SizedBox(width: 8),
                     Text('Community & Traditions',
                         style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
                   ]),
-                  const SizedBox(height: 4),
-                  const Text(
+                  SizedBox(height: 4),
+                  Text(
                     'These are public matrimonial details and may appear on your profile and biodata. All optional.',
                     style: TextStyle(fontSize: 11, color: AppTheme.textSecondary, height: 1.4),
                   ),

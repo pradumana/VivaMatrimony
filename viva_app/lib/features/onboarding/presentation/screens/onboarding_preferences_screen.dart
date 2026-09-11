@@ -119,7 +119,7 @@ class _State extends ConsumerState<OnboardingPreferencesScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── BASIC ──────────────────────────────────────────────────
-          _SectionHeader(
+          const _SectionHeader(
               icon: Icons.person_outline_rounded, title: 'Basic'),
           _AgeRow(
             minAge: _minAge,
@@ -151,7 +151,7 @@ class _State extends ConsumerState<OnboardingPreferencesScreen> {
 
           // ── LOCATION ───────────────────────────────────────────────
           const SizedBox(height: 20),
-          _SectionHeader(
+          const _SectionHeader(
               icon: Icons.location_on_outlined, title: 'Location'),
           VivaDropdownField<String>(
             label: 'Preferred State',
@@ -194,7 +194,7 @@ class _State extends ConsumerState<OnboardingPreferencesScreen> {
 
           // ── EDUCATION ──────────────────────────────────────────────
           const SizedBox(height: 20),
-          _SectionHeader(
+          const _SectionHeader(
               icon: Icons.school_outlined, title: 'Education'),
           VivaDropdownField<String>(
             label: 'Minimum Qualification',
@@ -225,7 +225,7 @@ class _State extends ConsumerState<OnboardingPreferencesScreen> {
 
           // ── CAREER ─────────────────────────────────────────────────
           const SizedBox(height: 20),
-          _SectionHeader(icon: Icons.work_outline_rounded, title: 'Career'),
+          const _SectionHeader(icon: Icons.work_outline_rounded, title: 'Career'),
           VivaDropdownField<String>(
             label: 'Career Preference',
             value: _careerPreference,
@@ -251,7 +251,7 @@ class _State extends ConsumerState<OnboardingPreferencesScreen> {
 
           // ── FAMILY ─────────────────────────────────────────────────
           const SizedBox(height: 20),
-          _SectionHeader(
+          const _SectionHeader(
               icon: Icons.family_restroom_outlined, title: 'Family'),
           VivaDropdownField<String>(
             label: 'Preferred Family Type',
@@ -272,7 +272,7 @@ class _State extends ConsumerState<OnboardingPreferencesScreen> {
 
           // ── LIFESTYLE ──────────────────────────────────────────────
           const SizedBox(height: 20),
-          _SectionHeader(
+          const _SectionHeader(
               icon: Icons.restaurant_menu_outlined, title: 'Lifestyle'),
           VivaDropdownField<String>(
             label: 'Diet',
@@ -323,7 +323,7 @@ class _State extends ConsumerState<OnboardingPreferencesScreen> {
 
           // ── COMMUNITY ──────────────────────────────────────────────
           const SizedBox(height: 20),
-          _SectionHeader(
+          const _SectionHeader(
               icon: Icons.diversity_3_outlined, title: 'Community'),
           const _InfoNote(
               'Leave blank for "any". These are soft preferences, '
@@ -352,7 +352,7 @@ class _State extends ConsumerState<OnboardingPreferencesScreen> {
 
           // ── CHILDREN ───────────────────────────────────────────────
           const SizedBox(height: 20),
-          _SectionHeader(
+          const _SectionHeader(
               icon: Icons.child_care_outlined,
               title: 'Children & Future'),
           VivaDropdownField<bool?>(
@@ -505,9 +505,9 @@ class _HeightRow extends StatelessWidget {
     }
 
     return Row(children: [
-      Expanded(
+      const Expanded(
           child: Text('Min Height',
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 13, color: AppTheme.textSecondary))),
       DropdownButton<int?>(
         value: value,

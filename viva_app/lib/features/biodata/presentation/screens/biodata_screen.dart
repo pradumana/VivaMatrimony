@@ -193,7 +193,7 @@ class _BiodataScreenState extends ConsumerState<BiodataScreen> {
               const SizedBox(height: 20),
 
               // Included
-              _IncludedCard(),
+              const _IncludedCard(),
 
               const SizedBox(height: 20),
 
