@@ -320,11 +320,11 @@ def _format_interest_row(row) -> dict:
     return {
         "interest_id": str(row.id),
         "user_id": str(other_id),
-        "full_name": row.full_name,
+        "full_name": row.full_name or "",
         "age": age,
         "location": f"{row.city}, {row.state}" if row.city and row.state else (row.state or ""),
         "status": row.status,
-        "sent_at": row.sent_at,
+        "sent_at": row.sent_at.isoformat() if row.sent_at else None,
     }
 
 

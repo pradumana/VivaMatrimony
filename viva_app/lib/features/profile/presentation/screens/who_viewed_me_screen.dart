@@ -132,6 +132,7 @@ class _ViewerCard extends StatelessWidget {
     final dt = DateTime.tryParse(iso);
     if (dt == null) return 'Recently';
     final diff = DateTime.now().difference(dt);
+    if (diff.inMinutes < 1) return 'Just now';
     if (diff.inMinutes < 60) return 'Viewed ${diff.inMinutes}m ago';
     if (diff.inHours < 24) return 'Viewed ${diff.inHours}h ago';
     if (diff.inDays == 1) return 'Viewed yesterday';

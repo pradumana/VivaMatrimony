@@ -288,6 +288,23 @@ async def get_recommended_matches(
     return matches
 
 
+def _to_list(val) -> list:
+    """
+    Coerce a value from partner_preferences to a plain Python list.
+    asyncpg returns PostgreSQL TEXT[] as Python lists already, but guard
+    against string representations like '{Brahmin,Rajput}' on some drivers.
+    """
+    if val is None:
+        return []
+    if isinstance(val, list):
+        return val
+    if isinstance(val, str):
+        # Strip braces and split — e.g. '{Brahmin,Rajput}' → ['Brahmin', 'Rajput']
+        stripped = val.strip("{}")
+        return [v.strip() for v in stripped.split(",") if v.strip()] if stripped else []
+    return []
+
+
 def _score_pair(
     user_data: dict,
     user_prefs: Optional[dict],
@@ -310,8 +327,8 @@ def _score_pair(
             user_data.get("age"),
         ),
         "location": _score_location(
-            user_prefs.get("preferred_states") or [],
-            user_prefs.get("preferred_cities") or [],
+            _to_list(user_prefs.get("preferred_states")),
+            _to_list(user_prefs.get("preferred_cities")),
             candidate_data.get("state"),
             candidate_data.get("city"),
         ),
@@ -320,13 +337,13 @@ def _score_pair(
             candidate_data.get("highest_qualification"),
         ),
         "profession": _score_profession(
-            user_prefs.get("preferred_professions") or [],
+            _to_list(user_prefs.get("preferred_professions")),
             candidate_data.get("profession"),
             user_prefs.get("min_income_lpa"),
             candidate_data.get("income_max_lpa"),
         ),
         "lifestyle": _score_lifestyle(
-            user_prefs.get("preferred_diet") or [],
+            _to_list(user_prefs.get("preferred_diet")),
             user_prefs.get("smoking_preference"),
             user_prefs.get("drinking_preference"),
             candidate_data.get("diet"),
@@ -335,15 +352,15 @@ def _score_pair(
         ),
         "preferences": _score_preferences_alignment(user_data, candidate_prefs or {}),
         "family": _score_family(
-            user_prefs.get("preferred_family_types") or [],
-            user_prefs.get("preferred_family_values") or [],
+            _to_list(user_prefs.get("preferred_family_types")),
+            _to_list(user_prefs.get("preferred_family_values")),
             candidate_data.get("family_type"),
             candidate_data.get("family_values"),
         ),
         "community": _score_community(
-            user_prefs.get("preferred_castes") or [],
-            user_prefs.get("preferred_subcastes") or [],
-            user_prefs.get("preferred_gotras") or [],
+            _to_list(user_prefs.get("preferred_castes")),
+            _to_list(user_prefs.get("preferred_subcastes")),
+            _to_list(user_prefs.get("preferred_gotras")),
             candidate_data.get("caste"),
             candidate_data.get("sub_caste"),
             candidate_data.get("gotra"),

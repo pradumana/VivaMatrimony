@@ -227,15 +227,15 @@ async def search_profiles(
         if prefs.get("location_importance") == "must_have":
             pref_states = prefs.get("preferred_states") or []
             if pref_states and not state:
-                placeholders = ", ".join(f":pref_state_{i}" for i in range(len(pref_states)))
-                conditions.append(f"LOWER(cl.state) IN ({placeholders})")
-                for i, s in enumerate(pref_states):
-                    params[f"pref_state_{i}"] = s.lower()
+                loc_placeholders = ", ".join(f":pref_state_{i}" for i in range(len(pref_states)))
+                conditions.append(f"LOWER(cl.state) IN ({loc_placeholders})")
+                for i, st in enumerate(pref_states):
+                    params[f"pref_state_{i}"] = st.lower()
         if prefs.get("lifestyle_importance") == "must_have":
             pref_diets = prefs.get("preferred_diet") or []
             if pref_diets and not diet:
-                placeholders = ", ".join(f":pref_diet_{i}" for i in range(len(pref_diets)))
-                conditions.append(f"ls.diet IN ({placeholders})")
+                diet_placeholders = ", ".join(f":pref_diet_{i}" for i in range(len(pref_diets)))
+                conditions.append(f"ls.diet IN ({diet_placeholders})")
                 for i, d in enumerate(pref_diets):
                     params[f"pref_diet_{i}"] = d
 

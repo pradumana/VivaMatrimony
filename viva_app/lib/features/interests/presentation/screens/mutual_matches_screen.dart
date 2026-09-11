@@ -32,9 +32,9 @@ class MutualMatchesScreen extends ConsumerWidget {
         data: (matches) => matches.isEmpty
             ? const EmptyStateView(
                 icon: Icons.favorite_border_rounded,
-                title: 'No mutual matches yet',
+                title: 'No connections yet',
                 subtitle:
-                    'When someone you sent interest to accepts, they\'ll appear here.',
+                    'When an interest you sent or received is accepted, they\'ll appear here.',
               )
             : ListView.builder(
                 padding: const EdgeInsets.symmetric(vertical: 8),

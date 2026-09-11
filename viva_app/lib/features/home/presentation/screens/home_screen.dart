@@ -15,7 +15,6 @@ import '../../../../shared/widgets/viva_logo.dart';
 final _matchesProvider =
     FutureProvider.autoDispose<List<ProfileSummary>>((ref) async {
   const cacheKey = 'matches_home';
-  // Serve stale data immediately while we revalidate in the background
   final cached = await CacheService.get(cacheKey);
   final fresh = await CacheService.isFresh(cacheKey);
 
@@ -30,10 +29,13 @@ final _matchesProvider =
     }
   }
 
-  // If fresh cache exists, return it immediately — no network call
+  // Return fresh cache immediately without hitting the network.
   if (cachedList != null && fresh) return cachedList;
 
-  // Fetch from network
+  // Cache is stale or absent — fetch from network.
+  // ponytail: true stale-while-revalidate (serve stale, refresh in background)
+  // would require a separate background isolate. For our 5-min TTL and
+  // Riverpod's autoDispose model, cache-first-then-network is sufficient.
   try {
     final client = ref.read(apiClientProvider);
     final response =
@@ -42,12 +44,11 @@ final _matchesProvider =
     final list = (data['matches'] as List)
         .map((e) => ProfileSummary.fromJson(e as Map<String, dynamic>))
         .toList();
-    // Cache for 5 minutes
     await CacheService.set(cacheKey, data['matches'],
         ttl: const Duration(minutes: 5));
     return list;
   } catch (_) {
-    // Network failed — return stale cache if available
+    // Network failed — serve stale cache rather than an error screen.
     if (cachedList != null) return cachedList;
     rethrow;
   }

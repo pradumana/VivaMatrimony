@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../network/api_client.dart';
+import '../storage/cache_service.dart';
 import '../storage/secure_storage.dart';
 
 /// Auth states that drive all routing decisions.
@@ -188,6 +189,9 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     try {
       await ref.read(apiClientProvider).post('/auth/logout');
     } catch (_) {}
+
+    // Clear match/profile cache so a different user logging in gets fresh data
+    await CacheService.invalidateAll();
 
     // Supabase signOut clears the local session and fires onAuthStateChange
     // which will set state to unauthenticated via the listener above.
