@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/constants/app_constants.dart';
 
 /// Edit profile — menu to jump to specific profile sections.
@@ -11,9 +12,10 @@ class EditProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AppTheme.background,
-      appBar: AppBar(title: const Text('Edit Profile')),
+      appBar: AppBar(title: Text(l.editProfile)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         children: [
@@ -108,12 +110,12 @@ class EditProfileScreen extends ConsumerWidget {
                       extra: true)),
               _EditTile(
                   icon: Icons.diversity_3_outlined,
-                  title: 'Community & Traditions',
+                  title: l.communityAndTraditions,
                   subtitle: 'Religion, caste, sub-caste, gotra',
                   onTap: () => context.push(AppRoutes.onboardingCommunity, extra: true)),
               _EditTile(
                   icon: Icons.favorite_border_rounded,
-                  title: 'Partner Preferences',
+                  title: l.partnerPreferences,
                   subtitle: 'What you\'re looking for',
                   onTap: () => context.push(AppRoutes.onboardingPreferences,
                       extra: true)),

@@ -47,7 +47,7 @@ class _ForgotPasswordScreenState
         leading: IconButton(
           icon: Container(
             width: 38, height: 38,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
               boxShadow: AppShadows.card,
@@ -103,7 +103,7 @@ class _FormView extends StatelessWidget {
         children: [
           Container(
             width: 64, height: 64,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppTheme.primaryContainer,
               shape: BoxShape.circle,
             ),

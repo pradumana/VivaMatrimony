@@ -80,9 +80,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             width: 64, height: 64,
                             decoration: const BoxDecoration(
                                 shape: BoxShape.circle, color: Colors.white),
-                            child: Center(
+                            child: const Center(
                               child: Padding(
-                                padding: const EdgeInsets.all(10),
+                                padding: EdgeInsets.all(10),
                                 child: VivaLogo(
                                     size: 44,
                                     variant: VivaLogoVariant.gradient),

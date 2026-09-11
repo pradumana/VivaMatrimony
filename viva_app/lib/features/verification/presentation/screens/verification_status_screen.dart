@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/constants/app_constants.dart';
 import '../../../../shared/models/user_model.dart';
 import '../../../../shared/widgets/viva_button.dart';
@@ -21,11 +22,12 @@ class VerificationStatusScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final statusAsync = ref.watch(_verificationStatusProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.background,
-      appBar: AppBar(title: const Text('Verification Status')),
+      appBar: AppBar(title: Text(l.verificationStatus)),
       body: statusAsync.when(
         loading: () => const Center(
             child: CircularProgressIndicator(color: AppTheme.primary)),
@@ -159,7 +161,7 @@ class _StatusBody extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(children: const [
+                  const Row(children: [
                     Icon(Icons.error_outline_rounded,
                         size: 16, color: AppTheme.error),
                     SizedBox(width: 8),

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../../../../shared/widgets/verified_badge.dart';
 
@@ -53,10 +54,11 @@ class ShortlistScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final async = ref.watch(_shortlistProvider);
     return Scaffold(
       backgroundColor: AppTheme.background,
-      appBar: AppBar(title: const Text('Shortlisted')),
+      appBar: AppBar(title: Text(l.shortlisted)),
       body: async.when(
         loading: () => const LoadingView(),
         error: (e, _) => ErrorView(
@@ -64,11 +66,10 @@ class ShortlistScreen extends ConsumerWidget {
           onRetry: () => ref.invalidate(_shortlistProvider),
         ),
         data: (items) => items.isEmpty
-            ? const EmptyStateView(
+            ? EmptyStateView(
                 icon: Icons.bookmark_border_rounded,
-                title: 'No profiles shortlisted',
-                subtitle:
-                    'Tap the bookmark icon on any profile to save them here.',
+                title: l.noShortlist,
+                subtitle: l.noShortlistSubtitle,
               )
             : ListView.builder(
                 padding: const EdgeInsets.symmetric(vertical: 8),
@@ -170,9 +171,9 @@ class _ShortlistCard extends StatelessWidget {
           color: AppTheme.error,
           borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
-        child: Column(
+        child: const Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
+          children: [
             Icon(Icons.delete_outline_rounded,
                 color: Colors.white, size: 24),
             SizedBox(height: 4),

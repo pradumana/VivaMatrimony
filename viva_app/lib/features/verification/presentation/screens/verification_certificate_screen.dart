@@ -93,7 +93,7 @@ class _State extends ConsumerState<VerificationCertificateScreen> {
               const SizedBox(height: 24),
 
               // Accepted formats
-              Text('Accepted formats: PDF, JPG, PNG (max ${AppConstants.maxCertSizeMB}MB)', style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+              const Text('Accepted formats: PDF, JPG, PNG (max ${AppConstants.maxCertSizeMB}MB)', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
               const SizedBox(height: 16),
 
               // File picker
@@ -175,7 +175,7 @@ class _SuccessView extends StatelessWidget {
         const SizedBox(height: 20),
         const Text('Certificate Uploaded!', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
         const SizedBox(height: 8),
-        Text('Your certificate is under review.\nVerification typically takes ${AppConstants.verificationSlaDays}.', textAlign: TextAlign.center,
+        const Text('Your certificate is under review.\nVerification typically takes ${AppConstants.verificationSlaDays}.', textAlign: TextAlign.center,
           style: TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.5)),
         const SizedBox(height: 32),
         VivaButton(label: 'Continue to Home', onPressed: onDone),

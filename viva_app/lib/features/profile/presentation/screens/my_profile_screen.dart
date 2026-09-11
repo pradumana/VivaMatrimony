@@ -314,10 +314,10 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                               children: [
                                 Text(
                                   completion == 100
-                                      ? 'Profile Complete ✓'
+                                      ? l.profileComplete
                                       : completion == 0
                                           ? 'Let\'s complete your profile'
-                                          : 'Profile Completion',
+                                          : l.profileCompletion,
                                   style: const TextStyle(
                                     fontSize: 13,
                                     color: AppTheme.textSecondary,
@@ -392,7 +392,7 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                         ),
                         const SizedBox(height: 12),
                         VivaButton(
-                          label: 'Complete Profile',
+                          label: l.completeProfile,
                           onPressed: () => _goAndRefresh(
                               AppRoutes.editProfile),
                           height: 42,
@@ -515,7 +515,7 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
 
                 // ── Profile sections ──────────────────────────────────
                 _ProfileSection(
-                    title: 'Personal',
+                    title: l.personalDetails,
                     icon: Icons.person_outline_rounded,
                     items: _buildPersonal()),
                 _ProfileSection(
@@ -523,11 +523,11 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                     icon: Icons.diversity_3_outlined,
                     items: _buildCommunity(l)),
                 _ProfileSection(
-                    title: 'Education & Career',
+                    title: '${l.education} & ${l.career}',
                     icon: Icons.school_outlined,
                     items: _buildEducation()),
                 _ProfileSection(
-                    title: 'Family',
+                    title: l.family,
                     icon: Icons.family_restroom_outlined,
                     items: _buildFamily()),
 
@@ -537,7 +537,7 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: VivaButton(
-                    label: 'Log Out',
+                    label: l.logOut,
                     isOutlined: true,
                     onPressed: () async {
                       final confirm = await showDialog<bool>(
@@ -553,11 +553,11 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                             TextButton(
                                 onPressed: () =>
                                     Navigator.pop(context, false),
-                                child: const Text('Cancel')),
+                                child: Text(l.cancel)),
                             ElevatedButton(
                                 onPressed: () =>
                                     Navigator.pop(context, true),
-                                child: const Text('Log Out')),
+                                child: Text(l.logOut)),
                           ],
                         ),
                       );

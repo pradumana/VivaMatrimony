@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/constants/app_constants.dart';
 import '../../../../shared/widgets/viva_button.dart';
 
@@ -69,8 +70,9 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
   Widget build(BuildContext context) {
     if (_submitted) return _SuccessView(onDone: () => context.pop());
 
+    final l = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Report Profile')),
+      appBar: AppBar(title: Text(l.reportProfile)),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -147,6 +149,7 @@ class _SuccessView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -160,7 +163,7 @@ class _SuccessView extends StatelessWidget {
             const Text('Thank you. Our team will review your report within ${AppConstants.reportReviewHours} and take appropriate action.', textAlign: TextAlign.center,
               style: TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.5)),
             const SizedBox(height: 32),
-            VivaButton(label: 'Go Back', onPressed: onDone),
+            VivaButton(label: l.goBack, onPressed: onDone),
           ]),
         ),
       ),

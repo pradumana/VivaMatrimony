@@ -95,10 +95,10 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
+              child: Text(AppLocalizations.of(context).cancel)),
           ElevatedButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Send Interest')),
+              child: Text(AppLocalizations.of(context).sendInterest)),
         ],
       ),
     );
@@ -337,8 +337,8 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                     // CTA
                     VivaButton(
                       label: _interestSent
-                          ? '✓ Interest Sent'
-                          : '❤️  Send Interest',
+                          ? '✓ ${l.interestSent}'
+                          : '❤️  ${l.sendInterest}',
                       onPressed: _interestSent ? null : _sendInterest,
                     ),                    const SizedBox(height: 20),
                   ],
@@ -353,7 +353,7 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                 delegate: SliverChildListDelegate([
                   if (profile['about_me'] != null)
                     _Section(
-                      title: 'About',
+                      title: l.about,
                       icon: Icons.person_outline_rounded,
                       child: Text(
                         profile['about_me'] as String,
@@ -366,14 +366,14 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                     ),
 
                   _Section(
-                    title: 'Personal Details',
+                    title: l.personalDetails,
                     icon: Icons.info_outline_rounded,
                     child: _Grid([
-                      if (age != null && age > 0) _Field('Age', '$age years'),
+                      if (age != null && age > 0) _Field(l.age, '$age years'),
                       if (profile['height_display'] != null)
-                        _Field('Height', profile['height_display'] as String),
+                        _Field(l.height, profile['height_display'] as String),
                       _Field(
-                          'Marital Status',
+                          l.maritalStatus,
                           (profile['marital_status'] as String? ?? '')
                               .replaceAll('_', ' ')
                               .toUpperCase()
@@ -381,11 +381,11 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                               .map((w) => w.isEmpty ? w : '${w[0]}${w.substring(1).toLowerCase()}')
                               .join(' ')),
                       if (profile['mother_tongue'] != null)
-                        _Field('Mother Tongue', profile['mother_tongue'] as String),
+                        _Field(l.motherTongue, profile['mother_tongue'] as String),
                       if (profile['religion'] != null)
-                        _Field('Religion', profile['religion'] as String),
+                        _Field(l.religion, profile['religion'] as String),
                       if (nativePlace != null)
-                        _Field('Native Place',
+                        _Field(l.nativePlace,
                             '${nativePlace!['city'] ?? ''}, ${nativePlace!['state'] ?? ''}'
                                 .trim()
                                 .removePrefix(', ')),
@@ -411,61 +411,61 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
 
                   if (education != null)
                     _Section(
-                      title: 'Education',
+                      title: l.education,
                       icon: Icons.school_outlined,
                       child: _Grid([
                         if (education!['degree'] != null)
-                          _Field('Degree', education!['degree'] as String),
+                          _Field(l.degree, education!['degree'] as String),
                         if (education!['field_of_study'] != null)
-                          _Field('Field',
+                          _Field(l.field,
                               education!['field_of_study'] as String),
                         if (education!['college_university'] != null)
-                          _Field('College',
+                          _Field(l.college,
                               education!['college_university'] as String),
                       ]),
                     ),
 
                   if (employment != null)
                     _Section(
-                      title: 'Career',
+                      title: l.career,
                       icon: Icons.work_outline_rounded,
                       child: _Grid([
                         if (employment!['profession'] != null)
-                          _Field('Profession',
+                          _Field(l.profession,
                               employment!['profession'] as String),
                         if (employment!['company'] != null)
-                          _Field('Company',
+                          _Field(l.company,
                               employment!['company'] as String),
                         if (employment!['income_min_lpa'] != null)
-                          _Field('Income',
+                          _Field(l.income,
                               '₹${employment!['income_min_lpa']} LPA'),
                       ]),
                     ),
 
                   if (family != null)
                     _Section(
-                      title: 'Family',
+                      title: l.family,
                       icon: Icons.family_restroom_outlined,
                       child: _Grid([
                         if (family!['family_type'] != null)
-                          _Field('Family Type',
+                          _Field(l.familyType,
                               (family!['family_type'] as String).capitalize),
                         if (family!['family_values'] != null)
-                          _Field('Values',
+                          _Field(l.values,
                               (family!['family_values'] as String).capitalize),
-                        _Field('Siblings',
+                        _Field(l.siblings,
                             '${family!['brothers_count'] ?? 0}B / ${family!['sisters_count'] ?? 0}S'),
                       ]),
                     ),
 
                   if (lifestyle != null)
                     _Section(
-                      title: 'Lifestyle',
+                      title: l.lifestyle,
                       icon: Icons.spa_outlined,
                       child: _Grid([
                         if (lifestyle!['diet'] != null)
                           _Field(
-                              'Diet',
+                              l.diet,
                               (lifestyle!['diet'] as String)
                                   .replaceAll('_', ' ')
                                   .capitalize),

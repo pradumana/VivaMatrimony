@@ -54,7 +54,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           children: [
             Container(
               width: 64, height: 64,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppTheme.primaryContainer,
                 shape: BoxShape.circle,
               ),
@@ -105,7 +105,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         leading: IconButton(
           icon: Container(
             width: 38, height: 38,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
               boxShadow: AppShadows.card,
@@ -128,7 +128,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 // Icon
                 Container(
                   width: 64, height: 64,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: AppTheme.primaryContainer,
                     shape: BoxShape.circle,
                   ),
@@ -264,11 +264,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                Center(
+                const Center(
                   child: Text(
                     'By creating an account you agree to our\nTerms & Conditions and Privacy Policy.',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 11,
                         color: AppTheme.textTertiary,
                         height: 1.5),

@@ -7,6 +7,7 @@ import 'package:dio/dio.dart';
 
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../../../../shared/widgets/verified_badge.dart';
 
@@ -80,11 +81,12 @@ class ConversationsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final async = ref.watch(_connectionsProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.background,
-      appBar: AppBar(title: const Text('Connections')),
+      appBar: AppBar(title: Text(l.connections)),
       body: async.when(
         loading: () => const LoadingView(),
         error: (e, _) => ErrorView(
@@ -92,12 +94,10 @@ class ConversationsScreen extends ConsumerWidget {
           onRetry: () => ref.invalidate(_connectionsProvider),
         ),
         data: (connections) => connections.isEmpty
-            ? const EmptyStateView(
+            ? EmptyStateView(
                 icon: Icons.people_outline_rounded,
-                title: 'No connections yet',
-                subtitle:
-                    'When someone accepts your interest (or you accept theirs), '
-                    'their WhatsApp contact will appear here.',
+                title: l.noConnectionsYet,
+                subtitle: l.noConnectionsMessage,
               )
             : ListView.builder(
                 padding: const EdgeInsets.symmetric(vertical: 8),

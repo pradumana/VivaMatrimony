@@ -229,13 +229,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           builder: (context, value, _) {
             final t = value.text.trim();
             if (!t.toUpperCase().startsWith('VIVA') || t.isEmpty) return const SizedBox.shrink();
-            return const Padding(
-              padding: EdgeInsets.fromLTRB(16, 0, 16, 6),
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
               child: Row(children: [
-                Icon(Icons.badge_outlined, size: 13, color: AppTheme.primary),
-                SizedBox(width: 5),
-                Text('Searching by Member ID',
-                    style: TextStyle(fontSize: 11, color: AppTheme.primary, fontWeight: FontWeight.w600)),
+                const Icon(Icons.badge_outlined, size: 13, color: AppTheme.primary),
+                const SizedBox(width: 5),
+                Text(AppLocalizations.of(context).searchByMemberId,
+                    style: const TextStyle(fontSize: 11, color: AppTheme.primary, fontWeight: FontWeight.w600)),
               ]),
             );
           },
@@ -274,7 +274,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
             child: Align(
               alignment: Alignment.centerLeft,
-              child: Text('$_total profiles found',
+              child: Text(l.profilesFound(_total),
                   style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
             ),
           ),
@@ -421,6 +421,7 @@ class _FilterSheetState extends State<_FilterSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return DraggableScrollableSheet(
       initialChildSize: 0.80,
       maxChildSize: 0.95,
@@ -437,10 +438,10 @@ class _FilterSheetState extends State<_FilterSheet> {
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 4, 16, 4),
           child: Row(children: [
-            const Text('Filters',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+            Text(l.filters,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
             const Spacer(),
-            TextButton(onPressed: _resetAll, child: const Text('Reset all')),
+            TextButton(onPressed: _resetAll, child: Text(l.resetAll)),
           ]),
         ),
         const Divider(height: 1),
@@ -453,8 +454,8 @@ class _FilterSheetState extends State<_FilterSheet> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Age Range',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                  Text(l.ageRange,
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
@@ -491,8 +492,8 @@ class _FilterSheetState extends State<_FilterSheet> {
               const SizedBox(height: 20),
 
               // Community
-              const Text('Community',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+              Text(l.community,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
               const SizedBox(height: 10),
               TextField(controller: _casteCtrl,
                   decoration: const InputDecoration(
@@ -536,7 +537,7 @@ class _FilterSheetState extends State<_FilterSheet> {
                   'has_photo': _hasPhoto,
                 });
               },
-              child: const Text('Apply Filters'),
+              child: Text(l.applyFilters),
             ),
           ),
         ),

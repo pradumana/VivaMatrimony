@@ -111,7 +111,7 @@ class _State extends State<VerificationSelectScreen> {
               const SizedBox(height: 14),
 
               // OR divider
-              Row(children: const [
+              const Row(children: [
                 Expanded(child: Divider()),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 14),

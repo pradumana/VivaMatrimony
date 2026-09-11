@@ -1,32 +1,122 @@
 {
   "@@locale": "en",
+
   "appName": "Viva",
   "appTagline": "Find someone who feels like home.",
+
+  "search": "Search",
   "searchHint": "Name or Member ID (e.g. VIVA001234)",
+  "searchByMemberId": "Searching by Member ID",
   "noProfilesFound": "No profiles found",
   "tryAdjustingFilters": "Try adjusting your filters to see more results.",
+  "profilesFound": "{count} profiles found",
+  "@profilesFound": { "placeholders": { "count": { "type": "int" } } },
+
   "sendInterest": "Send Interest",
-  "interestSent": "Interest Sent",
+  "interestSent": "✓ Interest Sent",
   "shortlisted": "Shortlisted",
+  "noShortlist": "No profiles shortlisted",
+  "noShortlistSubtitle": "Tap the bookmark icon on any profile to save them here.",
+
   "verified": "Verified",
+  "getVerified": "Get verified",
+  "verificationStatus": "Verification Status",
+  "underReview": "Under review",
+  "needsAttention": "Needs attention",
+
   "community": "Community",
   "caste": "Caste",
   "subCaste": "Sub-caste",
   "gotra": "Gotra",
   "religion": "Religion",
-  "profileComplete": "Profile Complete",
+  "communityAndTraditions": "Community & Traditions",
+
+  "profileComplete": "Profile Complete ✓",
   "profileCompletion": "Profile Completion",
+  "editProfile": "Edit Profile",
+  "myProfile": "My Profile",
+  "personalDetails": "Personal Details",
+  "education": "Education",
+  "career": "Career",
+  "family": "Family",
+  "lifestyle": "Lifestyle",
+  "about": "About",
+  "nativePlace": "Native Place",
+  "location": "Location",
+
   "whoViewedMe": "Who Viewed My Profile",
+  "noProfileViewsYet": "No profile views yet",
+  "noProfileViewsSubtitle": "When someone views your profile, they'll appear here.",
+
   "mutualMatches": "Mutual Matches",
+  "noConnectionsYet": "No connections yet",
+  "noConnectionsSubtitle": "When an interest you sent or received is accepted, they'll appear here.",
+
   "biodata": "Matrimonial Biodata",
   "generate": "Generate Biodata",
+  "regenerate": "Regenerate Biodata",
   "download": "Download PDF",
   "share": "Share",
+  "biodataReady": "Biodata ready to download",
+  "biodataGenerating": "Generating…",
+  "biodataStale": "Profile updated — regenerate to refresh",
+  "biodataNotGenerated": "Not yet generated",
+
   "lastActive": "Last active",
+  "activeToday": "Active today",
+  "activeYesterday": "Active yesterday",
+  "activeThisWeek": "Active this week",
+  "activeThisMonth": "Active this month",
+  "justNow": "Just now",
+
   "compatibilityScore": "{score}% Compatible",
   "@compatibilityScore": {
-    "placeholders": {
-      "score": {"type": "int"}
-    }
-  }
+    "placeholders": { "score": { "type": "int" } }
+  },
+
+  "settings": "Settings",
+  "language": "Language / भाषा",
+  "selectLanguage": "Select Language / भाषा चुनें",
+  "privacySettings": "Privacy Settings",
+  "notificationPreferences": "Notification Preferences",
+  "helpAndSupport": "Help & Support",
+  "deleteAccount": "Delete Account",
+  "reportProfile": "Report Profile",
+
+  "connections": "Connections",
+  "noConnectionsMessage": "Accept interests to start connecting.",
+
+  "filters": "Filters",
+  "resetAll": "Reset all",
+  "applyFilters": "Apply Filters",
+  "ageRange": "Age Range",
+
+  "height": "Height",
+  "age": "Age",
+  "gender": "Gender",
+  "maritalStatus": "Marital Status",
+  "motherTongue": "Mother Tongue",
+  "profession": "Profession",
+  "degree": "Degree",
+  "field": "Field",
+  "college": "College",
+  "company": "Company",
+  "income": "Income",
+  "siblings": "Siblings",
+  "familyType": "Family Type",
+  "values": "Values",
+  "diet": "Diet",
+  "smoking": "Smoking",
+  "drinking": "Drinking",
+
+  "partnerPreferences": "Partner Preferences",
+  "completeProfile": "Complete Profile",
+
+  "logOut": "Log Out",
+  "cancel": "Cancel",
+  "save": "Save",
+  "saveAndContinue": "Save & Continue",
+  "continue_": "Continue",
+  "retry": "Retry",
+  "goBack": "Go Back"
 }

@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/widgets/viva_button.dart';
 
 class PrivacyScreen extends ConsumerStatefulWidget {
@@ -84,8 +85,9 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Privacy Settings')),
+      appBar: AppBar(title: Text(l.privacySettings)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -141,7 +143,7 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
           ]),
           const SizedBox(height: 24),
           VivaButton(
-            label: _saved ? '✓ Saved!' : 'Save Privacy Settings',
+            label: _saved ? '✓ Saved!' : l.save,
             isLoading: _loading,
             onPressed: _save,
           ),

@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/constants/app_constants.dart';
 import '../../../../main.dart' show setAppLocale;
 
@@ -15,9 +16,10 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AppTheme.background,
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: Text(l.settings)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         children: [
@@ -26,7 +28,7 @@ class SettingsScreen extends ConsumerWidget {
             children: [
               _SettingsTile(
                 icon: Icons.lock_outline_rounded,
-                title: 'Privacy Settings',
+                title: l.privacySettings,
                 onTap: () => context.push(AppRoutes.privacy),
               ),
               _SettingsTile(
@@ -66,7 +68,7 @@ class SettingsScreen extends ConsumerWidget {
             children: [
               _SettingsTile(
                 icon: Icons.help_outline_rounded,
-                title: 'Help & Support',
+                title: l.helpAndSupport,
                 onTap: () => context.push(AppRoutes.helpSupport),
               ),
               _SettingsTile(
@@ -93,7 +95,7 @@ class SettingsScreen extends ConsumerWidget {
             children: [
               _SettingsTile(
                 icon: Icons.delete_outline_rounded,
-                title: 'Delete Account',
+                title: l.deleteAccount,
                 color: AppTheme.error,
                 onTap: () => _confirmDelete(context, ref),
               ),
@@ -301,6 +303,7 @@ class _DeleteAccountDialogState
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return AlertDialog(
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.xl)),
@@ -314,7 +317,7 @@ class _DeleteAccountDialogState
       actions: [
         TextButton(
           onPressed: _loading ? null : () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(l.cancel),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
@@ -367,6 +370,7 @@ class _LanguageTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     return ListTile(
       contentPadding:
           const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -380,8 +384,8 @@ class _LanguageTile extends ConsumerWidget {
         child: const Icon(Icons.translate_rounded,
             size: 18, color: AppTheme.textPrimary),
       ),
-      title: const Text('Language / भाषा',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+      title: Text(l.language,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
       trailing: const Icon(Icons.chevron_right_rounded,
           size: 18, color: AppTheme.textTertiary),
       onTap: () => _showPicker(context, ref),

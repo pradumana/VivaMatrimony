@@ -1,32 +1,122 @@
 {
   "@@locale": "hi",
+
   "appName": "विवा",
   "appTagline": "वो मिले जो घर जैसा लगे।",
+
+  "search": "खोजें",
   "searchHint": "नाम या सदस्य ID (जैसे VIVA001234)",
+  "searchByMemberId": "सदस्य ID से खोज रहे हैं",
   "noProfilesFound": "कोई प्रोफ़ाइल नहीं मिली",
   "tryAdjustingFilters": "अधिक परिणामों के लिए अपने फ़िल्टर बदलें।",
+  "profilesFound": "{count} प्रोफ़ाइल मिलीं",
+  "@profilesFound": { "placeholders": { "count": { "type": "int" } } },
+
   "sendInterest": "रुचि भेजें",
-  "interestSent": "रुचि भेजी गई",
+  "interestSent": "✓ रुचि भेजी गई",
   "shortlisted": "सूचीबद्ध",
+  "noShortlist": "कोई प्रोफ़ाइल सूचीबद्ध नहीं",
+  "noShortlistSubtitle": "किसी भी प्रोफ़ाइल पर बुकमार्क आइकन दबाएं।",
+
   "verified": "सत्यापित",
+  "getVerified": "सत्यापन करें",
+  "verificationStatus": "सत्यापन स्थिति",
+  "underReview": "समीक्षाधीन",
+  "needsAttention": "ध्यान चाहिए",
+
   "community": "समुदाय",
   "caste": "जाति",
   "subCaste": "उपजाति",
   "gotra": "गोत्र",
   "religion": "धर्म",
-  "profileComplete": "प्रोफ़ाइल पूर्ण",
+  "communityAndTraditions": "समुदाय और परंपराएं",
+
+  "profileComplete": "प्रोफ़ाइल पूर्ण ✓",
   "profileCompletion": "प्रोफ़ाइल पूर्णता",
+  "editProfile": "प्रोफ़ाइल संपादित करें",
+  "myProfile": "मेरी प्रोफ़ाइल",
+  "personalDetails": "व्यक्तिगत विवरण",
+  "education": "शिक्षा",
+  "career": "करियर",
+  "family": "परिवार",
+  "lifestyle": "जीवनशैली",
+  "about": "परिचय",
+  "nativePlace": "मूल स्थान",
+  "location": "स्थान",
+
   "whoViewedMe": "मेरी प्रोफ़ाइल किसने देखी",
+  "noProfileViewsYet": "अभी तक कोई प्रोफ़ाइल दृश्य नहीं",
+  "noProfileViewsSubtitle": "जब कोई आपकी प्रोफ़ाइल देखेगा, वे यहाँ दिखेंगे।",
+
   "mutualMatches": "आपसी मेल",
+  "noConnectionsYet": "अभी कोई संपर्क नहीं",
+  "noConnectionsSubtitle": "जब कोई रुचि स्वीकार की जाएगी, वे यहाँ दिखेंगे।",
+
   "biodata": "विवाह बायोडेटा",
   "generate": "बायोडेटा बनाएं",
+  "regenerate": "बायोडेटा फिर से बनाएं",
   "download": "PDF डाउनलोड करें",
   "share": "साझा करें",
+  "biodataReady": "बायोडेटा डाउनलोड के लिए तैयार",
+  "biodataGenerating": "बन रहा है…",
+  "biodataStale": "प्रोफ़ाइल अपडेट हुई — फिर से बनाएं",
+  "biodataNotGenerated": "अभी नहीं बनाया",
+
   "lastActive": "अंतिम सक्रिय",
+  "activeToday": "आज सक्रिय",
+  "activeYesterday": "कल सक्रिय",
+  "activeThisWeek": "इस सप्ताह सक्रिय",
+  "activeThisMonth": "इस महीने सक्रिय",
+  "justNow": "अभी",
+
   "compatibilityScore": "{score}% मेल",
   "@compatibilityScore": {
-    "placeholders": {
-      "score": {"type": "int"}
-    }
-  }
+    "placeholders": { "score": { "type": "int" } }
+  },
+
+  "settings": "सेटिंग्स",
+  "language": "भाषा",
+  "selectLanguage": "भाषा चुनें",
+  "privacySettings": "गोपनीयता सेटिंग्स",
+  "notificationPreferences": "सूचना प्राथमिकताएं",
+  "helpAndSupport": "सहायता और समर्थन",
+  "deleteAccount": "खाता हटाएं",
+  "reportProfile": "प्रोफ़ाइल रिपोर्ट करें",
+
+  "connections": "संपर्क",
+  "noConnectionsMessage": "जुड़ने के लिए रुचियां स्वीकार करें।",
+
+  "filters": "फ़िल्टर",
+  "resetAll": "सब रीसेट करें",
+  "applyFilters": "फ़िल्टर लागू करें",
+  "ageRange": "आयु सीमा",
+
+  "height": "ऊंचाई",
+  "age": "आयु",
+  "gender": "लिंग",
+  "maritalStatus": "वैवाहिक स्थिति",
+  "motherTongue": "मातृभाषा",
+  "profession": "पेशा",
+  "degree": "डिग्री",
+  "field": "विषय",
+  "college": "कॉलेज",
+  "company": "कंपनी",
+  "income": "आय",
+  "siblings": "भाई-बहन",
+  "familyType": "परिवार का प्रकार",
+  "values": "मूल्य",
+  "diet": "आहार",
+  "smoking": "धूम्रपान",
+  "drinking": "शराब",
+
+  "partnerPreferences": "पार्टनर की प्राथमिकताएं",
+  "completeProfile": "प्रोफ़ाइल पूर्ण करें",
+
+  "logOut": "लॉग आउट",
+  "cancel": "रद्द करें",
+  "save": "सहेजें",
+  "saveAndContinue": "सहेजें और जारी रखें",
+  "continue_": "जारी रखें",
+  "retry": "पुनः प्रयास",
+  "goBack": "वापस जाएं"
 }
