@@ -415,12 +415,12 @@ class _LanguageTile extends ConsumerWidget {
                   ),
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.fromLTRB(24, 0, 24, 12),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
                 child: Align(
                   alignment: Alignment.centerLeft,
-                  child: Text('Select Language / भाषा चुनें',
-                      style: TextStyle(
+                  child: Text(AppLocalizations.of(context).selectLanguage,
+                      style: const TextStyle(
                           fontSize: 16, fontWeight: FontWeight.w700)),
                 ),
               ),

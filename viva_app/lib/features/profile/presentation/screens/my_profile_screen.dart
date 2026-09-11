@@ -61,7 +61,7 @@ class MyProfileScreen extends ConsumerWidget {
     return async.when(
       loading: () => const _SkeletonScreen(),
       error: (e, _) => Scaffold(
-        appBar: AppBar(title: const Text('My Profile')),
+        appBar: AppBar(title: Text(AppLocalizations.of(context).myProfile)),
         body: ErrorView(
           message: 'Couldn\'t load your profile.',
           retryLabel: 'Try Again',
@@ -495,17 +495,19 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                         borderRadius: BorderRadius.circular(AppRadius.lg),
                         boxShadow: AppShadows.card,
                       ),
-                      child: const Row(children: [
-                        Icon(Icons.visibility_outlined, size: 20, color: AppTheme.primary),
-                        SizedBox(width: 12),
+                      child: Row(children: [
+                        const Icon(Icons.visibility_outlined, size: 20, color: AppTheme.primary),
+                        const SizedBox(width: 12),
                         Expanded(child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Who Viewed My Profile', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                            Text('See who recently visited your profile', style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+                            Text(l.whoViewedMe,
+                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                            const Text('See who recently visited your profile',
+                                style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
                           ],
                         )),
-                        Icon(Icons.chevron_right_rounded, color: AppTheme.textTertiary, size: 20),
+                        const Icon(Icons.chevron_right_rounded, color: AppTheme.textTertiary, size: 20),
                       ]),
                     ),
                   ),

@@ -17,23 +17,19 @@ import 'firebase_options.dart';
 
 // ── Locale provider ───────────────────────────────────────────────────────────
 // Persisted in SharedPreferences so the choice survives restarts.
+// The initial value is loaded synchronously at startup (see main()) to avoid
+// a one-frame English flicker when the user has selected Hindi.
+
+Locale _initialLocale = const Locale('en', 'IN');
 
 final _localeProvider = StateNotifierProvider<_LocaleNotifier, Locale>((ref) {
-  return _LocaleNotifier();
+  return _LocaleNotifier(_initialLocale);
 });
 
 class _LocaleNotifier extends StateNotifier<Locale> {
   static const _key = 'viva_locale';
 
-  _LocaleNotifier() : super(const Locale('en', 'IN')) {
-    _load();
-  }
-
-  Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
-    final code = prefs.getString(_key);
-    if (code != null) state = Locale(code, 'IN');
-  }
+  _LocaleNotifier(super.initial);
 
   Future<void> setLocale(Locale locale) async {
     state = locale;
@@ -88,6 +84,11 @@ void main() async {
       DeviceOrientation.portraitDown,
     ]);
   } catch (_) {}
+
+  // Load persisted locale before runApp so there is no English flicker.
+  final prefs = await SharedPreferences.getInstance();
+  final localeCode = prefs.getString('viva_locale');
+  if (localeCode != null) _initialLocale = Locale(localeCode, 'IN');
 
   runApp(const ProviderScope(child: VivaApp()));
 }

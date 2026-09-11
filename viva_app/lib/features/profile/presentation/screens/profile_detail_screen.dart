@@ -487,6 +487,7 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
   }
 
   void _showOptions(BuildContext context) {
+    final l = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
       builder: (_) => SafeArea(
@@ -515,8 +516,8 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                   child: const Icon(Icons.flag_outlined,
                       color: AppTheme.error, size: 18),
                 ),
-                title: const Text('Report Profile',
-                    style: TextStyle(fontWeight: FontWeight.w500)),
+                title: Text(l.reportProfile,
+                    style: const TextStyle(fontWeight: FontWeight.w500)),
                 onTap: () {
                   Navigator.pop(context);
                   context.push('/report/${widget.userId}');

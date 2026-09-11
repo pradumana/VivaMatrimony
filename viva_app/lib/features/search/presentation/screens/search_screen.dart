@@ -158,7 +158,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: const Text('Search'),
+        title: Text(l.search),
         actions: [
           Stack(children: [
             IconButton(

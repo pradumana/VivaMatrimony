@@ -119,7 +119,7 @@ class ShortlistScreen extends ConsumerWidget {
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
+              child: Text(AppLocalizations.of(context).cancel)),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
