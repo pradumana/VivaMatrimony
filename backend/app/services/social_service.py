@@ -10,6 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
 from app.utils import log_action, compute_age
+from app.config import get_settings
+from app.database import get_supabase
 
 logger = structlog.get_logger()
 
@@ -289,7 +291,9 @@ async def get_interests_sent(db: AsyncSession, user_id: UUID, limit: int = 20, o
         """),
         {"uid": user_id, "limit": limit, "offset": offset},
     )
-    return [_format_interest_row(row) for row in result.fetchall()]
+    supabase = get_supabase()
+    cfg = get_settings()
+    return [_format_interest_row(row, supabase, cfg.storage_bucket_profile_photos) for row in result.fetchall()]
 
 
 async def get_interests_received(db: AsyncSession, user_id: UUID, limit: int = 20, offset: int = 0) -> list:
@@ -309,20 +313,32 @@ async def get_interests_received(db: AsyncSession, user_id: UUID, limit: int = 2
         """),
         {"uid": user_id, "limit": limit, "offset": offset},
     )
-    return [_format_interest_row(row) for row in result.fetchall()]
+    supabase = get_supabase()
+    cfg = get_settings()
+    return [_format_interest_row(row, supabase, cfg.storage_bucket_profile_photos) for row in result.fetchall()]
 
 
-def _format_interest_row(row) -> dict:
+def _format_interest_row(row, supabase, bucket: str) -> dict:
     dob = row.date_of_birth
     age = compute_age(dob) if dob else None
 
     other_id = getattr(row, "receiver_id", None) or getattr(row, "sender_id", None)
+
+    photo_url = None
+    photo_path = getattr(row, "photo_path", None)
+    if photo_path:
+        try:
+            photo_url = supabase.storage.from_(bucket).get_public_url(photo_path)
+        except Exception:
+            pass  # Missing photo is non-fatal — client shows placeholder
+
     return {
         "interest_id": str(row.id),
         "user_id": str(other_id),
         "full_name": row.full_name or "",
         "age": age,
         "location": f"{row.city}, {row.state}" if row.city and row.state else (row.state or ""),
+        "primary_photo_url": photo_url,
         "status": row.status,
         "sent_at": row.sent_at.isoformat() if row.sent_at else None,
     }
@@ -387,8 +403,6 @@ async def get_shortlist(db: AsyncSession, user_id: UUID, limit: int = 20, offset
     rows = result.fetchall()
     if not rows:
         return []
-    from app.config import get_settings
-    from app.database import get_supabase
     cfg = get_settings()
     supabase = get_supabase()
     items = []

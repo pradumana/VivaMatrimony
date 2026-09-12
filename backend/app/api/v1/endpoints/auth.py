@@ -51,6 +51,8 @@ async def register(
             db=db,
             user_id=current_user.user_id,
             email=current_user.email or (body.email if body else None),
+            privacy_policy_accepted=body.privacy_policy_accepted if body else False,
+            terms_accepted=body.terms_accepted if body else False,
         )
     except AuthError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))

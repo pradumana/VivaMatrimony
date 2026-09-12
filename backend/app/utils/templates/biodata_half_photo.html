@@ -5,94 +5,335 @@
   <style>
     @page { size: A4; margin: 0; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Noto Sans', Arial, sans-serif; font-size: 10pt; }
-    .page { display: flex; min-height: 297mm; width: 210mm; }
-    .photo-col { width: 40%; background: #f0e8e5; flex-shrink: 0; }
-    .photo-col img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .photo-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(160deg, #8B1A1A, #C0392B); color: white; font-size: 10pt; text-align: center; padding: 20px; }
-    .info-col { flex: 1; padding: 22px 18px 18px 18px; display: flex; flex-direction: column; }
-    .brand { font-size: 8pt; color: #C0392B; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
-    .name { font-size: 22pt; font-weight: 800; color: #1a1a1a; letter-spacing: -0.5px; line-height: 1.1; }
-    .tagline { font-size: 9pt; color: #888; margin-top: 3px; margin-bottom: 14px; font-style: italic; }
-    .verified-badge { display: inline-block; background: #27AE60; color: white; padding: 2px 8px; border-radius: 10px; font-size: 7.5pt; margin-bottom: 10px; }
-    .divider { height: 2px; background: linear-gradient(90deg, #C0392B, transparent); margin: 10px 0; }
-    .section-title { font-size: 7.5pt; font-weight: 700; color: #C0392B; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 7px; margin-top: 10px; }
-    .field { margin-bottom: 5px; }
-    .field-label { font-size: 7pt; color: #999; text-transform: uppercase; letter-spacing: 0.3px; }
-    .field-value { font-size: 9.5pt; color: #1a1a1a; font-weight: 500; }
-    .about-text { font-size: 8.5pt; color: #444; line-height: 1.5; background: #fdf8f5; padding: 7px 10px; border-left: 2px solid #C0392B; margin-top: 4px; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; }
-    .tag-list { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
-    .tag { background: #fdf0ec; border: 1px solid #e8c5b8; color: #8B1A1A; padding: 1px 6px; border-radius: 8px; font-size: 7.5pt; }
-    .footer { margin-top: auto; padding-top: 10px; border-top: 1px solid #f0d9d0; font-size: 7.5pt; color: #bbb; text-align: center; }
-    .footer span { color: #C0392B; font-weight: 700; }
+    body {
+      font-family: 'Noto Sans', Arial, sans-serif;
+      font-size: 10pt;
+      background: #f4f1ec;
+    }
+    .page {
+      position: relative;
+      width: 210mm;
+      min-height: 297mm;
+      background: #faf8f4;
+      padding: 26px 30px 34px 30px;
+      overflow: hidden;
+    }
+
+    /* ---------- decorative leaf corners ---------- */
+    .leaf-corner {
+      position: absolute;
+      width: 170px;
+      height: 170px;
+      opacity: 0.9;
+      z-index: 0;
+    }
+    .leaf-corner.top-left   { top: -10px; left: -20px; }
+    .leaf-corner.bottom-left{ bottom: -15px; left: -25px; transform: scaleY(-1); }
+
+    /* ---------- header ---------- */
+    .header { position: relative; z-index: 1; text-align: center; margin-bottom: 18px; }
+    .crown { width: 30px; height: 30px; fill: #7C8B6F; margin-bottom: 4px; }
+    .title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 24pt;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: #3a3a2f;
+      text-transform: uppercase;
+    }
+    .subtitle {
+      font-size: 9.5pt;
+      color: #8a8a78;
+      letter-spacing: 1.5px;
+      margin-top: 4px;
+      text-transform: uppercase;
+    }
+    .subtitle .dot { color: #C7A15A; margin: 0 6px; }
+
+    /* ---------- main content row ---------- */
+    .content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      gap: 26px;
+      margin-top: 22px;
+    }
+
+    .photo-panel {
+      flex: 0 0 38%;
+      background: linear-gradient(160deg, #B9C6AB, #8FA07E);
+      border-radius: 6px;
+      padding: 22px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      min-height: 380px;
+    }
+    .photo-frame {
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      border-radius: 4px;
+      border: 3px solid #D9B86A;
+      overflow: hidden;
+      background: #e5e0d5;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+    }
+    .photo-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .photo-placeholder {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      background: #e5e0d5; color: #9a9686; font-size: 9pt; text-align: center; padding: 14px;
+    }
+
+    .details-panel { flex: 1; padding-top: 4px; }
+    .field-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 7px 0;
+      border-bottom: 1px dashed #e6e1d5;
+    }
+    .field-row:last-child { border-bottom: none; }
+    .field-icon {
+      flex: 0 0 18px;
+      width: 18px; height: 18px;
+      fill: #7C8B6F;
+      margin-top: 1px;
+    }
+    .field-label {
+      flex: 0 0 108px;
+      font-size: 8.5pt;
+      color: #9a9686;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      padding-top: 1px;
+    }
+    .field-colon { flex: 0 0 10px; color: #cfc9b8; }
+    .field-value {
+      flex: 1;
+      font-size: 10pt;
+      font-weight: 600;
+      color: #333025;
+    }
+    .field-value.tag-list { display: flex; flex-wrap: wrap; gap: 5px; font-weight: 500; }
+    .tag {
+      background: #f2efe4;
+      border: 1px solid #ddd5bd;
+      color: #6a6650;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 8pt;
+    }
+
+    .about-block { margin-top: 14px; }
+    .about-title {
+      font-size: 8.5pt; font-weight: 700; color: #7C8B6F;
+      text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;
+    }
+    .about-text {
+      font-size: 9pt; color: #4a4738; line-height: 1.55;
+      background: #f6f4ec; padding: 9px 12px; border-left: 2px solid #C7A15A; border-radius: 2px;
+    }
+
+    /* ---------- quote ---------- */
+    .quote {
+      position: relative; z-index: 1;
+      text-align: center;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-style: italic;
+      font-size: 12pt;
+      color: #5b5843;
+      margin-top: 26px;
+      line-height: 1.5;
+    }
+
+    .footer {
+      position: relative; z-index: 1;
+      margin-top: 20px;
+      padding-top: 10px;
+      border-top: 1px solid #ece7d8;
+      text-align: center;
+      font-size: 7.5pt;
+      color: #b6b09c;
+    }
+    .footer span { color: #C7A15A; font-weight: 700; }
   </style>
 </head>
 <body>
 <div class="page">
-  <div class="photo-col">
-    {% if photo_url %}
-      <img src="{{ photo_url }}" alt="{{ full_name }}">
-    {% else %}
-      <div class="photo-placeholder">
-        <div>
-          <div style="font-size:28pt; margin-bottom:8px;">☺</div>
-          <div>{{ full_name }}</div>
+
+  <!-- decorative corner leaves -->
+  <svg class="leaf-corner top-left" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <g fill="none" stroke="#A9B999" stroke-width="2">
+      <path d="M10 10 C 60 20, 90 60, 80 120" />
+      <ellipse cx="40" cy="35" rx="16" ry="8" transform="rotate(35 40 35)" fill="#C3D0B2" stroke="none"/>
+      <ellipse cx="58" cy="58" rx="18" ry="9" transform="rotate(45 58 58)" fill="#B3C4A0" stroke="none"/>
+      <ellipse cx="70" cy="88" rx="17" ry="8" transform="rotate(60 70 88)" fill="#C3D0B2" stroke="none"/>
+      <ellipse cx="78" cy="115" rx="14" ry="7" transform="rotate(75 78 115)" fill="#B3C4A0" stroke="none"/>
+    </g>
+  </svg>
+  <svg class="leaf-corner bottom-left" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <g fill="none" stroke="#A9B999" stroke-width="2">
+      <path d="M10 10 C 60 20, 90 60, 80 120" />
+      <ellipse cx="40" cy="35" rx="16" ry="8" transform="rotate(35 40 35)" fill="#C3D0B2" stroke="none"/>
+      <ellipse cx="58" cy="58" rx="18" ry="9" transform="rotate(45 58 58)" fill="#B3C4A0" stroke="none"/>
+      <ellipse cx="70" cy="88" rx="17" ry="8" transform="rotate(60 70 88)" fill="#C3D0B2" stroke="none"/>
+      <ellipse cx="78" cy="115" rx="14" ry="7" transform="rotate(75 78 115)" fill="#B3C4A0" stroke="none"/>
+    </g>
+  </svg>
+
+  <!-- header -->
+  <div class="header">
+    <svg class="crown" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M2 18h20l-1.5-9-5 4-3.5-7-3.5 7-5-4L2 18z"/>
+    </svg>
+    <div class="title">{{ heading or (gender + ' Biodata' if gender else 'Biodata') }}</div>
+    <div class="subtitle">Values<span class="dot">•</span>Family<span class="dot">•</span>Future</div>
+  </div>
+
+  <div class="content">
+    <!-- photo -->
+    <div class="photo-panel">
+      <div class="photo-frame">
+        {% if photo_url %}
+          <img src="{{ photo_url }}" alt="{{ full_name }}">
+        {% else %}
+          <div class="photo-placeholder">Photo</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- details -->
+    <div class="details-panel">
+
+      <div class="field-row">
+        <svg class="field-icon" viewBox="0 0 24 24"><path d="M12 12c2.7 0 8 1.34 8 4v2H4v-2c0-2.66 5.3-4 8-4zm0-2a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>
+        <div class="field-label">Name</div><div class="field-colon">:</div>
+        <div class="field-value">{{ full_name }}</div>
+      </div>
+
+      {% if age %}
+      <div class="field-row">
+        <svg class="field-icon" viewBox="0 0 24 24"><path d="M12 2l1.5 3.5L17 4l-1 3.6L20 9l-3 2.3L18 15l-3.6-.8L13 18l-1-3.6L8.6 15l1-3.6L6 9l3.5-1.4L8 4l3.5 1.5L12 2z"/></svg>
+        <div class="field-label">Age</div><div class="field-colon">:</div>
+        <div class="field-value">{{ age }} years</div>
+      </div>
+      {% endif %}
+
+      {% if height %}
+      <div class="field-row">
+        <svg class="field-icon" viewBox="0 0 24 24"><path d="M6 2h2v20H6zM10 2h2v6h-2zM10 16h2v6h-2zM14 2h2v3h-2zM14 19h2v3h-2z"/></svg>
+        <div class="field-label">Height</div><div class="field-colon">:</div>
+        <div class="field-value">{{ height }}</div>
+      </div>
+      {% endif %}
+
+      {% if education and education.degree %}
+      <div class="field-row">
+        <svg class="field-icon" viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.9V17h2V9L12 3zM5 13.2V17c0 2.2 3.1 4 7 4s7-1.8 7-4v-3.8l-7 3.8-7-3.8z"/></svg>
+        <div class="field-label">Education</div><div class="field-colon">:</div>
+        <div class="field-value">{{ education.degree }}{% if education.field_of_study %} ({{ education.field_of_study }}){% endif %}</div>
+      </div>
+      {% endif %}
+
+      {% if employment and employment.profession %}
+      <div class="field-row">
+        <svg class="field-icon" viewBox="0 0 24 24"><path d="M10 2h4a2 2 0 0 1 2 2v2h4a2 2 0 0 1 2 2v3H2V8a2 2 0 0 1 2-2h4V4a2 2 0 0 1 2-2zm0 4h4V4h-4v2zM2 12h20v7a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-7z"/></svg>
+        <div class="field-label">Profession</div><div class="field-colon">:</div>
+        <div class="field-value">{{ employment.profession }}</div>
+      </div>
+      {% endif %}
+
+      {% if employment and employment.company %}
+      <div class="field-row">
+        <svg class="field-icon" viewBox="0 0 24 24"><path d="M4 22V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v18h4V10h-2V8h3a1 1 0 0 1 1 1v13H4zm3-16h2v2H7V6zm4 0h2v2h-2V6zM7 10h2v2H7v-2zm4 0h2v2h-2v-2zM7 14h2v2H7v-2zm4 0h2v2h-2v-2zM7 18h2v2H7v-2zm4 0h2v2h-2v-2z"/></svg>
+        <div class="field-label">Company</div><div class="field-colon">:</div>
+        <div class="field-value">{{ employment.company }}</div>
+      </div>
+      {% endif %}
+
+      {% if current_location %}
+      <div class="field-row">
+        <svg class="field-icon" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>
+        <div class="field-label">Location</div><div class="field-colon">:</div>
+        <div class="field-value">{{ current_location }}</div>
+      </div>
+      {% endif %}
+
+      {% if native_place %}
+      <div class="field-row">
+        <svg class="field-icon" viewBox="0 0 24 24"><path d="M3 21h18v-2H3v2zM5 19h2v-6H5v6zm4 0h2v-9H9v9zm4 0h2v-5h-2v5zm4 0h2V8h-2v11zM12 2 3 8v1h18V8L12 2z"/></svg>
+        <div class="field-label">Native Place</div><div class="field-colon">:</div>
+        <div class="field-value">{{ native_place }}</div>
+      </div>
+      {% endif %}
+
+      {% if mother_tongue %}
+      <div class="field-row">
+        <svg class="field-icon" viewBox="0 0 24 24"><path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/></svg>
+        <div class="field-label">Mother Tongue</div><div class="field-colon">:</div>
+        <div class="field-value">{{ mother_tongue }}</div>
+      </div>
+      {% endif %}
+
+      {% if religion %}
+      <div class="field-row">
+        <svg class="field-icon" viewBox="0 0 24 24"><path d="M13 2v4.09a7.99 7.99 0 0 1 3.53 1.46l2.9-2.9 1.41 1.41-2.9 2.9A7.99 7.99 0 0 1 19.91 13H24v2h-4.09a8 8 0 0 1-14.82 0H1v-2h4.09A8 8 0 0 1 7.06 8.96l-2.9-2.9 1.41-1.41 2.9 2.9A7.99 7.99 0 0 1 11 6.09V2h2zm-1 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/></svg>
+        <div class="field-label">Religion</div><div class="field-colon">:</div>
+        <div class="field-value">{{ religion }}{% if caste %}, {{ caste }}{% endif %}{% if sub_caste %} ({{ sub_caste }}){% endif %}</div>
+      </div>
+      {% endif %}
+
+      {% if gotra %}
+      <div class="field-row">
+        <svg class="field-icon" viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <div class="field-label">Gotra</div><div class="field-colon">:</div>
+        <div class="field-value">{{ gotra }}</div>
+      </div>
+      {% endif %}
+
+      <div class="field-row">
+        <svg class="field-icon" viewBox="0 0 24 24"><path d="M7.5 8a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm9 0a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z" fill="none" stroke="#7C8B6F" stroke-width="1.6"/><path d="M9.8 9.8l4.4 4.4" stroke="#7C8B6F" stroke-width="1.6"/></svg>
+        <div class="field-label">Marital Status</div><div class="field-colon">:</div>
+        <div class="field-value">{{ marital_status or '—' }}</div>
+      </div>
+
+      {% if family %}
+      <div class="field-row">
+        <svg class="field-icon" viewBox="0 0 24 24"><path d="M12 5a3 3 0 1 1 0 6 3 3 0 0 1 0-6zm-6 2a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zm12 0a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 19c0-2.5 2.5-4 4.5-4 .8 0 1.6.2 2.3.6A5.5 5.5 0 0 0 9 19H3zm18 0h-6a5.5 5.5 0 0 0-.8-3.4c.7-.4 1.5-.6 2.3-.6 2 0 4.5 1.5 4.5 4zm-9-3c2.8 0 5 1.8 5 4v0H7v0c0-2.2 2.2-4 5-4z"/></svg>
+        <div class="field-label">Family</div><div class="field-colon">:</div>
+        <div class="field-value">
+          {% if family.family_type %}{{ family.family_type | replace('_',' ') | title }} family{% endif %}
+          {% if family.brothers_count is defined or family.sisters_count is defined %} · {{ family.brothers_count }}B / {{ family.sisters_count }}S{% endif %}
         </div>
       </div>
-    {% endif %}
+      {% endif %}
+
+      {% if lifestyle and lifestyle.hobbies %}
+      <div class="field-row">
+        <svg class="field-icon" viewBox="0 0 24 24"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87L18.2 21 12 17.77 5.8 21 7 14.14l-5-4.87 7.1-1.01L12 2z"/></svg>
+        <div class="field-label">Hobbies</div><div class="field-colon">:</div>
+        <div class="field-value tag-list">
+          {% for h in lifestyle.hobbies %}<span class="tag">{{ h }}</span>{% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      {% if about_me %}
+      <div class="about-block">
+        <div class="about-title">About</div>
+        <div class="about-text">{{ about_me }}</div>
+      </div>
+      {% endif %}
+
+    </div>
   </div>
-  <div class="info-col">
-    <div class="brand">Viva Matrimony</div>
-    <div class="name">{{ full_name }}</div>
-    <div class="tagline">"Find someone who feels like home."</div>
-    {% if is_verified %}<div class="verified-badge">✓ Verified Profile</div>{% endif %}
-    <div class="divider"></div>
 
-    <div class="section-title">Personal</div>
-    <div class="grid">
-      {% if age %}<div class="field"><div class="field-label">Age</div><div class="field-value">{{ age }} years</div></div>{% endif %}
-      {% if height %}<div class="field"><div class="field-label">Height</div><div class="field-value">{{ height }}</div></div>{% endif %}
-      <div class="field"><div class="field-label">Marital Status</div><div class="field-value">{{ marital_status or '—' }}</div></div>
-      {% if mother_tongue %}<div class="field"><div class="field-label">Mother Tongue</div><div class="field-value">{{ mother_tongue }}</div></div>{% endif %}
-      {% if religion %}<div class="field"><div class="field-label">Religion</div><div class="field-value">{{ religion }}</div></div>{% endif %}
-      {% if caste %}<div class="field"><div class="field-label">Caste</div><div class="field-value">{{ caste }}</div></div>{% endif %}
-      {% if sub_caste %}<div class="field"><div class="field-label">Sub-caste</div><div class="field-value">{{ sub_caste }}</div></div>{% endif %}
-      {% if gotra %}<div class="field"><div class="field-label">Gotra</div><div class="field-value">{{ gotra }}</div></div>{% endif %}
-      {% if current_location %}<div class="field"><div class="field-label">Location</div><div class="field-value">{{ current_location }}</div></div>{% endif %}
-      {% if native_place %}<div class="field"><div class="field-label">Native Place</div><div class="field-value">{{ native_place }}</div></div>{% endif %}
-    </div>
+  <div class="quote">"{{ quote or 'Grounded in values, focused on the future.' }}"</div>
 
-    {% if education or employment %}
-    <div class="section-title">Education &amp; Career</div>
-    <div class="grid">
-      {% if education and education.degree %}<div class="field"><div class="field-label">Degree</div><div class="field-value">{{ education.degree }}</div></div>{% endif %}
-      {% if education and education.field_of_study %}<div class="field"><div class="field-label">Field</div><div class="field-value">{{ education.field_of_study }}</div></div>{% endif %}
-      {% if employment and employment.profession %}<div class="field"><div class="field-label">Profession</div><div class="field-value">{{ employment.profession }}</div></div>{% endif %}
-      {% if employment and employment.company %}<div class="field"><div class="field-label">Company</div><div class="field-value">{{ employment.company }}</div></div>{% endif %}
-    </div>
-    {% endif %}
+  <div class="footer"><span>{{ app_name }}</span> — {{ app_tagline }}</div>
 
-    {% if family %}
-    <div class="section-title">Family</div>
-    <div class="grid">
-      {% if family.family_type %}<div class="field"><div class="field-label">Family Type</div><div class="field-value">{{ family.family_type | replace('_',' ') | title }}</div></div>{% endif %}
-      <div class="field"><div class="field-label">Siblings</div><div class="field-value">{{ family.brothers_count }}B / {{ family.sisters_count }}S</div></div>
-    </div>
-    {% endif %}
-
-    {% if about_me %}
-    <div class="section-title">About</div>
-    <div class="about-text">{{ about_me }}</div>
-    {% endif %}
-
-    {% if lifestyle and lifestyle.hobbies %}
-    <div class="section-title">Hobbies</div>
-    <div class="tag-list">{% for h in lifestyle.hobbies %}<span class="tag">{{ h }}</span>{% endfor %}</div>
-    {% endif %}
-
-    <div class="footer"><span>Viva</span> — {{ app_tagline }}</div>
-  </div>
 </div>
 </body>
 </html>

@@ -1,8 +1,22 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
 }
+
+// Load key.properties (local dev). CI/CD uses env vars instead.
+val keyProps = Properties()
+val keyPropsFile = rootProject.file("key.properties")
+if (keyPropsFile.exists()) {
+    keyPropsFile.inputStream().use { keyProps.load(it) }
+}
+
+fun signingProp(envVar: String, propKey: String): String =
+    System.getenv(envVar) ?: keyProps.getProperty(propKey)
+    ?: error("Missing signing config: set $envVar env var or $propKey in key.properties")
 
 android {
     namespace = "com.vivamatrimony.viva_app"
@@ -16,19 +30,10 @@ android {
 
     signingConfigs {
         create("release") {
-            // Set via environment variables or key.properties file
-            // See docs/DEPLOYMENT.md for setup instructions
-            val keystoreFile = System.getenv("KEYSTORE_PATH") ?: project.findProperty("keystorePath") as String?
-            val keystorePass = System.getenv("KEYSTORE_PASSWORD") ?: project.findProperty("keystorePassword") as String?
-            val keyAliasName = System.getenv("KEY_ALIAS") ?: project.findProperty("keyAlias") as String?
-            val keyPass = System.getenv("KEY_PASSWORD") ?: project.findProperty("keyPassword") as String?
-
-            if (keystoreFile != null) {
-                storeFile = file(keystoreFile)
-                storePassword = keystorePass
-                keyAlias = keyAliasName
-                keyPassword = keyPass
-            }
+            storeFile     = file(signingProp("KEYSTORE_PATH",     "storeFile"))
+            storePassword = signingProp("KEYSTORE_PASSWORD", "storePassword")
+            keyAlias      = signingProp("KEY_ALIAS",         "keyAlias")
+            keyPassword   = signingProp("KEY_PASSWORD",      "keyPassword")
         }
     }
 
@@ -42,10 +47,7 @@ android {
 
     buildTypes {
         release {
-            signingConfig = if (System.getenv("KEYSTORE_PATH") != null || project.hasProperty("keystorePath"))
-                signingConfigs.getByName("release")
-            else
-                signingConfigs.getByName("debug") // fallback for local dev
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")

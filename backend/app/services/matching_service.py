@@ -11,6 +11,7 @@ Scoring weights:
   Preferences align:  15%
   Family:             10%
 """
+import asyncio
 from datetime import date
 from typing import Optional
 from uuid import UUID
@@ -161,9 +162,12 @@ async def get_recommended_matches(
     scores entirely in-memory. Upgrade path: materialise scores in a
     pre-computed column if the list grows beyond ~200 candidates.
     """
-    # 1. Fetch requesting user's data + preferences in parallel
-    user_data = await _fetch_user_data(db, user_id)
-    user_prefs = await _fetch_preferences(db, user_id)
+    # 1. Fetch requesting user's data + preferences in parallel — independent
+    #    queries, no reason to serialize them.
+    user_data, user_prefs = await asyncio.gather(
+        _fetch_user_data(db, user_id),
+        _fetch_preferences(db, user_id),
+    )
 
     if not user_data:
         return []

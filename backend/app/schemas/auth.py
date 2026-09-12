@@ -11,6 +11,8 @@ class RegisterRequest(BaseModel):
     email claim is absent (shouldn't happen with Supabase Auth).
     """
     email: Optional[EmailStr] = None
+    privacy_policy_accepted: bool = False
+    terms_accepted: bool = False
 
     @field_validator("email", mode="before")
     @classmethod
@@ -26,3 +28,6 @@ class MeResponse(BaseModel):
     email: Optional[str]
     account_status: str
     onboarding_completed: bool
+    privacy_policy_accepted: bool = False
+    terms_accepted: bool = False
+    onboarding_step: Optional[str] = None

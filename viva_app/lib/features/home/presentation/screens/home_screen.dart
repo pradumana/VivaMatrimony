@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/network/api_client.dart';
+import '../../../../core/providers/profile_provider.dart';
 import '../../../../core/storage/cache_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/constants/app_constants.dart';
@@ -54,25 +55,17 @@ final _matchesProvider =
   }
 });
 
-final _userNameProvider = FutureProvider.autoDispose<String?>((ref) async {
-  try {
-    final client = ref.read(apiClientProvider);
-    final response = await client.get('/profile');
-    final data = response.data as Map<String, dynamic>;
-    final profile = data['profile'] as Map<String, dynamic>?;
-    return profile?['full_name'] as String?;
-  } catch (_) {
-    return null;
-  }
-});
-
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final matchesAsync = ref.watch(_matchesProvider);
-    final nameAsync = ref.watch(_userNameProvider);
+    // Derive name from the shared profile provider — no extra network call.
+    final profileAsync = ref.watch(myProfileProvider);
+    final nameAsync = profileAsync.whenData(
+      (data) => (data['profile'] as Map<String, dynamic>?)?['full_name'] as String?,
+    );
 
     return Scaffold(
       backgroundColor: AppTheme.background,

@@ -7,6 +7,7 @@ import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/network/api_client.dart';
 import '../../../../core/providers/auth_provider.dart';
+import '../../../../core/providers/profile_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/constants/app_constants.dart';
@@ -16,28 +17,8 @@ import '../../../../shared/widgets/viva_button.dart';
 
 // ── Providers ─────────────────────────────────────────────────────────────────
 
-final _myProfileProvider =
-    FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
-  final client = ref.read(apiClientProvider);
-  final r = await client.get('/profile');
-  return r.data as Map<String, dynamic>;
-});
-
-/// Separate provider so verification status refresh is independent.
-final _verificationStatusProvider =
-    FutureProvider.autoDispose<String>((ref) async {
-  try {
-    final client = ref.read(apiClientProvider);
-    final r = await client.get('/verification/status');
-    final data = r.data as Map<String, dynamic>;
-    // Returns one of: 'verified', 'pending', 'rejected', 'unverified'
-    return data['verification_status'] as String? ?? 'unverified';
-  } catch (_) {
-    return 'unverified';
-  }
-});
-
-/// Separate provider so biodata status refresh is independent.
+/// Biodata status is independent of profile — keep its own provider so
+/// refreshing biodata doesn't re-fetch the full profile.
 final _biodataStatusProvider =
     FutureProvider.autoDispose<String>((ref) async {
   try {
@@ -57,7 +38,7 @@ class MyProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final async = ref.watch(_myProfileProvider);
+    final async = ref.watch(myProfileProvider);
     return async.when(
       loading: () => const _SkeletonScreen(),
       error: (e, _) => Scaffold(
@@ -65,7 +46,7 @@ class MyProfileScreen extends ConsumerWidget {
         body: ErrorView(
           message: 'Couldn\'t load your profile.',
           retryLabel: 'Try Again',
-          onRetry: () => ref.invalidate(_myProfileProvider),
+          onRetry: () => ref.invalidate(myProfileProvider),
         ),
       ),
       data: (data) => _ProfileBody(data: data),
@@ -152,8 +133,7 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
     await context.push(route, extra: extra);
     if (!mounted) return;
     // Invalidate so the profile reflects any changes made in the sub-screen.
-    ref.invalidate(_myProfileProvider);
-    ref.invalidate(_verificationStatusProvider);
+    ref.invalidate(myProfileProvider);
     ref.invalidate(_biodataStatusProvider);
   }
 
@@ -163,8 +143,15 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
     final name = (profile['full_name'] as String?)?.trim();
     final age = profile['age'] as int?;
     final memberId = ref.watch(authProvider).valueOrNull?.memberId;
-    final verificationAsync = ref.watch(_verificationStatusProvider);
     final biodataAsync = ref.watch(_biodataStatusProvider);
+
+    // Verification status: derive from already-loaded profile to avoid a
+    // separate GET /verification/status on tab load. Falls back to the
+    // detailed status endpoint only when the user taps into the status screen.
+    // The profile response exposes is_verified (bool) but not the raw status
+    // string — map it back to the string the display helper expects.
+    final rawVerifStatus = isVerified ? 'verified' : 'unverified';
+    final verificationAsync = AsyncValue.data(rawVerifStatus);
 
     // Location string — guard empty parts
     final city = (location?['city'] as String?)?.trim() ?? '';

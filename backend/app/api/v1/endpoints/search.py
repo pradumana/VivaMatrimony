@@ -114,7 +114,6 @@ async def search_profiles(
             except Exception:
                 pass
 
-        from app.utils import compute_age
         return {
             "results": [{
                 "user_id": str(row.user_id),
@@ -188,7 +187,9 @@ async def search_profiles(
         conditions.append("LOWER(cl.state) = LOWER(:state)")
         params["state"] = state
     if city:
-        conditions.append("LOWER(cl.city) LIKE LOWER(:city)")
+        # ILIKE uses the GIN trigram index (idx_current_locations_city_trgm).
+        # LOWER(col) LIKE LOWER(:val) with a leading wildcard never uses B-tree.
+        conditions.append("cl.city ILIKE :city")
         params["city"] = f"%{city}%"
     if native_state:
         conditions.append("LOWER(np.state) = LOWER(:native_state)")
@@ -197,7 +198,8 @@ async def search_profiles(
         conditions.append("LOWER(np.district) LIKE LOWER(:native_district)")
         params["native_district"] = f"%{native_district}%"
     if profession:
-        conditions.append("LOWER(em.profession) LIKE LOWER(:profession)")
+        # ILIKE uses the GIN trigram index (idx_employment_profession_trgm).
+        conditions.append("em.profession ILIKE :profession")
         params["profession"] = f"%{profession}%"
     if diet:
         conditions.append("ls.diet = :diet")
@@ -213,7 +215,12 @@ async def search_profiles(
     # Apply must_have preferences from the requesting user's stored preferences
     # Only hard-filter on fields where importance = 'must_have'
     prefs_result = await db.execute(
-        text("SELECT * FROM partner_preferences WHERE user_id = :uid"),
+        text("""
+            SELECT age_importance, min_age, max_age,
+                   location_importance, preferred_states,
+                   lifestyle_importance, preferred_diet
+            FROM partner_preferences WHERE user_id = :uid
+        """),
         {"uid": current_user.user_id},
     )
     prefs_row = prefs_result.fetchone()
@@ -234,8 +241,7 @@ async def search_profiles(
                 loc_placeholders = ", ".join(f":pref_state_{i}" for i in range(len(pref_states)))
                 conditions.append(f"LOWER(cl.state) IN ({loc_placeholders})")
                 for i, st in enumerate(pref_states):
-                    params[f"pref_state_{i}"] = st.lower()
-        if prefs.get("lifestyle_importance") == "must_have":
+                    params[f"pref_state_{i}"] = st.lower()        if prefs.get("lifestyle_importance") == "must_have":
             pref_diets = prefs.get("preferred_diet") or []
             if pref_diets and not diet:
                 diet_placeholders = ", ".join(f":pref_diet_{i}" for i in range(len(pref_diets)))
@@ -245,46 +251,38 @@ async def search_profiles(
 
     where_clause = " AND ".join(conditions)
 
-    count_result = await db.execute(
-        text(f"""
-            SELECT COUNT(DISTINCT u.id) as total
-            FROM users u
-            JOIN profiles p ON p.user_id = u.id
-            LEFT JOIN current_locations cl ON cl.user_id = u.id
-            LEFT JOIN native_places np ON np.user_id = u.id
-            LEFT JOIN employment em ON em.user_id = u.id
-            LEFT JOIN lifestyle ls ON ls.user_id = u.id
-            WHERE {where_clause}
-        """),
-        params,
-    )
-    total = count_result.fetchone().total
-
+    # Single query: wrap the DISTINCT in a subquery so COUNT(*) OVER() counts
+    # after deduplication, not before. Eliminates the separate COUNT round-trip.
     result = await db.execute(
         text(f"""
-            SELECT DISTINCT u.id as user_id,
-                   p.full_name, p.date_of_birth, p.height_cm, p.religion, p.mother_tongue,
-                   p.marital_status, p.caste, p.sub_caste, p.gotra,
-                   u.verification_status,
-                   cl.state, cl.city,
-                   ph.storage_path as photo_path, ph.thumbnail_path,
-                   e.highest_qualification, em.profession,
-                   u.last_active_at, u.created_at, u.member_id
-            FROM users u
-            JOIN profiles p ON p.user_id = u.id
-            LEFT JOIN current_locations cl ON cl.user_id = u.id
-            LEFT JOIN native_places np ON np.user_id = u.id
-            LEFT JOIN photos ph ON ph.user_id = u.id AND ph.is_primary = TRUE AND ph.deleted_at IS NULL
-            LEFT JOIN education e ON e.user_id = u.id
-            LEFT JOIN employment em ON em.user_id = u.id
-            LEFT JOIN lifestyle ls ON ls.user_id = u.id
-            WHERE {where_clause}
+            SELECT *,
+                   COUNT(*) OVER() AS total_count
+            FROM (
+                SELECT DISTINCT u.id as user_id,
+                       p.full_name, p.date_of_birth, p.height_cm, p.religion, p.mother_tongue,
+                       p.marital_status, p.caste, p.sub_caste, p.gotra,
+                       u.verification_status,
+                       cl.state, cl.city,
+                       ph.storage_path as photo_path, ph.thumbnail_path,
+                       e.highest_qualification, em.profession,
+                       u.last_active_at, u.created_at, u.member_id
+                FROM users u
+                JOIN profiles p ON p.user_id = u.id
+                LEFT JOIN current_locations cl ON cl.user_id = u.id
+                LEFT JOIN native_places np ON np.user_id = u.id
+                LEFT JOIN photos ph ON ph.user_id = u.id AND ph.is_primary = TRUE AND ph.deleted_at IS NULL
+                LEFT JOIN education e ON e.user_id = u.id
+                LEFT JOIN employment em ON em.user_id = u.id
+                LEFT JOIN lifestyle ls ON ls.user_id = u.id
+                WHERE {where_clause}
+            ) AS deduped
             ORDER BY {_build_order_clause(sort_by)}
             LIMIT :limit OFFSET :offset
         """),
         params,
     )
     rows = result.fetchall()
+    total = rows[0].total_count if rows else 0
 
     supabase = get_supabase()
     cfg = get_settings()

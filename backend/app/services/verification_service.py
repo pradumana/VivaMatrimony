@@ -252,34 +252,45 @@ async def upload_certificate(
 
 async def get_verification_status(db: AsyncSession, user_id: UUID) -> dict:
     """Get current verification status for a user."""
+    # Single query: anchor on users (always exists), LEFT JOIN verification_requests
+    # so users with no request row still get their verification_status back.
     result = await db.execute(
         text("""
-            SELECT vr.method, vr.status, vr.admin_notes,
-                   vd.status as cert_status, vd.rejection_reason,
-                   rm.status as ref_status
-            FROM verification_requests vr
+            SELECT u.verification_status,
+                   vr.method, vr.status AS request_status, vr.admin_notes,
+                   vd.status AS cert_status, vd.rejection_reason,
+                   rm.status AS ref_status
+            FROM users u
+            LEFT JOIN verification_requests vr ON vr.user_id = u.id
             LEFT JOIN verification_documents vd ON vd.id = vr.document_id
             LEFT JOIN reference_members rm ON rm.id = vr.reference_id
-            WHERE vr.user_id = :uid
+            WHERE u.id = :uid
         """),
         {"uid": user_id},
     )
     row = result.fetchone()
 
-    user_status_result = await db.execute(
-        text("SELECT verification_status FROM users WHERE id = :uid"),
-        {"uid": user_id},
-    )
-    user_row = user_status_result.fetchone()
+    # row is None only if the user doesn't exist at all (deleted between auth
+    # check and this query) — return a safe default rather than a 500.
+    if row is None:
+        return {
+            "verification_status": "unverified",
+            "method": None,
+            "request_status": None,
+            "certificate_status": None,
+            "certificate_rejection_reason": None,
+            "reference_status": None,
+            "admin_notes": None,
+        }
 
     return {
-        "verification_status": user_row.verification_status if user_row else "unverified",
-        "method": row.method if row else None,
-        "request_status": row.status if row else None,
-        "certificate_status": row.cert_status if row else None,
-        "certificate_rejection_reason": row.rejection_reason if row else None,
-        "reference_status": row.ref_status if row else None,
-        "admin_notes": row.admin_notes if row else None,
+        "verification_status": row.verification_status or "unverified",
+        "method": row.method,
+        "request_status": row.request_status,
+        "certificate_status": row.cert_status,
+        "certificate_rejection_reason": row.rejection_reason,
+        "reference_status": row.ref_status,
+        "admin_notes": row.admin_notes,
     }
 
 

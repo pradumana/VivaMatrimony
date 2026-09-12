@@ -42,8 +42,10 @@ class _Connection {
         location: j['location'] as String?,
         photoUrl: j['primary_photo_url'] as String?,
         isVerified: j['is_verified'] as bool? ?? false,
-        acceptedAt: j['sent_at'] != null
-            ? DateTime.tryParse(j['sent_at'] as String)
+        // /interests/mutual returns 'connected_at'; guard both key names so
+        // this factory stays correct if the key ever changes back.
+        acceptedAt: (j['connected_at'] ?? j['sent_at']) != null
+            ? DateTime.tryParse((j['connected_at'] ?? j['sent_at']) as String)
             : null,
       );
 }
@@ -52,26 +54,12 @@ class _Connection {
 
 final _connectionsProvider =
     FutureProvider.autoDispose<List<_Connection>>((ref) async {
-  final client = ref.read(apiClientProvider);
-  final results = await Future.wait([
-    client.get('/interests/sent'),
-    client.get('/interests/received'),
-  ]);
-
-  final all = <_Connection>[];
-  for (final r in results) {
-    final items = (r.data['interests'] as List)
-        .map((e) => e as Map<String, dynamic>)
-        .where((e) => e['status'] == 'accepted')
-        .map(_Connection.fromJson)
-        .toList();
-    all.addAll(items);
-  }
-
-  final seen = <String>{};
-  return all.where((c) => seen.add(c.userId)).toList()
-    ..sort((a, b) => (b.acceptedAt ?? DateTime(0))
-        .compareTo(a.acceptedAt ?? DateTime(0)));
+  // Single query via the dedicated mutual endpoint instead of fetching
+  // /interests/sent + /interests/received and filtering client-side.
+  final r = await ref.read(apiClientProvider).get('/interests/mutual');
+  return (r.data['mutual'] as List)
+      .map((e) => _Connection.fromJson(e as Map<String, dynamic>))
+      .toList();
 });
 
 // ── Screen ────────────────────────────────────────────────────────────────────

@@ -131,7 +131,7 @@ async def list_users(
 
     result = await db.execute(
         text(f"""
-            SELECT u.id, u.phone_normalized, u.account_status, u.verification_status,
+            SELECT u.id, u.member_id, u.phone_normalized, u.account_status, u.verification_status,
                    u.onboarding_completed, u.created_at, u.last_active_at,
                    p.full_name, p.gender, p.date_of_birth, p.completion_percentage
             FROM users u
@@ -148,6 +148,7 @@ async def list_users(
         "users": [
             {
                 "user_id": str(r.id),
+                "member_id": r.member_id,
                 "phone": r.phone_normalized,
                 "full_name": r.full_name,
                 "account_status": r.account_status,

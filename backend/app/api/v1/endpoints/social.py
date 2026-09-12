@@ -130,6 +130,7 @@ async def get_mutual_interests(
     result = await db.execute(
         text("""
             SELECT
+                i.id AS interest_id,
                 CASE
                     WHEN i.sender_id = :uid THEN i.receiver_id
                     ELSE i.sender_id
@@ -169,6 +170,7 @@ async def get_mutual_interests(
             except Exception:
                 pass
         matches.append({
+            "interest_id": str(row.interest_id),
             "user_id": str(row.other_user_id),
             "full_name": row.full_name or "",
             "age": age,
