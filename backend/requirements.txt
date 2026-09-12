@@ -46,6 +46,7 @@ limits==3.14.0
 
 # Utilities
 phonenumbers==8.13.50
+python-dateutil==2.9.0.post0
 
 # Logging
 structlog==24.4.0

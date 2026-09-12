@@ -8,6 +8,7 @@ from datetime import date, timedelta
 from typing import Optional, List
 from uuid import UUID
 
+from dateutil.relativedelta import relativedelta
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
@@ -23,11 +24,13 @@ router = APIRouter(tags=["Search & Matching"])
 
 
 def _build_order_clause(sort_by: Optional[str]) -> str:
+    # Column names only — no table prefix — because this clause runs in the
+    # outer query where the subquery alias 'deduped' is the only table in scope.
     return {
-        "age_asc":  "p.date_of_birth DESC NULLS LAST",   # youngest = largest DOB
-        "age_desc": "p.date_of_birth ASC NULLS LAST",    # oldest = smallest DOB
-        "newest":   "u.created_at DESC NULLS LAST",
-    }.get(sort_by or "", "u.last_active_at DESC NULLS LAST")
+        "age_asc":  "date_of_birth DESC NULLS LAST",   # youngest = largest DOB
+        "age_desc": "date_of_birth ASC NULLS LAST",    # oldest = smallest DOB
+        "newest":   "created_at DESC NULLS LAST",
+    }.get(sort_by or "", "last_active_at DESC NULLS LAST")
 
 
 @router.get("/search")
@@ -156,11 +159,12 @@ async def search_profiles(
 
     if min_age:
         # age >= min_age  →  dob <= today - min_age years (uses idx_profiles_dob)
-        params["dob_max_for_min_age"] = date.today().replace(year=date.today().year - min_age)
+        # relativedelta handles Feb-29 → Feb-28 correctly on non-leap years.
+        params["dob_max_for_min_age"] = date.today() - relativedelta(years=min_age)
         conditions.append("p.date_of_birth <= :dob_max_for_min_age")
     if max_age:
         # age <= max_age  →  dob >= today - (max_age+1) years + 1 day
-        params["dob_min_for_max_age"] = date.today().replace(year=date.today().year - max_age - 1) + timedelta(days=1)
+        params["dob_min_for_max_age"] = date.today() - relativedelta(years=max_age + 1) + timedelta(days=1)
         conditions.append("p.date_of_birth >= :dob_min_for_max_age")
     if gender:
         conditions.append("p.gender = :gender")
@@ -230,10 +234,10 @@ async def search_profiles(
             pref_min = prefs.get("min_age")
             pref_max = prefs.get("max_age")
             if pref_min and "dob_max_for_min_age" not in params:
-                params["pref_dob_max"] = date.today().replace(year=date.today().year - pref_min)
+                params["pref_dob_max"] = date.today() - relativedelta(years=pref_min)
                 conditions.append("p.date_of_birth <= :pref_dob_max")
             if pref_max and "dob_min_for_max_age" not in params:
-                params["pref_dob_min"] = date.today().replace(year=date.today().year - pref_max - 1) + timedelta(days=1)
+                params["pref_dob_min"] = date.today() - relativedelta(years=pref_max + 1) + timedelta(days=1)
                 conditions.append("p.date_of_birth >= :pref_dob_min")
         if prefs.get("location_importance") == "must_have":
             pref_states = prefs.get("preferred_states") or []
@@ -241,7 +245,8 @@ async def search_profiles(
                 loc_placeholders = ", ".join(f":pref_state_{i}" for i in range(len(pref_states)))
                 conditions.append(f"LOWER(cl.state) IN ({loc_placeholders})")
                 for i, st in enumerate(pref_states):
-                    params[f"pref_state_{i}"] = st.lower()        if prefs.get("lifestyle_importance") == "must_have":
+                    params[f"pref_state_{i}"] = st.lower()
+        if prefs.get("lifestyle_importance") == "must_have":
             pref_diets = prefs.get("preferred_diet") or []
             if pref_diets and not diet:
                 diet_placeholders = ", ".join(f":pref_diet_{i}" for i in range(len(pref_diets)))
