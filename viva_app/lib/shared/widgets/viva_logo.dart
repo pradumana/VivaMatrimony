@@ -11,9 +11,11 @@ enum VivaLogoVariant {
 
 /// Viva brand logo widget.
 ///
-/// Renders the app logo image at [size] diameter.
-/// [showWordmark] and [showTagline] are unused (the logo image already
-/// contains the wordmark) but kept so all callers compile without changes.
+/// Renders the app logo image clipped to a circle at [size] diameter.
+/// [variant] is accepted but currently unused — the single PNG asset works
+/// on both light and dark backgrounds because call sites already control
+/// the surrounding container colour.
+/// [showWordmark] and [showTagline] are kept for API compatibility.
 class VivaLogo extends StatelessWidget {
   const VivaLogo({
     super.key,
@@ -30,11 +32,13 @@ class VivaLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
-      'assets/images/app_icon.png',
-      width: size,
-      height: size,
-      fit: BoxFit.cover,
+    return ClipOval(
+      child: Image.asset(
+        'assets/images/app_icon.png',
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+      ),
     );
   }
 }

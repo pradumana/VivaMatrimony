@@ -120,13 +120,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                                     shape: BoxShape.circle,
                                     color: Colors.white,
                                   ),
-                                  child: const ClipOval(
-                                    child: Padding(
-                                      padding: EdgeInsets.all(14),
-                                      child: VivaLogo(
-                                        size: 64,
-                                        variant: VivaLogoVariant.gradient,
-                                      ),
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(14),
+                                    child: VivaLogo(
+                                      size: 64,
+                                      variant: VivaLogoVariant.gradient,
                                     ),
                                   ),
                                 ),
