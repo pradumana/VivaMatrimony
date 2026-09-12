@@ -100,7 +100,13 @@ async def get_profile(
                    fd.mother_name, fd.mother_occupation, fd.mother_is_alive,
                    fd.brothers_count, fd.brothers_married, fd.sisters_count, fd.sisters_married,
                    fd.family_type, fd.family_values, fd.family_location, fd.additional_info as fam_info, fd.show_parents_info,
-                   ls.diet, ls.smoking, ls.drinking, ls.fitness, ls.hobbies, ls.interests, ls.travel, ls.pets, ls.pet_types, ls.other_info as ls_info
+                   ls.diet, ls.smoking, ls.drinking, ls.fitness, ls.hobbies, ls.interests, ls.travel, ls.pets, ls.pet_types, ls.other_info as ls_info,
+                   ph.storage_path  AS primary_photo_path,
+                   ph.thumbnail_path AS primary_thumbnail_path,
+                   (SELECT COUNT(*) FROM photos pc
+                    WHERE pc.user_id = p.user_id
+                      AND pc.deleted_at IS NULL
+                      AND pc.is_approved = TRUE) AS photo_count
             FROM profiles p
             JOIN users u ON u.id = p.user_id
             LEFT JOIN current_locations cl ON cl.user_id = p.user_id
@@ -109,6 +115,9 @@ async def get_profile(
             LEFT JOIN employment em ON em.user_id = p.user_id
             LEFT JOIN family_details fd ON fd.user_id = p.user_id
             LEFT JOIN lifestyle ls ON ls.user_id = p.user_id
+            LEFT JOIN photos ph ON ph.user_id = p.user_id
+                               AND ph.is_primary = TRUE
+                               AND ph.deleted_at IS NULL
             WHERE p.user_id = :user_id
               AND u.deleted_at IS NULL
         """),
@@ -120,7 +129,7 @@ async def get_profile(
 
     is_own = requesting_user_id == user_id
 
-    # Check block
+    # Check block (inline — avoids a separate round-trip)
     if not is_own and requesting_user_id:
         block_result = await db.execute(
             text("""
@@ -138,23 +147,7 @@ async def get_profile(
     if not is_own and row.account_status not in ("active", "pending_verification"):
         return None
 
-    # Get primary photo
-    photo_result = await db.execute(
-        text("""
-            SELECT id, storage_path, thumbnail_path FROM photos
-            WHERE user_id = :user_id AND is_primary = TRUE AND deleted_at IS NULL
-            LIMIT 1
-        """),
-        {"user_id": user_id},
-    )
-    primary_photo = photo_result.fetchone()
-
-    photo_count_result = await db.execute(
-        text("SELECT COUNT(*) as cnt FROM photos WHERE user_id = :user_id AND deleted_at IS NULL AND is_approved = TRUE"),
-        {"user_id": user_id},
-    )
-    photo_count = photo_count_result.fetchone().cnt
-
+    # Photo data is now in the main row — no extra queries needed.
     supabase = get_supabase()
 
     def get_public_url(path: str, bucket: str) -> str:
@@ -166,10 +159,11 @@ async def get_profile(
 
     primary_photo_url = None
     thumbnail_url = None
-    if primary_photo:
-        primary_photo_url = get_public_url(primary_photo.storage_path, settings.storage_bucket_profile_photos)
-        if primary_photo.thumbnail_path:
-            thumbnail_url = get_public_url(primary_photo.thumbnail_path, settings.storage_bucket_profile_photos)
+    if row.primary_photo_path:
+        primary_photo_url = get_public_url(row.primary_photo_path, settings.storage_bucket_profile_photos)
+        if row.primary_thumbnail_path:
+            thumbnail_url = get_public_url(row.primary_thumbnail_path, settings.storage_bucket_profile_photos)
+    photo_count = row.photo_count or 0
 
     dob = row.date_of_birth
     age = _compute_age(dob)

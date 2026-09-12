@@ -4,7 +4,7 @@ GET /search — filter profiles with pagination.
 GET /matches — recommended matches.
 GET /matches/{user_id} — compatibility score.
 """
-from datetime import date
+from datetime import date, timedelta
 from typing import Optional, List
 from uuid import UUID
 
@@ -156,11 +156,13 @@ async def search_profiles(
     params: dict = {"uid": current_user.user_id, "limit": page_size, "offset": offset}
 
     if min_age:
-        conditions.append("get_age(p.date_of_birth) >= :min_age")
-        params["min_age"] = min_age
+        # age >= min_age  →  dob <= today - min_age years (uses idx_profiles_dob)
+        params["dob_max_for_min_age"] = date.today().replace(year=date.today().year - min_age)
+        conditions.append("p.date_of_birth <= :dob_max_for_min_age")
     if max_age:
-        conditions.append("get_age(p.date_of_birth) <= :max_age")
-        params["max_age"] = max_age
+        # age <= max_age  →  dob >= today - (max_age+1) years + 1 day
+        params["dob_min_for_max_age"] = date.today().replace(year=date.today().year - max_age - 1) + timedelta(days=1)
+        conditions.append("p.date_of_birth >= :dob_min_for_max_age")
     if gender:
         conditions.append("p.gender = :gender")
         params["gender"] = gender
@@ -218,12 +220,14 @@ async def search_profiles(
     if prefs_row:
         prefs = prefs_row._asdict()
         if prefs.get("age_importance") == "must_have":
-            if prefs.get("min_age") and "get_age(p.date_of_birth) >= :min_age" not in " ".join(conditions):
-                conditions.append("get_age(p.date_of_birth) >= :pref_min_age")
-                params["pref_min_age"] = prefs["min_age"]
-            if prefs.get("max_age") and "get_age(p.date_of_birth) <= :max_age" not in " ".join(conditions):
-                conditions.append("get_age(p.date_of_birth) <= :pref_max_age")
-                params["pref_max_age"] = prefs["max_age"]
+            pref_min = prefs.get("min_age")
+            pref_max = prefs.get("max_age")
+            if pref_min and "dob_max_for_min_age" not in params:
+                params["pref_dob_max"] = date.today().replace(year=date.today().year - pref_min)
+                conditions.append("p.date_of_birth <= :pref_dob_max")
+            if pref_max and "dob_min_for_max_age" not in params:
+                params["pref_dob_min"] = date.today().replace(year=date.today().year - pref_max - 1) + timedelta(days=1)
+                conditions.append("p.date_of_birth >= :pref_dob_min")
         if prefs.get("location_importance") == "must_have":
             pref_states = prefs.get("preferred_states") or []
             if pref_states and not state:
@@ -265,7 +269,7 @@ async def search_profiles(
                    cl.state, cl.city,
                    ph.storage_path as photo_path, ph.thumbnail_path,
                    e.highest_qualification, em.profession,
-                   u.last_active_at, u.member_id
+                   u.last_active_at, u.created_at, u.member_id
             FROM users u
             JOIN profiles p ON p.user_id = u.id
             LEFT JOIN current_locations cl ON cl.user_id = u.id

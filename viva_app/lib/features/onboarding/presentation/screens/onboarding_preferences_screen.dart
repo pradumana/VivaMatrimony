@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/constants/app_constants.dart';
+import '../../../../shared/constants/community_constants.dart';
 import '../../../../shared/widgets/viva_text_field.dart';
 import '../providers/onboarding_provider.dart';
 import '../widgets/onboarding_scaffold.dart';
@@ -42,9 +43,9 @@ class _State extends ConsumerState<OnboardingPreferencesScreen> {
   String? _drinkingPreference;
 
   // ── Community ────────────────────────────────────────────────
-  final _casteCtrl   = TextEditingController();
-  final _subcasteCtrl = TextEditingController();
-  final _gotraCtrl   = TextEditingController();
+  String? _prefCaste;
+  String? _prefSubCaste;
+  String? _prefGotra;
 
   // ── Children ─────────────────────────────────────────────────
   bool? _wantChildren;               // null = no preference
@@ -52,9 +53,6 @@ class _State extends ConsumerState<OnboardingPreferencesScreen> {
 
   @override
   void dispose() {
-    _casteCtrl.dispose();
-    _subcasteCtrl.dispose();
-    _gotraCtrl.dispose();
     super.dispose();
   }
 
@@ -80,13 +78,10 @@ class _State extends ConsumerState<OnboardingPreferencesScreen> {
       if (_smokingPreference != null) 'smoking_preference': _smokingPreference,
       if (_drinkingPreference != null)
         'drinking_preference': _drinkingPreference,
-      // Community — only send non-blank entries
-      if (_casteCtrl.text.trim().isNotEmpty)
-        'preferred_castes': [_casteCtrl.text.trim()],
-      if (_subcasteCtrl.text.trim().isNotEmpty)
-        'preferred_subcastes': [_subcasteCtrl.text.trim()],
-      if (_gotraCtrl.text.trim().isNotEmpty)
-        'preferred_gotras': [_gotraCtrl.text.trim()],
+      // Community — only send non-null entries
+      if (_prefCaste != null) 'preferred_castes': [_prefCaste],
+      if (_prefSubCaste != null) 'preferred_subcastes': [_prefSubCaste],
+      if (_prefGotra != null) 'preferred_gotras': [_prefGotra],
       if (_wantChildren != null) 'want_children': _wantChildren,
       if (_childrenTimeline != null)
         'want_children_timeline': _childrenTimeline,
@@ -329,25 +324,28 @@ class _State extends ConsumerState<OnboardingPreferencesScreen> {
               'Leave blank for "any". These are soft preferences, '
               'not hard filters.'),
           const SizedBox(height: 10),
-          VivaTextField(
-            controller: _casteCtrl,
+          _prefDropdown(
             label: 'Preferred Caste (optional)',
-            hint: 'e.g. Brahmin, Rajput, Jat, Patel…',
-            keyboardType: TextInputType.text,
+            value: _prefCaste,
+            hint: 'No preference',
+            items: CommunityConstants.castes,
+            onChanged: (v) => setState(() => _prefCaste = v),
           ),
           const SizedBox(height: 12),
-          VivaTextField(
-            controller: _subcasteCtrl,
+          _prefDropdown(
             label: 'Preferred Sub-caste (optional)',
-            hint: 'e.g. Kanyakubj, Anavil…',
-            keyboardType: TextInputType.text,
+            value: _prefSubCaste,
+            hint: 'No preference',
+            items: CommunityConstants.vishwakarmaSubCastes,
+            onChanged: (v) => setState(() => _prefSubCaste = v),
           ),
           const SizedBox(height: 12),
-          VivaTextField(
-            controller: _gotraCtrl,
+          _prefDropdown(
             label: 'Preferred Gotra (optional)',
-            hint: 'Leave blank for no preference',
-            keyboardType: TextInputType.text,
+            value: _prefGotra,
+            hint: 'No preference',
+            items: CommunityConstants.vishwakarmaGotras,
+            onChanged: (v) => setState(() => _prefGotra = v),
           ),
 
           // ── CHILDREN ───────────────────────────────────────────────
@@ -393,6 +391,25 @@ class _State extends ConsumerState<OnboardingPreferencesScreen> {
           const SizedBox(height: 8),
         ],
       ),
+    );
+  }
+
+  Widget _prefDropdown({
+    required String label,
+    required String? value,
+    required String hint,
+    required List<String> items,
+    required void Function(String?) onChanged,
+  }) {
+    return VivaDropdownField<String>(
+      label: label,
+      value: value,
+      hint: hint,
+      items: [
+        DropdownMenuItem<String>(value: null, child: Text(hint)),
+        ...items.map((s) => DropdownMenuItem(value: s, child: Text(s))),
+      ],
+      onChanged: onChanged,
     );
   }
 }

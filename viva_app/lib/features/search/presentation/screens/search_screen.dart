@@ -98,7 +98,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       });
     } on DioException catch (e) {
       setState(() { _loading = false; _error = ApiException.fromDioError(e).message; });
-    } catch (_) {
+    } catch (e) {
+      // Non-Dio errors (e.g. JSON parse failure on a 500 body) — still try to
+      // surface something readable rather than swallowing silently.
       setState(() { _loading = false; _error = 'Could not load results. Please try again.'; });
     }
   }

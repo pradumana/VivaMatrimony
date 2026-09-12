@@ -7,6 +7,7 @@ import '../../../../core/network/api_client.dart';
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/constants/app_constants.dart';
+import '../../../../shared/constants/community_constants.dart';
 import '../../../../shared/widgets/viva_text_field.dart';
 import '../providers/onboarding_provider.dart';
 import '../widgets/onboarding_scaffold.dart';
@@ -26,9 +27,9 @@ class _OnboardingBasicScreenState
   final _nameController = TextEditingController();
   final _whatsappController = TextEditingController();
   final _religionController = TextEditingController();
-  final _casteController = TextEditingController();
-  final _subcasteController = TextEditingController();
-  final _gotraController = TextEditingController();
+  String? _caste    = CommunityConstants.defaultCaste;
+  String? _subCaste = CommunityConstants.defaultSubCaste;
+  String? _gotra;
   String? _gender;
   DateTime? _dob;
   int? _heightCm;
@@ -40,9 +41,6 @@ class _OnboardingBasicScreenState
     _nameController.dispose();
     _whatsappController.dispose();
     _religionController.dispose();
-    _casteController.dispose();
-    _subcasteController.dispose();
-    _gotraController.dispose();
     super.dispose();
   }
 
@@ -70,9 +68,9 @@ class _OnboardingBasicScreenState
         final wa = profile['whatsapp_phone'] as String?;
         if (wa != null) _whatsappController.text = wa;
         _religionController.text = (profile['religion'] as String?) ?? '';
-        _casteController.text    = (profile['caste']    as String?) ?? '';
-        _subcasteController.text = (profile['sub_caste'] as String?) ?? '';
-        _gotraController.text    = (profile['gotra']    as String?) ?? '';
+        _caste    = profile['caste']     as String? ?? CommunityConstants.defaultCaste;
+        _subCaste = profile['sub_caste'] as String?;
+        _gotra    = profile['gotra']     as String?;
       });
     } catch (_) {
       // pre-fill is best-effort — user can enter manually
@@ -138,9 +136,9 @@ class _OnboardingBasicScreenState
       'marital_status': _maritalStatus ?? 'never_married',
       'mother_tongue': _motherTongue,
       'religion': _religionController.text.trim().isEmpty ? null : _religionController.text.trim(),
-      'caste': _casteController.text.trim().isEmpty ? null : _casteController.text.trim(),
-      'sub_caste': _subcasteController.text.trim().isEmpty ? null : _subcasteController.text.trim(),
-      'gotra': _gotraController.text.trim().isEmpty ? null : _gotraController.text.trim(),
+      'caste': _caste,
+      'sub_caste': _subCaste,
+      'gotra': _gotra,
       'whatsapp_phone': _whatsappController.text.trim().isEmpty
           ? null
           : _whatsappController.text.trim(),
@@ -355,26 +353,79 @@ class _OnboardingBasicScreenState
               controller: _religionController,
             ),
             const SizedBox(height: 12),
-            VivaTextField(
+            // Caste — dropdown, default Vishwakarma
+            _buildCommunityDropdown(
               label: 'Caste (optional)',
-              hint: 'e.g. Brahmin, Rajput, Jat, Patel…',
-              controller: _casteController,
+              value: _caste,
+              hint: 'Select caste',
+              items: CommunityConstants.castes,
+              onChanged: (v) => setState(() => _caste = v),
             ),
             const SizedBox(height: 12),
-            VivaTextField(
+            // Sub-caste — dropdown, default Panchal
+            _buildCommunityDropdown(
               label: 'Sub-caste (optional)',
-              hint: 'e.g. Kanyakubj, Anavil…',
-              controller: _subcasteController,
+              value: _subCaste,
+              hint: 'Select sub-caste',
+              items: CommunityConstants.vishwakarmaSubCastes,
+              onChanged: (v) => setState(() => _subCaste = v),
             ),
             const SizedBox(height: 12),
-            VivaTextField(
+            // Gotra — dropdown, optional
+            _buildCommunityDropdown(
               label: 'Gotra (optional)',
-              hint: 'Leave blank if not known or not applicable',
-              controller: _gotraController,
+              value: _gotra,
+              hint: 'Select gotra',
+              items: CommunityConstants.vishwakarmaGotras,
+              allowNull: true,
+              onChanged: (v) => setState(() => _gotra = v),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildCommunityDropdown({
+    required String label,
+    required String? value,
+    required String hint,
+    required List<String> items,
+    required void Function(String?) onChanged,
+    bool allowNull = false,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(
+          fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.textSecondary,
+        )),
+        const SizedBox(height: 6),
+        DropdownButtonFormField<String>(
+          value: value,
+          isExpanded: true,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: AppTheme.surfaceVariant,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              borderSide: const BorderSide(color: AppTheme.border, width: 1.5),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              borderSide: const BorderSide(color: AppTheme.border, width: 1.5),
+            ),
+          ),
+          hint: Text(hint, style: const TextStyle(color: AppTheme.textTertiary)),
+          items: [
+            if (allowNull)
+              const DropdownMenuItem<String>(value: null, child: Text('Not specified')),
+            ...items.map((s) => DropdownMenuItem(value: s, child: Text(s))),
+          ],
+          onChanged: onChanged,
+        ),
+      ],
     );
   }
 
