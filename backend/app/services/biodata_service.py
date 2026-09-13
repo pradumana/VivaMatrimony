@@ -72,7 +72,10 @@ async def generate_biodata_pdf(
         "gender": profile.get("gender", "").title(),
         "height": profile.get("height_display"),
         "marital_status": _format_enum(profile.get("marital_status", "")),
+        "have_children": profile.get("have_children"),
+        "children_count": profile.get("children_count"),
         "mother_tongue": profile.get("mother_tongue", ""),
+        "languages_known": profile.get("languages_known") or [],
         "religion": profile.get("religion", ""),
         "caste": profile.get("caste", ""),
         "sub_caste": profile.get("sub_caste", ""),
@@ -81,6 +84,7 @@ async def generate_biodata_pdf(
         "photo_url": primary_photo_url,
         "all_photo_urls": all_photo_urls,
         "is_verified": profile.get("is_verified", False),
+        "member_id": profile_data.get("member_id"),
 
         # Location
         "current_location": _format_location(profile_data.get("current_location")),
@@ -97,6 +101,9 @@ async def generate_biodata_pdf(
 
         # Lifestyle
         "lifestyle": profile_data.get("lifestyle"),
+
+        # Partner preferences
+        "partner_preferences": await _fetch_partner_preferences(db, user_id),
 
         "app_name": "Viva",
         "app_tagline": "Find someone who feels like home.",
@@ -218,3 +225,32 @@ def _compute_profile_hash(profile_data: dict) -> str:
     """Hash of profile data to detect staleness."""
     data_str = json.dumps(profile_data, default=str, sort_keys=True)
     return hashlib.sha256(data_str.encode()).hexdigest()[:16]
+
+
+async def _fetch_partner_preferences(db: AsyncSession, user_id: UUID) -> Optional[dict]:
+    """Fetch partner preferences for biodata — returns None if not set."""
+    result = await db.execute(
+        text("""
+            SELECT min_age, max_age, preferred_states, preferred_castes,
+                   preferred_subcastes, min_education, preferred_professions,
+                   min_income_lpa, preferred_diet, preferred_family_types,
+                   preferred_family_values, smoking_preference, drinking_preference
+            FROM partner_preferences WHERE user_id = :uid
+        """),
+        {"uid": user_id},
+    )
+    row = result.fetchone()
+    if not row:
+        return None
+    d = row._asdict()
+    # Coerce any PostgreSQL array that arrives as a string
+    for key in ("preferred_states", "preferred_castes", "preferred_subcastes",
+                "preferred_professions", "preferred_diet",
+                "preferred_family_types", "preferred_family_values"):
+        val = d.get(key)
+        if isinstance(val, str):
+            stripped = val.strip("{}")
+            d[key] = [v.strip() for v in stripped.split(",") if v.strip()] if stripped else []
+        elif val is None:
+            d[key] = []
+    return d if any(d.values()) else None

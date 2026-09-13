@@ -213,10 +213,28 @@
         <div class="field-label">Marital Status</div>
         <div class="field-value">{{ marital_status or '—' }}</div>
       </div>
+      {% if have_children %}
+      <div class="field">
+        <div class="field-label">Children</div>
+        <div class="field-value">Yes{% if children_count %}, {{ children_count }}{% endif %}</div>
+      </div>
+      {% endif %}
       <div class="field">
         <div class="field-label">Mother Tongue</div>
         <div class="field-value">{{ mother_tongue or '—' }}</div>
       </div>
+      {% if languages_known %}
+      <div class="field">
+        <div class="field-label">Languages Known</div>
+        <div class="field-value">
+          {% if languages_known is iterable and languages_known is not string %}
+            {{ languages_known | join(', ') }}
+          {% else %}
+            {{ languages_known }}
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
       <div class="field">
         <div class="field-label">Religion</div>
         <div class="field-value">{{ religion or '—' }}</div>
@@ -290,6 +308,18 @@
           <div class="field-value">{{ education.college_university }}</div>
         </div>
         {% endif %}
+        {% if education.graduation_year %}
+        <div class="field">
+          <div class="field-label">Year of Passing</div>
+          <div class="field-value">{{ education.graduation_year }}</div>
+        </div>
+        {% endif %}
+        {% if education.additional_qualifications %}
+        <div class="field">
+          <div class="field-label">Additional</div>
+          <div class="field-value">{{ education.additional_qualifications }}</div>
+        </div>
+        {% endif %}
       {% endif %}
       {% if employment %}
         {% if employment.profession %}
@@ -308,6 +338,24 @@
         <div class="field">
           <div class="field-label">Company</div>
           <div class="field-value">{{ employment.company }}</div>
+        </div>
+        {% endif %}
+        {% if employment.industry %}
+        <div class="field">
+          <div class="field-label">Industry</div>
+          <div class="field-value">{{ employment.industry }}</div>
+        </div>
+        {% endif %}
+        {% if employment.employment_type %}
+        <div class="field">
+          <div class="field-label">Employment Type</div>
+          <div class="field-value">{{ employment.employment_type | replace('_',' ') | title }}</div>
+        </div>
+        {% endif %}
+        {% if employment.work_location %}
+        <div class="field">
+          <div class="field-label">Work Location</div>
+          <div class="field-value">{{ employment.work_location }}</div>
         </div>
         {% endif %}
         {% if employment.income_min_lpa %}
@@ -399,6 +447,23 @@
         <div class="field-value">{{ lifestyle.fitness }}</div>
       </div>
       {% endif %}
+      {% if lifestyle.travel %}
+      <div class="field">
+        <div class="field-label">Travel</div>
+        <div class="field-value">{{ lifestyle.travel | replace('_',' ') | title }}</div>
+      </div>
+      {% endif %}
+      {% if lifestyle.pets %}
+      <div class="field">
+        <div class="field-label">Pets</div>
+        <div class="field-value">
+          {{ lifestyle.pets | title }}
+          {% if lifestyle.pet_types %}
+            ({% if lifestyle.pet_types is iterable and lifestyle.pet_types is not string %}{{ lifestyle.pet_types | join(', ') }}{% else %}{{ lifestyle.pet_types }}{% endif %})
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
     </div>
     {% if lifestyle.hobbies or lifestyle.interests %}
     <div style="margin-top:6px">
@@ -409,6 +474,65 @@
       </div>
     </div>
     {% endif %}
+    {% if lifestyle.other_info %}
+    <div class="about-text" style="margin-top:8px">{{ lifestyle.other_info }}</div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% if partner_preferences %}
+  <div class="section">
+    <div class="section-title">Partner Expectations</div>
+    <div class="grid">
+      {% if partner_preferences.min_age or partner_preferences.max_age %}
+      <div class="field">
+        <div class="field-label">Age Range</div>
+        <div class="field-value">{{ partner_preferences.min_age or '—' }} – {{ partner_preferences.max_age or '—' }} yrs</div>
+      </div>
+      {% endif %}
+      {% if partner_preferences.preferred_castes %}
+      <div class="field">
+        <div class="field-label">Caste</div>
+        <div class="field-value">{{ partner_preferences.preferred_castes | join(', ') }}</div>
+      </div>
+      {% endif %}
+      {% if partner_preferences.min_education %}
+      <div class="field">
+        <div class="field-label">Min. Education</div>
+        <div class="field-value">{{ partner_preferences.min_education | replace('_',' ') | title }}</div>
+      </div>
+      {% endif %}
+      {% if partner_preferences.preferred_professions %}
+      <div class="field">
+        <div class="field-label">Profession</div>
+        <div class="field-value">{{ partner_preferences.preferred_professions | join(', ') }}</div>
+      </div>
+      {% endif %}
+      {% if partner_preferences.min_income_lpa %}
+      <div class="field">
+        <div class="field-label">Min. Income</div>
+        <div class="field-value">&#8377;{{ partner_preferences.min_income_lpa }} LPA</div>
+      </div>
+      {% endif %}
+      {% if partner_preferences.preferred_states %}
+      <div class="field">
+        <div class="field-label">Location</div>
+        <div class="field-value">{{ partner_preferences.preferred_states | join(', ') }}</div>
+      </div>
+      {% endif %}
+      {% if partner_preferences.preferred_diet %}
+      <div class="field">
+        <div class="field-label">Diet</div>
+        <div class="field-value">{{ partner_preferences.preferred_diet | join(', ') }}</div>
+      </div>
+      {% endif %}
+      {% if partner_preferences.preferred_family_types %}
+      <div class="field">
+        <div class="field-label">Family Type</div>
+        <div class="field-value">{{ partner_preferences.preferred_family_types | join(', ') }}</div>
+      </div>
+      {% endif %}
+    </div>
   </div>
   {% endif %}
 

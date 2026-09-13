@@ -190,6 +190,8 @@
     </svg>
     <div class="title">{{ heading or (gender + ' Biodata' if gender else 'Biodata') }}</div>
     <div class="subtitle">Values<span class="dot">•</span>Family<span class="dot">•</span>Future</div>
+    {% if is_verified %}<div style="margin-top:6px;display:inline-block;background:rgba(124,139,111,0.12);border:1px solid #7C8B6F;padding:2px 10px;border-radius:12px;font-size:8pt;color:#7C8B6F;">✓ Verified Profile</div>{% endif %}
+    {% if member_id %}<div style="margin-top:4px;font-size:7.5pt;color:#9a9686;letter-spacing:0.5px;">ID: {{ member_id }}</div>{% endif %}
   </div>
 
   <div class="content">
@@ -328,6 +330,154 @@
       {% endif %}
 
     </div>
+  </div>
+
+  <!-- ── Extra sections (overflow to page 2 as needed) ─────────────────── -->
+  <div style="position:relative;z-index:1;margin-top:18px;">
+
+    <!-- Education full -->
+    {% if education %}
+    <div style="page-break-inside:avoid;margin-bottom:14px;">
+      <div class="about-title" style="margin-bottom:8px;">Education &amp; Career</div>
+      <table style="width:100%;border-collapse:collapse;font-size:9pt;">
+        {% if education.highest_qualification %}
+        <tr><td style="width:130px;color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">Qualification</td><td style="color:#333025;font-weight:600;">{{ education.highest_qualification }}</td></tr>
+        {% endif %}
+        {% if education.degree %}
+        <tr><td style="color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">Degree</td><td style="color:#333025;font-weight:600;">{{ education.degree }}{% if education.field_of_study %} – {{ education.field_of_study }}{% endif %}</td></tr>
+        {% endif %}
+        {% if education.college_university %}
+        <tr><td style="color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">College/Univ.</td><td style="color:#333025;font-weight:600;">{{ education.college_university }}</td></tr>
+        {% endif %}
+        {% if education.graduation_year %}
+        <tr><td style="color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">Year of Passing</td><td style="color:#333025;font-weight:600;">{{ education.graduation_year }}</td></tr>
+        {% endif %}
+        {% if education.additional_qualifications %}
+        <tr><td style="color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">Additional</td><td style="color:#333025;font-weight:600;">{{ education.additional_qualifications }}</td></tr>
+        {% endif %}
+        {% if employment %}
+          {% if employment.job_title %}
+          <tr><td style="color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">Designation</td><td style="color:#333025;font-weight:600;">{{ employment.job_title }}</td></tr>
+          {% endif %}
+          {% if employment.industry %}
+          <tr><td style="color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">Industry</td><td style="color:#333025;font-weight:600;">{{ employment.industry }}</td></tr>
+          {% endif %}
+          {% if employment.employment_type %}
+          <tr><td style="color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">Type</td><td style="color:#333025;font-weight:600;">{{ employment.employment_type | replace('_',' ') | title }}</td></tr>
+          {% endif %}
+          {% if employment.work_location %}
+          <tr><td style="color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">Work Location</td><td style="color:#333025;font-weight:600;">{{ employment.work_location }}</td></tr>
+          {% endif %}
+          {% if employment.income_min_lpa %}
+          <tr><td style="color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">Income</td><td style="color:#333025;font-weight:600;">&#8377;{{ employment.income_min_lpa }}{% if employment.income_max_lpa %} – {{ employment.income_max_lpa }}{% endif %} LPA</td></tr>
+          {% endif %}
+        {% endif %}
+      </table>
+    </div>
+    {% endif %}
+
+    <!-- Family -->
+    {% if family %}
+    <div style="page-break-inside:avoid;margin-bottom:14px;">
+      <div class="about-title" style="margin-bottom:8px;">Family Details</div>
+      <table style="width:100%;border-collapse:collapse;font-size:9pt;">
+        {% if family.father_name %}
+        <tr><td style="width:130px;color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">Father</td><td style="color:#333025;font-weight:600;">{{ family.father_name }}{% if family.father_occupation %}, {{ family.father_occupation }}{% endif %}</td></tr>
+        {% endif %}
+        {% if family.mother_name %}
+        <tr><td style="color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">Mother</td><td style="color:#333025;font-weight:600;">{{ family.mother_name }}{% if family.mother_occupation %}, {{ family.mother_occupation }}{% endif %}</td></tr>
+        {% endif %}
+        {% if family.brothers_count is not none %}
+        <tr><td style="color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">Siblings</td><td style="color:#333025;font-weight:600;">{{ family.brothers_count }} Brothers ({{ family.brothers_married }} married), {{ family.sisters_count }} Sisters ({{ family.sisters_married }} married)</td></tr>
+        {% endif %}
+        {% if family.family_type %}
+        <tr><td style="color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">Family Type</td><td style="color:#333025;font-weight:600;">{{ family.family_type | replace('_',' ') | title }}</td></tr>
+        {% endif %}
+        {% if family.family_values %}
+        <tr><td style="color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">Family Values</td><td style="color:#333025;font-weight:600;">{{ family.family_values | title }}</td></tr>
+        {% endif %}
+        {% if family.family_location %}
+        <tr><td style="color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">Family Location</td><td style="color:#333025;font-weight:600;">{{ family.family_location }}</td></tr>
+        {% endif %}
+      </table>
+      {% if family.additional_info %}
+      <div class="about-text" style="margin-top:6px;">{{ family.additional_info }}</div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Lifestyle full -->
+    {% if lifestyle %}
+    <div style="page-break-inside:avoid;margin-bottom:14px;">
+      <div class="about-title" style="margin-bottom:8px;">Lifestyle</div>
+      <table style="width:100%;border-collapse:collapse;font-size:9pt;">
+        {% if lifestyle.diet %}<tr><td style="width:130px;color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">Diet</td><td style="color:#333025;font-weight:600;">{{ lifestyle.diet | replace('_',' ') | title }}</td></tr>{% endif %}
+        {% if lifestyle.smoking %}<tr><td style="color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">Smoking</td><td style="color:#333025;font-weight:600;">{{ lifestyle.smoking | title }}</td></tr>{% endif %}
+        {% if lifestyle.drinking %}<tr><td style="color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">Drinking</td><td style="color:#333025;font-weight:600;">{{ lifestyle.drinking | title }}</td></tr>{% endif %}
+        {% if lifestyle.fitness %}<tr><td style="color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">Fitness</td><td style="color:#333025;font-weight:600;">{{ lifestyle.fitness }}</td></tr>{% endif %}
+        {% if lifestyle.travel %}<tr><td style="color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">Travel</td><td style="color:#333025;font-weight:600;">{{ lifestyle.travel | replace('_',' ') | title }}</td></tr>{% endif %}
+        {% if lifestyle.pets %}<tr><td style="color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">Pets</td><td style="color:#333025;font-weight:600;">{{ lifestyle.pets | title }}{% if lifestyle.pet_types %} ({% if lifestyle.pet_types is iterable and lifestyle.pet_types is not string %}{{ lifestyle.pet_types | join(', ') }}{% else %}{{ lifestyle.pet_types }}{% endif %}){% endif %}</td></tr>{% endif %}
+      </table>
+      {% if lifestyle.hobbies or lifestyle.interests %}
+      <div style="margin-top:7px;">
+        <span style="font-size:8.5pt;color:#9a9686;text-transform:uppercase;letter-spacing:0.4px;font-weight:600;">Hobbies &amp; Interests</span>
+        <div class="field-value tag-list" style="margin-top:4px;">
+          {% if lifestyle.hobbies %}{% for h in lifestyle.hobbies %}<span class="tag">{{ h }}</span>{% endfor %}{% endif %}
+          {% if lifestyle.interests %}{% for i in lifestyle.interests %}<span class="tag">{{ i }}</span>{% endfor %}{% endif %}
+        </div>
+      </div>
+      {% endif %}
+      {% if lifestyle.other_info %}
+      <div class="about-text" style="margin-top:6px;">{{ lifestyle.other_info }}</div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Partner Expectations -->
+    {% if partner_preferences %}
+    <div style="page-break-inside:avoid;margin-bottom:14px;">
+      <div class="about-title" style="margin-bottom:8px;">Partner Expectations</div>
+      <table style="width:100%;border-collapse:collapse;font-size:9pt;">
+        {% if partner_preferences.min_age or partner_preferences.max_age %}
+        <tr><td style="width:130px;color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">Age Range</td><td style="color:#333025;font-weight:600;">{{ partner_preferences.min_age or '—' }} – {{ partner_preferences.max_age or '—' }} yrs</td></tr>
+        {% endif %}
+        {% if partner_preferences.preferred_castes %}
+        <tr><td style="color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">Caste</td><td style="color:#333025;font-weight:600;">{{ partner_preferences.preferred_castes | join(', ') }}</td></tr>
+        {% endif %}
+        {% if partner_preferences.min_education %}
+        <tr><td style="color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">Min. Education</td><td style="color:#333025;font-weight:600;">{{ partner_preferences.min_education | replace('_',' ') | title }}</td></tr>
+        {% endif %}
+        {% if partner_preferences.preferred_professions %}
+        <tr><td style="color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">Profession</td><td style="color:#333025;font-weight:600;">{{ partner_preferences.preferred_professions | join(', ') }}</td></tr>
+        {% endif %}
+        {% if partner_preferences.min_income_lpa %}
+        <tr><td style="color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">Min. Income</td><td style="color:#333025;font-weight:600;">&#8377;{{ partner_preferences.min_income_lpa }} LPA</td></tr>
+        {% endif %}
+        {% if partner_preferences.preferred_states %}
+        <tr><td style="color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">Location</td><td style="color:#333025;font-weight:600;">{{ partner_preferences.preferred_states | join(', ') }}</td></tr>
+        {% endif %}
+        {% if partner_preferences.preferred_diet %}
+        <tr><td style="color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">Diet</td><td style="color:#333025;font-weight:600;">{{ partner_preferences.preferred_diet | join(', ') }}</td></tr>
+        {% endif %}
+        {% if partner_preferences.preferred_family_types %}
+        <tr><td style="color:#9a9686;text-transform:uppercase;font-size:8.5pt;font-weight:600;padding:3px 0;">Family Type</td><td style="color:#333025;font-weight:600;">{{ partner_preferences.preferred_family_types | join(', ') }}</td></tr>
+        {% endif %}
+      </table>
+    </div>
+    {% endif %}
+
+    <!-- Additional photos -->
+    {% if all_photo_urls and all_photo_urls | length > 1 %}
+    <div style="page-break-before:always;">
+      <div class="about-title" style="margin-bottom:10px;">Photos</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;">
+        {% for url in all_photo_urls %}
+        <img src="{{ url }}" alt="Photo {{ loop.index }}" style="width:110px;height:140px;object-fit:cover;border-radius:6px;border:2px solid #D9B86A;">
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
   </div>
 
   <div class="quote">"{{ quote or 'Grounded in values, focused on the future.' }}"</div>
