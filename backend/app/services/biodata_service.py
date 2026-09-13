@@ -171,9 +171,14 @@ def _render_pdf(context: dict, template: str = "traditional") -> bytes:
     html_content = tmpl.render(**context)
 
     from weasyprint import HTML, CSS
+    # Do NOT use @import url() for Google Fonts — Render has no outbound HTTP
+    # during rendering, so a network font fetch blocks and then fails, causing
+    # the entire PDF generation to crash. The templates already declare
+    # font-family fallbacks (Arial, sans-serif); this CSS just reinforces them.
     font_css = CSS(string="""
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap');
-        body { font-family: 'Noto Sans', 'Noto Sans Devanagari', sans-serif; }
+        body {
+            font-family: 'Noto Sans', 'DejaVu Sans', Arial, sans-serif;
+        }
     """)
 
     pdf_bytes = HTML(string=html_content).write_pdf(stylesheets=[font_css])

@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpango-1.0-0 libpangoft2-1.0-0 libpangocairo-1.0-0 \
     libcairo2 libgdk-pixbuf-xlib-2.0-0 libffi-dev libssl-dev \
     gcc libpq-dev curl \
+    fonts-noto fonts-noto-core fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
@@ -24,6 +25,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpango-1.0-0 libpangoft2-1.0-0 libpangocairo-1.0-0 \
     libcairo2 libgdk-pixbuf-xlib-2.0-0 libssl3 libpq5 \
     curl \
+    fonts-noto fonts-noto-core fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy installed packages from builder

@@ -14,8 +14,11 @@ import '../../../../shared/widgets/viva_button.dart';
 // ── Providers ────────────────────────────────────────────────────────────────
 
 final _biodataProvider =
-    FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
-  final r = await ref.read(apiClientProvider).get('/biodata');
+    FutureProvider.autoDispose.family<Map<String, dynamic>, String>((ref, template) async {
+  final r = await ref.read(apiClientProvider).get(
+    '/biodata',
+    queryParameters: {'template': template},
+  );
   return r.data as Map<String, dynamic>;
 });
 
@@ -41,7 +44,7 @@ class _BiodataScreenState extends ConsumerState<BiodataScreen> {
         '/biodata/generate',
         data: {'template': _template},
       );
-      ref.invalidate(_biodataProvider);
+      ref.invalidate(_biodataProvider(_template));
       setState(() => _generating = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -104,7 +107,7 @@ class _BiodataScreenState extends ConsumerState<BiodataScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final statusAsync = ref.watch(_biodataProvider);
+    final statusAsync = ref.watch(_biodataProvider(_template));
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(title: Text(l.biodata)),
@@ -189,8 +192,7 @@ class _BiodataScreenState extends ConsumerState<BiodataScreen> {
                   icon: Icons.view_column_outlined,
                   selected: _template == 'half_photo',
                   onTap: () => setState(() => _template = 'half_photo'),
-                ),
-              ]),
+                ),              ]),
 
               const SizedBox(height: 20),
 
@@ -233,18 +235,14 @@ class _BiodataScreenState extends ConsumerState<BiodataScreen> {
                 icon: Icons.download_rounded,
                 isLoading: _downloading,
                 isOutlined: status['status'] != 'ready',
-                onPressed: (status['has_pdf'] as bool? ?? false) || status['status'] == 'ready'
-                    ? () => _download()
-                    : null,
+                onPressed: () => _download(),
               ),
               const SizedBox(height: 12),
               VivaButton(
                 label: l.share,
                 icon: Icons.share_outlined,
                 isOutlined: true,
-                onPressed: (status['has_pdf'] as bool? ?? false) || status['status'] == 'ready'
-                    ? () => _download(share: true)
-                    : null,
+                onPressed: () => _download(share: true),
               ),
               const SizedBox(height: 32),
             ],
