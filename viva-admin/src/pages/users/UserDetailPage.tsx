@@ -121,7 +121,12 @@ export default function UserDetailPage() {
               </div>
               {user.verification_request_status === 'pending' && (
                 <div style={{ marginTop: 14 }}>
-                  <Link to="/admin/verification" className="btn btn-sm btn-primary">
+                  <Link
+                    to={user.verification_method === 'reference'
+                      ? '/admin/references'
+                      : '/admin/verification'}
+                    className="btn btn-sm btn-primary"
+                  >
                     Review Verification
                   </Link>
                 </div>
