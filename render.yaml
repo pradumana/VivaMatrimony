@@ -1,4 +1,16 @@
 services:
+  # ── Viva Landing / Email Callback — Static Site ───────────────────────────
+  - type: web
+    name: viva-landing
+    runtime: static
+    rootDir: landing
+    staticPublishPath: .
+    pullRequestPreviewsEnabled: false
+    routes:
+      - type: rewrite
+        source: /auth/callback
+        destination: /auth/callback/index.html
+
   # ── Viva Admin Panel — Static Site ────────────────────────────────────────
   - type: web
     name: viva-admin
