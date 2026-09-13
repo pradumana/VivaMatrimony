@@ -118,6 +118,10 @@ export const api = {
   // References
   getReferences: (status?: string, page = 1, page_size = 20) =>
     http.get('/admin/references', { params: { status, page, page_size } }),
+  approveReference: (id: string) =>
+    http.post(`/admin/references/${id}/approve`),
+  rejectReference: (id: string, rejection_reason: string) =>
+    http.post(`/admin/references/${id}/reject`, { rejection_reason }),
 
   // Reports
   getReports: (report_status = 'open', page = 1, page_size = 20) =>

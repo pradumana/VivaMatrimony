@@ -782,6 +782,127 @@ async def list_references(
 
 
 # ---------------------------------------------------------------------------
+# References — approve / reject  (admin confirms on behalf of reference member)
+# ---------------------------------------------------------------------------
+
+class ReferenceRejectRequest(BaseModel):
+    rejection_reason: str
+
+
+@router.post("/references/{reference_id}/approve")
+async def approve_reference(
+    reference_id: UUID,
+    admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Admin approves a reference — marks reference as confirmed and marks the
+    user as verified if the verification request is still pending.
+    """
+    admin.require("verify")
+
+    result = await db.execute(
+        text("""
+            SELECT rm.id, rm.user_id, rm.status
+            FROM reference_members rm
+            WHERE rm.id = :rid
+        """),
+        {"rid": reference_id},
+    )
+    row = result.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Reference not found")
+    if row.status == "confirmed":
+        raise HTTPException(status_code=409, detail="Reference already confirmed")
+
+    await db.execute(
+        text("""
+            UPDATE reference_members
+            SET status = 'confirmed', confirmed_at = NOW(), updated_at = NOW()
+            WHERE id = :rid
+        """),
+        {"rid": reference_id},
+    )
+
+    await db.execute(
+        text("""
+            UPDATE verification_requests
+            SET status = 'approved', reviewed_by = :admin_id, reviewed_at = NOW()
+            WHERE user_id = :uid
+        """),
+        {"uid": row.user_id, "admin_id": admin.admin_id},
+    )
+
+    await db.execute(
+        text("""
+            UPDATE users SET verification_status = 'verified', account_status = 'active'
+            WHERE id = :uid
+        """),
+        {"uid": row.user_id},
+    )
+
+    await db.execute(
+        text("""
+            INSERT INTO notifications (user_id, type, title, body)
+            VALUES (:uid, 'certificate_approved', 'Profile Verified! 🎉',
+                    'Your reference has been confirmed. Your profile is now verified.')
+        """),
+        {"uid": row.user_id},
+    )
+
+    await db.commit()
+    await log_action(db, "admin", admin.admin_id, "approve_reference", "reference_member", reference_id)
+    return {"success": True, "action": "approved"}
+
+
+@router.post("/references/{reference_id}/reject")
+async def reject_reference(
+    reference_id: UUID,
+    body: ReferenceRejectRequest,
+    admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Admin rejects a reference request."""
+    admin.require("verify")
+
+    result = await db.execute(
+        text("SELECT id, user_id, status FROM reference_members WHERE id = :rid"),
+        {"rid": reference_id},
+    )
+    row = result.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Reference not found")
+    if row.status in ("confirmed", "rejected"):
+        raise HTTPException(status_code=409, detail=f"Reference already {row.status}")
+
+    await db.execute(
+        text("""
+            UPDATE reference_members
+            SET status = 'rejected', rejected_at = NOW(),
+                rejection_reason = :reason, updated_at = NOW()
+            WHERE id = :rid
+        """),
+        {"rid": reference_id, "reason": body.rejection_reason},
+    )
+
+    await db.execute(
+        text("""
+            INSERT INTO notifications (user_id, type, title, body)
+            VALUES (:uid, 'certificate_rejected', 'Reference Rejected', :body_text)
+        """),
+        {
+            "uid": row.user_id,
+            "body_text": f"Your reference was rejected: {body.rejection_reason}. Please try adding a different reference member.",
+        },
+    )
+
+    await db.commit()
+    await log_action(db, "admin", admin.admin_id, "reject_reference", "reference_member", reference_id,
+                     {"reason": body.rejection_reason})
+    return {"success": True, "action": "rejected"}
+
+
+# ---------------------------------------------------------------------------
 # Reports — dismiss action (resolve already exists above)
 # ---------------------------------------------------------------------------
 
