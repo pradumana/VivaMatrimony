@@ -1,4 +1,34 @@
 services:
+  # ── Viva Backend API — Web Service ────────────────────────────────────────
+  - type: web
+    name: viva-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 2 --timeout-keep-alive 30
+    pullRequestPreviewsEnabled: false
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: ALLOWED_ORIGINS
+        value: https://admin.vivamatrimony.in,https://vivamatrimony.in
+      - key: APP_SECRET_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      - key: JWT_SECRET_KEY
+        sync: false
+      - key: JWT_ALGORITHM
+        value: HS256
+
   # ── Viva Landing / Email Callback — Static Site ───────────────────────────
   - type: web
     name: viva-landing
