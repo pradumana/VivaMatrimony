@@ -48,6 +48,7 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro   # SSL certs from certbot
       - ./logs/nginx:/var/log/nginx
+      - ./landing:/var/www/landing:ro
     depends_on:
       backend:
         condition: service_healthy
