@@ -11,8 +11,7 @@ CREATE TABLE member_subscriptions (
   -- Payment details
   amount          INTEGER NOT NULL,  -- INR, 300–800
   paid_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  expires_at      TIMESTAMPTZ NOT NULL
-                    GENERATED ALWAYS AS (paid_at + INTERVAL '6 months') STORED,
+  expires_at      TIMESTAMPTZ NOT NULL,  -- = paid_at + 6 months, set on insert
 
   -- Recorded by which admin
   recorded_by     UUID NOT NULL REFERENCES admin_users(id),
