@@ -1,0 +1,49 @@
+name: Build Release APK
+
+on:
+  workflow_dispatch:  # manual trigger from GitHub UI
+  push:
+    tags:
+      - 'v*'          # also triggers on version tags like v1.0.1
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.32.x'
+          channel: stable
+          cache: true
+
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > viva_app/android/keystore.jks
+
+      - name: Flutter pub get
+        run: flutter pub get
+        working-directory: viva_app
+
+      - name: Build release APK
+        working-directory: viva_app
+        env:
+          KEYSTORE_PATH: android/keystore.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: viva-release-apk
+          path: viva_app/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
