@@ -37,9 +37,12 @@ class ApiClient {
     String path, {
     Map<String, dynamic>? queryParameters,
     Options? options,
+    CancelToken? cancelToken,
   }) =>
       _dio.get<T>(path,
-          queryParameters: queryParameters, options: options);
+          queryParameters: queryParameters,
+          options: options,
+          cancelToken: cancelToken);
 
   Future<Response<T>> post<T>(
     String path, {

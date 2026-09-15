@@ -21,6 +21,7 @@ class SearchScreen extends ConsumerStatefulWidget {
 class _SearchScreenState extends ConsumerState<SearchScreen> {
   final _searchCtrl = TextEditingController();
   Timer? _debounce;
+  CancelToken? _cancelToken;
 
   // Filters
   int? _minAge, _maxAge;
@@ -43,6 +44,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   void dispose() {
     _debounce?.cancel();
+    _cancelToken?.cancel();
     _searchCtrl.dispose();
     super.dispose();
   }
@@ -53,7 +55,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       _subCaste != null || _gotra != null || _verifiedOnly || _hasPhoto;
 
   Future<void> _search({bool reset = true}) async {
-    if (_loading) return;
+    // Cancel any in-flight request so the latest query always wins.
+    _cancelToken?.cancel();
+    _cancelToken = CancelToken();
+
     if (reset) setState(() { _page = 1; _results = []; _hasMore = true; });
     setState(() { _loading = true; _error = null; });
 
@@ -80,7 +85,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         if (_hasPhoto) params['has_photo'] = true;
       }
 
-      final response = await client.get('/search', queryParameters: params);
+      final response = await client.get(
+        '/search',
+        queryParameters: params,
+        cancelToken: _cancelToken,
+      );
+      // Ignore stale response if a newer request was already issued
+      if (_cancelToken?.isCancelled ?? false) return;
       final data = response.data as Map<String, dynamic>;
       final newResults = (data['results'] as List)
           .map((e) => ProfileSummary.fromJson(e as Map<String, dynamic>))
@@ -97,6 +108,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         _hasMore = _results.length < _total;
       });
     } on DioException catch (e) {
+      if (CancelToken.isCancel(e)) return; // superseded by newer query — ignore
       setState(() { _loading = false; _error = ApiException.fromDioError(e).message; });
     } catch (e) {
       // Non-Dio errors (e.g. JSON parse failure on a 500 body) — still try to
