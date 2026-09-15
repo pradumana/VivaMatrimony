@@ -322,7 +322,7 @@ export default function SubscriptionsPage() {
         page={page}
         pageSize={PAGE_SIZE}
         total={total}
-        onPageChange={setPage}
+        onPage={setPage}
       />
     </>
   );
