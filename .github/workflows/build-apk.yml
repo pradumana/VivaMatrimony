@@ -36,7 +36,7 @@ jobs:
       - name: Build release APK
         working-directory: viva_app
         env:
-          KEYSTORE_PATH: android/keystore.jks
+          KEYSTORE_PATH: ${{ github.workspace }}/viva_app/android/keystore.jks
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
