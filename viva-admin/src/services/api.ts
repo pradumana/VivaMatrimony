@@ -147,4 +147,12 @@ export const api = {
   getSettings: () => http.get('/admin/settings'),
   updateSettings: (data: Record<string, unknown>) =>
     http.put('/admin/settings', data),
+
+  // Subscriptions
+  getSubscriptions: (params?: Record<string, string | number | undefined>) =>
+    http.get('/admin/subscriptions', { params }),
+  createSubscription: (data: { user_id: string; amount: number; paid_at?: string; notes?: string }) =>
+    http.post('/admin/subscriptions', data),
+  downloadSubscriptionsCSV: () =>
+    http.get('/admin/subscriptions/report.csv', { responseType: 'blob' }),
 };

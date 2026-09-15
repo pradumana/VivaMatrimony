@@ -17,6 +17,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/admin/references',    label: 'References',    icon: '🔗', permission: 'verify' },
   { to: '/admin/reports',       label: 'Reports',       icon: '🚩', permission: 'moderate' },
   { to: '/admin/photos',        label: 'Photos',        icon: '🖼', permission: 'moderate' },
+  { to: '/admin/subscriptions', label: 'Subscriptions', icon: '💳', permission: 'ban' },
 ];
 
 const SUPER_ITEMS: NavItem[] = [

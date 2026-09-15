@@ -5,8 +5,12 @@ All require admin JWT with appropriate role.
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel
+import csv
+import io
+from datetime import datetime
+
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
@@ -1138,3 +1142,177 @@ async def update_settings_endpoint(
     await db.commit()
     await log_action(db, "admin", admin.admin_id, "update_settings", details={"keys": list(body.keys())})
     return {"success": True, "updated": list(body.keys())}
+
+
+# ---------------------------------------------------------------------------
+# Member Subscriptions
+# ---------------------------------------------------------------------------
+
+class CreateSubscriptionRequest(BaseModel):
+    user_id: UUID
+    amount: int = Field(..., ge=300, le=800, description="Payment amount in INR (300–800)")
+    paid_at: Optional[datetime] = None   # defaults to NOW() if omitted
+    notes: Optional[str] = None
+
+
+@router.post("/subscriptions", status_code=status.HTTP_201_CREATED)
+async def create_subscription(
+    body: CreateSubscriptionRequest,
+    admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Record a manual payment for a member."""
+    admin.require("ban")  # admin+ only (reuses existing 'ban' permission tier)
+
+    # Verify user exists
+    user_row = await db.execute(
+        text("SELECT id FROM users WHERE id = :uid AND deleted_at IS NULL"),
+        {"uid": body.user_id},
+    )
+    if not user_row.fetchone():
+        raise HTTPException(status_code=404, detail="User not found")
+
+    paid_at = body.paid_at or datetime.utcnow()
+
+    result = await db.execute(
+        text("""
+            INSERT INTO member_subscriptions (user_id, amount, paid_at, recorded_by, notes)
+            VALUES (:user_id, :amount, :paid_at, :recorded_by, :notes)
+            RETURNING id, expires_at
+        """),
+        {
+            "user_id": body.user_id,
+            "amount": body.amount,
+            "paid_at": paid_at,
+            "recorded_by": admin.admin_id,
+            "notes": body.notes,
+        },
+    )
+    row = result.fetchone()
+    await db.commit()
+    await log_action(
+        db, "admin", admin.admin_id, "record_subscription",
+        "member_subscription", row.id,
+        {"user_id": str(body.user_id), "amount": body.amount},
+    )
+    return {"subscription_id": str(row.id), "expires_at": row.expires_at}
+
+
+@router.get("/subscriptions")
+async def list_subscriptions(
+    search: Optional[str] = Query(None, description="Name or phone"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """List all subscription payments, newest first."""
+    admin.require("view_users")
+
+    conditions = ["1=1"]
+    params: dict = {"limit": page_size, "offset": (page - 1) * page_size}
+
+    if search:
+        conditions.append(
+            "(p.full_name ILIKE :search OR u.phone_normalized ILIKE :search)"
+        )
+        params["search"] = f"%{search}%"
+
+    where = " AND ".join(conditions)
+
+    count_row = await db.execute(
+        text(f"""
+            SELECT COUNT(*) as total
+            FROM member_subscriptions ms
+            JOIN users u ON u.id = ms.user_id
+            LEFT JOIN profiles p ON p.user_id = ms.user_id
+            WHERE {where}
+        """),
+        params,
+    )
+    total = count_row.fetchone().total
+
+    result = await db.execute(
+        text(f"""
+            SELECT ms.id, ms.user_id, ms.amount, ms.paid_at, ms.expires_at,
+                   ms.notes, ms.created_at,
+                   p.full_name, u.phone_normalized,
+                   au.full_name as recorded_by_name
+            FROM member_subscriptions ms
+            JOIN users u ON u.id = ms.user_id
+            LEFT JOIN profiles p ON p.user_id = ms.user_id
+            JOIN admin_users au ON au.id = ms.recorded_by
+            WHERE {where}
+            ORDER BY ms.paid_at DESC
+            LIMIT :limit OFFSET :offset
+        """),
+        params,
+    )
+    rows = result.fetchall()
+
+    return {
+        "subscriptions": [
+            {
+                "id": str(r.id),
+                "user_id": str(r.user_id),
+                "full_name": r.full_name,
+                "phone": r.phone_normalized,
+                "amount": r.amount,
+                "paid_at": r.paid_at,
+                "expires_at": r.expires_at,
+                "notes": r.notes,
+                "recorded_by_name": r.recorded_by_name,
+                "created_at": r.created_at,
+            }
+            for r in rows
+        ],
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+    }
+
+
+@router.get("/subscriptions/report.csv")
+async def subscriptions_csv_report(
+    admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Download all subscription records as CSV."""
+    admin.require("view_users")
+
+    result = await db.execute(text("""
+        SELECT ms.id, p.full_name, u.phone_normalized, u.member_id,
+               ms.amount, ms.paid_at, ms.expires_at, ms.notes,
+               au.full_name as recorded_by_name, ms.created_at
+        FROM member_subscriptions ms
+        JOIN users u ON u.id = ms.user_id
+        LEFT JOIN profiles p ON p.user_id = ms.user_id
+        JOIN admin_users au ON au.id = ms.recorded_by
+        ORDER BY ms.paid_at DESC
+    """))
+    rows = result.fetchall()
+
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow([
+        "Subscription ID", "Member Name", "Phone", "Member ID",
+        "Amount (INR)", "Paid At", "Expires At", "Notes",
+        "Recorded By", "Entry Created At",
+    ])
+    for r in rows:
+        writer.writerow([
+            str(r.id), r.full_name or "", r.phone_normalized, r.member_id or "",
+            r.amount,
+            r.paid_at.strftime("%Y-%m-%d %H:%M:%S") if r.paid_at else "",
+            r.expires_at.strftime("%Y-%m-%d %H:%M:%S") if r.expires_at else "",
+            r.notes or "",
+            r.recorded_by_name,
+            r.created_at.strftime("%Y-%m-%d %H:%M:%S") if r.created_at else "",
+        ])
+
+    filename = f"subscriptions_{datetime.utcnow().strftime('%Y%m%d')}.csv"
+    return Response(
+        content=buf.getvalue(),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )

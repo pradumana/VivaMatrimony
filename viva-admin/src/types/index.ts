@@ -208,3 +208,37 @@ export interface Paginated {
   page_size: number;
   total: number;
 }
+
+// ─── Subscriptions ────────────────────────────────────────────────────────────
+
+export interface Subscription {
+  id: string;
+  user_id: string;
+  full_name: string | null;
+  phone: string;
+  amount: number;
+  paid_at: string;
+  expires_at: string;
+  notes: string | null;
+  recorded_by_name: string;
+  created_at: string;
+}
+
+export interface SubscriptionsResponse {
+  subscriptions: Subscription[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface CreateSubscriptionRequest {
+  user_id: string;
+  amount: number;
+  paid_at?: string;
+  notes?: string;
+}
+
+export interface CreateSubscriptionResponse {
+  subscription_id: string;
+  expires_at: string;
+}

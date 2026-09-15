@@ -19,6 +19,7 @@ const AdminsPage           = lazy(() => import('@/pages/admins/AdminsPage'));
 const CreateAdminPage      = lazy(() => import('@/pages/admins/CreateAdminPage'));
 const AuditLogsPage        = lazy(() => import('@/pages/audit/AuditLogsPage'));
 const SettingsPage         = lazy(() => import('@/pages/settings/SettingsPage'));
+const SubscriptionsPage    = lazy(() => import('@/pages/subscriptions/SubscriptionsPage'));
 
 function LoadingFallback() {
   return (
@@ -72,6 +73,7 @@ export default function AppRouter() {
           <Route path="reports"      element={<ReportsPage />} />
           <Route path="reports/:id"  element={<ReportDetailPage />} />
           <Route path="photos"       element={<PhotosPage />} />
+          <Route path="subscriptions" element={<SubscriptionsPage />} />
           <Route path="settings"     element={<SettingsPage />} />
 
           {/* Super admin only */}
