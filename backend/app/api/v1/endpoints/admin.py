@@ -1286,7 +1286,7 @@ async def create_subscription(
         result = await db.execute(
             text("""
                 INSERT INTO member_subscriptions (user_id, amount, paid_at, expires_at, recorded_by, notes)
-                VALUES (:user_id, :amount, :paid_at, :paid_at + INTERVAL '6 months', :recorded_by, :notes)
+                VALUES (:user_id, :amount, :paid_at, :paid_at::timestamp + INTERVAL '6 months', :recorded_by, :notes)
                 RETURNING id, expires_at
             """),
             {
