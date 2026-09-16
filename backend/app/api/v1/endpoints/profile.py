@@ -571,7 +571,9 @@ async def update_preferences(
     current_user: AuthenticatedUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    data = body.model_dump()
+    data = body.model_dump(exclude_none=True)
+    if not data:
+        raise HTTPException(status_code=400, detail="No preference fields provided")
     existing = await db.execute(
         text("SELECT id FROM partner_preferences WHERE user_id = :uid"), {"uid": current_user.user_id}
     )
@@ -590,4 +592,6 @@ async def update_preferences(
         )
     await profile_service._update_completion(db, current_user.user_id)
     await db.commit()
-    return data
+    # Return the full saved row, not just what was sent
+    r = await db.execute(text("SELECT * FROM partner_preferences WHERE user_id = :uid"), {"uid": current_user.user_id})
+    return r.fetchone()._asdict()
