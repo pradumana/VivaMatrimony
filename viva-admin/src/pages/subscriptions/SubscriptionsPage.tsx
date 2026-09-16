@@ -85,31 +85,43 @@ export default function SubscriptionsPage() {
 
   // User search for payment form
   const searchUsers = useCallback(async (query: string) => {
+    console.log('[searchUsers] Called with query:', query);
     if (query.length < 3) {
+      console.log('[searchUsers] Query too short, skipping');
       setFormSearchResults([]);
       return;
     }
+    console.log('[searchUsers] Setting searching=true');
     setFormSearching(true);
     try {
+      console.log('[searchUsers] Calling API...');
       const res = await api.searchUsers(query);
+      console.log('[searchUsers] API response:', res.data);
       setFormSearchResults(res.data.users || []);
       setFormShowResults(true);
     } catch (err) {
-      console.error('User search failed:', err);
+      console.error('[searchUsers] API call failed:', err);
       setFormSearchResults([]);
     } finally {
+      console.log('[searchUsers] Setting searching=false');
       setFormSearching(false);
     }
   }, []);
 
   const debouncedUserSearch = useRef(
-    debounce((q: string) => searchUsers(q), 300),
+    debounce((q: string) => {
+      console.log('[debouncedUserSearch] Debounced function fired with:', q);
+      searchUsers(q);
+    }, 300),
   ).current;
 
   useEffect(() => {
+    console.log('[useEffect] formUserSearch changed:', formUserSearch);
     if (formUserSearch) {
+      console.log('[useEffect] Calling debouncedUserSearch');
       debouncedUserSearch(formUserSearch);
     } else {
+      console.log('[useEffect] Clearing results');
       setFormSearchResults([]);
       setFormShowResults(false);
     }
