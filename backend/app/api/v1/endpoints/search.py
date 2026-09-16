@@ -143,6 +143,17 @@ async def search_profiles(
     # ── normal filter search ──────────────────────────────────────────────────
     offset = (page - 1) * page_size
 
+    # If gender filter not provided, default to opposite gender
+    if not gender:
+        user_gender_result = await db.execute(
+            text("SELECT gender FROM profiles WHERE user_id = :uid"),
+            {"uid": current_user.user_id},
+        )
+        user_gender_row = user_gender_result.fetchone()
+        if user_gender_row:
+            user_gender = user_gender_row.gender
+            gender = "female" if user_gender == "male" else "male"
+
     # Build query dynamically
     conditions = [
         "u.id != :uid",

@@ -74,8 +74,13 @@ void main() async {
   }
 
   // Handle links while the app is already running
-  appLinks.uriLinkStream.listen((uri) {
-    Supabase.instance.client.auth.getSessionFromUrl(uri);
+  appLinks.uriLinkStream.listen((uri) async {
+    try {
+      await Supabase.instance.client.auth.getSessionFromUrl(uri);
+    } catch (e) {
+      // Auth error (expired link, etc.) — silent fail, user sees the error page
+      debugPrint('Deep link auth failed: $e');
+    }
   });
 
   try {
