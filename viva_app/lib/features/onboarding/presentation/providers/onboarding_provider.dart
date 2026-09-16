@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/network/api_client.dart';
 import '../../../../core/providers/auth_provider.dart';
+import '../../../../core/storage/cache_service.dart';
 
 class OnboardingState {
   final bool isLoading;
