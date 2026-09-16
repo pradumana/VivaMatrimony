@@ -79,10 +79,17 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
         await client.put('/profile/location', data: data);
       });
 
-  Future<bool> savePreferences(Map<String, dynamic> data) => _save(() async {
-        final client = ref.read(apiClientProvider);
-        await client.put('/preferences', data: data);
-      });
+  Future<bool> savePreferences(Map<String, dynamic> data) async {
+    final result = await _save(() async {
+      final client = ref.read(apiClientProvider);
+      await client.put('/preferences', data: data);
+    });
+    // Invalidate matches cache so home screen refetches with new preferences
+    if (result) {
+      await CacheService.delete('matches_home');
+    }
+    return result;
+  }
 
   Future<bool> completeOnboarding() => _save(() async {
         final client = ref.read(apiClientProvider);

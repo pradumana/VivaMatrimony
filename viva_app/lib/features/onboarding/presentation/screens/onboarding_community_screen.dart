@@ -197,6 +197,7 @@ class _CommunityDropdown<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<String>(
+      // ignore: deprecated_member_use
       value: value as String?,
       isExpanded: true,
       decoration: InputDecoration(

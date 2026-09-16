@@ -299,8 +299,10 @@ class HomeScreen extends ConsumerWidget {
                         subtitle:
                             'Complete your partner preferences to discover better matches.',
                         actionLabel: 'Complete Preferences',
-                        onAction: () => context
-                            .push(AppRoutes.onboardingPreferences),
+                        onAction: () => context.push(
+                          AppRoutes.onboardingPreferences,
+                          extra: true,
+                        ),
                       ),
                     ),
                   )

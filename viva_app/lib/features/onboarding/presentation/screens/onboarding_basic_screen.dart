@@ -402,6 +402,7 @@ class _OnboardingBasicScreenState
         )),
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
+          // ignore: deprecated_member_use
           value: value,
           isExpanded: true,
           decoration: InputDecoration(
