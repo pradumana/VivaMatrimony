@@ -203,7 +203,7 @@ async def search_users_for_subscription(
             text("""
                 SELECT u.id, u.member_id, u.phone_normalized,
                        COALESCE(p.full_name, '') as full_name, 
-                       COALESCE(p.gender, '') as gender, 
+                       p.gender, 
                        p.date_of_birth
                 FROM users u
                 LEFT JOIN profiles p ON p.user_id = u.id
@@ -238,7 +238,7 @@ async def search_users_for_subscription(
                 "member_id": r.member_id or "",
                 "phone": r.phone_normalized or "",
                 "full_name": r.full_name or "No Name",
-                "gender": r.gender or "Unknown",
+                "gender": r.gender if r.gender else "Unknown",
                 "age": age,
             })
 
