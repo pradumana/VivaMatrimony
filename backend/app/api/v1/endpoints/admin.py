@@ -1280,19 +1280,21 @@ async def create_subscription(
                 raise HTTPException(status_code=404, detail="User not found")
             user_id = body.user_id
 
-        from datetime import datetime, timezone
+        from datetime import datetime, timezone, timedelta
         paid_at = body.paid_at or datetime.now(timezone.utc)
+        expires_at = paid_at + timedelta(days=180)  # 6 months = ~180 days
 
         result = await db.execute(
             text("""
                 INSERT INTO member_subscriptions (user_id, amount, paid_at, expires_at, recorded_by, notes)
-                VALUES (:user_id, :amount, :paid_at, :paid_at::timestamp + INTERVAL '6 months', :recorded_by, :notes)
+                VALUES (:user_id, :amount, :paid_at, :expires_at, :recorded_by, :notes)
                 RETURNING id, expires_at
             """),
             {
                 "user_id": user_id,
                 "amount": body.amount,
                 "paid_at": paid_at,
+                "expires_at": expires_at,
                 "recorded_by": admin.admin_id,
                 "notes": body.notes,
             },
