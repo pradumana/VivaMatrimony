@@ -36,9 +36,11 @@ class _State extends ConsumerState<VerificationSelectScreen> {
         final verificationStatus = status['verification_status'] as String? ?? 'unverified';
         final method = status['method'] as String?;
         if (verificationStatus != 'unverified' || method != null) {
-          // User already completed verification — redirect to status
+          // User already completed verification — redirect to status once
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) context.go(AppRoutes.verificationStatus);
+            if (mounted) {
+              context.replace(AppRoutes.verificationStatus);
+            }
           });
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
@@ -47,7 +49,6 @@ class _State extends ConsumerState<VerificationSelectScreen> {
     );
   }
 
-  Widget _buildSelection() {
   Widget _buildSelection() {
     return Scaffold(
       backgroundColor: AppTheme.background,

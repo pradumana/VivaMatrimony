@@ -265,7 +265,12 @@ class _State extends ConsumerState<OnboardingPhotosScreen> {
       if (confirm != true) return;
     }
 
-    await ref.read(onboardingProvider.notifier).completeOnboarding();
+    final success = await ref.read(onboardingProvider.notifier).completeOnboarding();
+    if (!success) {
+      // Error already shown via provider state, but stay on screen
+      return;
+    }
+    
     if (mounted) {
       context.go(AppRoutes.verificationSelect);
       await Future.microtask(() {});

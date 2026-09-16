@@ -87,7 +87,11 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
     });
     // Invalidate matches cache so home screen refetches with new preferences
     if (result) {
-      await CacheService.invalidate('matches_home');
+      try {
+        await CacheService.invalidate('matches_home');
+      } catch (_) {
+        // Cache invalidation failure is non-critical; preferences are saved
+      }
     }
     return result;
   }
