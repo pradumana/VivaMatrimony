@@ -1150,8 +1150,8 @@ async def update_settings_endpoint(
 
 @router.get("/users/search")
 async def search_users_for_subscription(
-    query: str = Query(..., min_length=3, description="Search by member_id, phone, or name"),
-    limit: int = Query(10, ge=1, le=50),
+    query: str = Query(..., description="Search by member_id, phone, or name"),
+    limit: int = Query(default=10, ge=1, le=50),
     admin: AdminUser = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
@@ -1161,22 +1161,31 @@ async def search_users_for_subscription(
     Returns minimal user info needed for payment recording.
     """
     admin.require("view_users")
+    
+    # Validate query length
+    if len(query.strip()) < 3:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Search query must be at least 3 characters"
+        )
 
     result = await db.execute(
         text("""
             SELECT u.id, u.member_id, u.phone_normalized,
-                   p.full_name, p.gender, p.date_of_birth
+                   COALESCE(p.full_name, '') as full_name, 
+                   COALESCE(p.gender, '') as gender, 
+                   p.date_of_birth
             FROM users u
             LEFT JOIN profiles p ON p.user_id = u.id
             WHERE u.deleted_at IS NULL
               AND (
                 u.member_id ILIKE :query
                 OR u.phone_normalized ILIKE :query
-                OR p.full_name ILIKE :query
+                OR COALESCE(p.full_name, '') ILIKE :query
               )
             ORDER BY 
               CASE WHEN u.member_id ILIKE :query THEN 1 ELSE 2 END,
-              p.full_name
+              COALESCE(p.full_name, '')
             LIMIT :limit
         """),
         {"query": f"%{query}%", "limit": limit},
@@ -1187,10 +1196,10 @@ async def search_users_for_subscription(
         "users": [
             {
                 "user_id": str(r.id),
-                "member_id": r.member_id,
-                "phone": r.phone_normalized,
-                "full_name": r.full_name,
-                "gender": r.gender,
+                "member_id": r.member_id or "",
+                "phone": r.phone_normalized or "",
+                "full_name": r.full_name or "No Name",
+                "gender": r.gender or "Unknown",
                 "age": (datetime.utcnow().year - r.date_of_birth.year) if r.date_of_birth else None,
             }
             for r in rows
