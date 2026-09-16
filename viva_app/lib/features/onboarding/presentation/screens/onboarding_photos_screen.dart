@@ -235,11 +235,13 @@ class _State extends ConsumerState<OnboardingPhotosScreen> {
   // ── Done / complete ───────────────────────────────────────────────────────
 
   Future<void> _done() async {
+    // If editing from profile, just go back without navigating to verification
     if (widget.isEditing) {
       if (mounted) context.pop();
       return;
     }
 
+    // First onboarding: confirm skip if no photos
     if (_photos.isEmpty) {
       final confirm = await showDialog<bool>(
         context: context,

@@ -40,9 +40,16 @@ class _State extends ConsumerState<VerificationReferenceScreen> {
         _successName = data['reference_name'] as String? ?? 'Member';
       });
     } on DioException catch (e) {
+      // Extract error message from ApiException
+      final apiError = ApiException.fromDioError(e);
       setState(() {
         _loading = false;
-        _error = ApiException.fromDioError(e).message;
+        _error = apiError.message;
+      });
+    } catch (e) {
+      setState(() {
+        _loading = false;
+        _error = 'Failed to add reference. Please try again.';
       });
     }
   }

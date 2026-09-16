@@ -1,21 +1,54 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/constants/app_constants.dart';
 import '../../../../shared/widgets/viva_button.dart';
 
-class VerificationSelectScreen extends StatefulWidget {
+final _verificationStatusProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+  final client = ref.read(apiClientProvider);
+  final response = await client.get('/verification/status');
+  return response.data as Map<String, dynamic>;
+});
+
+class VerificationSelectScreen extends ConsumerStatefulWidget {
   const VerificationSelectScreen({super.key});
   @override
-  State<VerificationSelectScreen> createState() => _State();
+  ConsumerState<VerificationSelectScreen> createState() => _State();
 }
 
-class _State extends State<VerificationSelectScreen> {
+class _State extends ConsumerState<VerificationSelectScreen> {
   String? _selected; // 'reference' | 'certificate'
 
   @override
   Widget build(BuildContext context) {
+    final statusAsync = ref.watch(_verificationStatusProvider);
+
+    return statusAsync.when(
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (_, __) => _buildSelection(),
+      data: (status) {
+        // If already verified or has pending verification, skip to status screen
+        final verificationStatus = status['verification_status'] as String? ?? 'unverified';
+        final method = status['method'] as String?;
+        if (verificationStatus != 'unverified' || method != null) {
+          // User already completed verification — redirect to status
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) context.go(AppRoutes.verificationStatus);
+          });
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+        return _buildSelection();
+      },
+    );
+  }
+
+  Widget _buildSelection() {
+  Widget _buildSelection() {
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
