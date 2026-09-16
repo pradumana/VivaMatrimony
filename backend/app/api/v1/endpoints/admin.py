@@ -1148,8 +1148,59 @@ async def update_settings_endpoint(
 # Member Subscriptions
 # ---------------------------------------------------------------------------
 
+@router.get("/users/search")
+async def search_users_for_subscription(
+    query: str = Query(..., min_length=3, description="Search by member_id, phone, or name"),
+    limit: int = Query(10, ge=1, le=50),
+    admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Quick user search for subscription payment recording.
+    Searches by member_id, phone, or full name.
+    Returns minimal user info needed for payment recording.
+    """
+    admin.require("view_users")
+
+    result = await db.execute(
+        text("""
+            SELECT u.id, u.member_id, u.phone_normalized,
+                   p.full_name, p.gender, p.date_of_birth
+            FROM users u
+            LEFT JOIN profiles p ON p.user_id = u.id
+            WHERE u.deleted_at IS NULL
+              AND (
+                u.member_id ILIKE :query
+                OR u.phone_normalized ILIKE :query
+                OR p.full_name ILIKE :query
+              )
+            ORDER BY 
+              CASE WHEN u.member_id ILIKE :query THEN 1 ELSE 2 END,
+              p.full_name
+            LIMIT :limit
+        """),
+        {"query": f"%{query}%", "limit": limit},
+    )
+    rows = result.fetchall()
+
+    return {
+        "users": [
+            {
+                "user_id": str(r.id),
+                "member_id": r.member_id,
+                "phone": r.phone_normalized,
+                "full_name": r.full_name,
+                "gender": r.gender,
+                "age": (datetime.utcnow().year - r.date_of_birth.year) if r.date_of_birth else None,
+            }
+            for r in rows
+        ]
+    }
+
+
 class CreateSubscriptionRequest(BaseModel):
-    user_id: UUID
+    user_id: Optional[UUID] = None
+    member_id: Optional[str] = None  # Support lookup by member_id (e.g., "VVA001234")
     amount: int = Field(..., ge=300, le=800, description="Payment amount in INR (300–800)")
     paid_at: Optional[datetime] = None   # defaults to NOW() if omitted
     notes: Optional[str] = None
@@ -1161,16 +1212,33 @@ async def create_subscription(
     admin: AdminUser = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
-    """Record a manual payment for a member."""
+    """Record a manual payment for a member. Accepts either user_id (UUID) or member_id (e.g., VVA001234)."""
     admin.require("ban")  # admin+ only (reuses existing 'ban' permission tier)
 
-    # Verify user exists
-    user_row = await db.execute(
-        text("SELECT id FROM users WHERE id = :uid AND deleted_at IS NULL"),
-        {"uid": body.user_id},
-    )
-    if not user_row.fetchone():
-        raise HTTPException(status_code=404, detail="User not found")
+    # Must provide either user_id or member_id
+    if not body.user_id and not body.member_id:
+        raise HTTPException(status_code=422, detail="Either user_id or member_id is required")
+
+    # Lookup user by member_id if provided
+    if body.member_id:
+        user_row = await db.execute(
+            text("SELECT id FROM users WHERE member_id = :mid AND deleted_at IS NULL"),
+            {"mid": body.member_id},
+        )
+        row = user_row.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail=f"User not found with member_id: {body.member_id}")
+        user_id = row.id
+    else:
+        # Verify user exists by UUID
+        user_row = await db.execute(
+            text("SELECT id FROM users WHERE id = :uid AND deleted_at IS NULL"),
+            {"uid": body.user_id},
+        )
+        row = user_row.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="User not found")
+        user_id = body.user_id
 
     paid_at = body.paid_at or datetime.utcnow()
 
@@ -1181,7 +1249,7 @@ async def create_subscription(
             RETURNING id, expires_at
         """),
         {
-            "user_id": body.user_id,
+            "user_id": user_id,
             "amount": body.amount,
             "paid_at": paid_at,
             "recorded_by": admin.admin_id,
@@ -1193,7 +1261,7 @@ async def create_subscription(
     await log_action(
         db, "admin", admin.admin_id, "record_subscription",
         "member_subscription", row.id,
-        {"user_id": str(body.user_id), "amount": body.amount},
+        {"user_id": str(user_id), "member_id": body.member_id, "amount": body.amount},
     )
     return {"subscription_id": str(row.id), "expires_at": row.expires_at}
 

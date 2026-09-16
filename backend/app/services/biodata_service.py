@@ -13,6 +13,7 @@ from uuid import UUID
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
+from PIL import Image as PILImage
 
 from app.config import get_settings
 from app.database import get_supabase
@@ -20,6 +21,12 @@ from app.services.profile_service import get_profile
 
 settings = get_settings()
 logger = structlog.get_logger()
+
+# Image optimization constants
+MAX_IMAGE_WIDTH = 800  # pixels
+MAX_IMAGE_HEIGHT = 1000  # pixels  
+MAX_IMAGE_SIZE_MB = 2  # MB before compression
+JPEG_QUALITY = 85  # Balance between quality and size
 
 
 async def generate_biodata_pdf(
@@ -61,26 +68,34 @@ async def generate_biodata_pdf(
     for p in photos_result.fetchall():
         try:
             url = supabase.storage.from_(settings.storage_bucket_profile_photos).get_public_url(p.storage_path)
-            all_photo_urls.append(url)
-        except Exception:
-            pass
+            # Optimize image before adding to PDF
+            optimized_url = await _optimize_image_for_pdf(url, supabase, p.storage_path)
+            all_photo_urls.append(optimized_url if optimized_url else url)
+        except Exception as exc:
+            logger.warning("photo_optimization_failed", path=p.storage_path, error=str(exc))
+            # Use original URL as fallback
+            try:
+                url = supabase.storage.from_(settings.storage_bucket_profile_photos).get_public_url(p.storage_path)
+                all_photo_urls.append(url)
+            except Exception:
+                pass
 
     # Build template context — NO sensitive data
     context = {
-        "full_name": profile.get("full_name", ""),
+        "full_name": _normalize_text(profile.get("full_name", "")),
         "age": profile.get("age"),
-        "gender": profile.get("gender", "").title(),
+        "gender": _normalize_text(profile.get("gender", "")).title() if profile.get("gender") else None,
         "height": profile.get("height_display"),
         "marital_status": _format_enum(profile.get("marital_status", "")),
         "have_children": profile.get("have_children"),
         "children_count": profile.get("children_count"),
-        "mother_tongue": profile.get("mother_tongue", ""),
-        "languages_known": profile.get("languages_known") or [],
-        "religion": profile.get("religion", ""),
-        "caste": profile.get("caste", ""),
-        "sub_caste": profile.get("sub_caste", ""),
-        "gotra": profile.get("gotra", ""),
-        "about_me": profile.get("about_me", ""),
+        "mother_tongue": _normalize_text(profile.get("mother_tongue", "")),
+        "languages_known": _normalize_array(profile.get("languages_known")),
+        "religion": _normalize_text(profile.get("religion", "")),
+        "caste": _normalize_text(profile.get("caste", "")),
+        "sub_caste": _normalize_text(profile.get("sub_caste", "")),
+        "gotra": _normalize_text(profile.get("gotra", "")),
+        "about_me": _normalize_text(profile.get("about_me", "")),
         "photo_url": primary_photo_url,
         "all_photo_urls": all_photo_urls,
         "is_verified": profile.get("is_verified", False),
@@ -91,16 +106,16 @@ async def generate_biodata_pdf(
         "native_place": _format_location(profile_data.get("native_place")),
 
         # Education
-        "education": profile_data.get("education"),
+        "education": _normalize_education(profile_data.get("education")),
 
         # Employment — respect show_income/show_company flags
         "employment": _filter_employment(profile_data.get("employment")),
 
         # Family — respect show_parents_info
-        "family": _filter_family(profile_data.get("family")),
+        "family": _normalize_family(profile_data.get("family")),
 
         # Lifestyle
-        "lifestyle": profile_data.get("lifestyle"),
+        "lifestyle": _normalize_lifestyle(profile_data.get("lifestyle")),
 
         # Partner preferences
         "partner_preferences": await _fetch_partner_preferences(db, user_id),
@@ -163,12 +178,16 @@ def _render_pdf(context: dict, template: str = "traditional") -> bytes:
     import os
     template_dir = os.path.join(os.path.dirname(__file__), "..", "utils", "templates")
 
+    # Map template names to V2 templates (new premium designs)
     _template_files = {
-        "traditional": "biodata.html",
-        "floral": "biodata_floral.html",
-        "half_photo": "biodata_half_photo.html",
+        "traditional": "biodata_traditional_v2.html",
+        "modern": "biodata_modern_v2.html",
+        "floral": "biodata_floral_v2.html",
+        "royal": "biodata_royal_v2.html",
+        # Legacy fallbacks for old template names
+        "half_photo": "biodata_modern_v2.html",  # Map old "half_photo" to new "modern"
     }
-    template_file = _template_files.get(template, "biodata.html")
+    template_file = _template_files.get(template, "biodata_traditional_v2.html")
 
     env = Environment(
         loader=FileSystemLoader(template_dir),
@@ -193,6 +212,7 @@ def _render_pdf(context: dict, template: str = "traditional") -> bytes:
 
 
 def _format_location(loc: Optional[dict]) -> Optional[str]:
+    """Format location dict into readable string."""
     if not loc:
         return None
     parts = [p for p in [loc.get("city"), loc.get("district"), loc.get("state"), loc.get("country")] if p]
@@ -200,25 +220,151 @@ def _format_location(loc: Optional[dict]) -> Optional[str]:
 
 
 def _format_enum(val: str) -> str:
+    """Convert enum value to title case display text."""
+    if not val:
+        return ""
     return val.replace("_", " ").title()
 
 
+def _normalize_text(text: Optional[str]) -> Optional[str]:
+    """Normalize text: trim whitespace, handle empty strings."""
+    if not text:
+        return None
+    text = text.strip()
+    return text if text else None
+
+
+def _normalize_array(arr: Optional[list]) -> Optional[list]:
+    """Normalize array: remove empty items, handle None."""
+    if not arr:
+        return None
+    normalized = [item.strip() for item in arr if item and str(item).strip()]
+    return normalized if normalized else None
+
+
 def _filter_employment(employment: Optional[dict]) -> Optional[dict]:
+    """Filter employment data based on privacy settings."""
     if not employment:
         return None
     result = dict(employment)
+    
+    # Normalize text fields
+    if result.get("profession"):
+        result["profession"] = _normalize_text(result["profession"])
+    if result.get("job_title"):
+        result["job_title"] = _normalize_text(result["job_title"])
+    if result.get("industry"):
+        result["industry"] = _normalize_text(result["industry"])
+    if result.get("work_location"):
+        result["work_location"] = _normalize_text(result["work_location"])
+    
+    # Apply privacy filters
     if not result.get("show_company"):
         result["company"] = None
+    elif result.get("company"):
+        result["company"] = _normalize_text(result["company"])
+    
     if not result.get("show_income"):
         result["income_min_lpa"] = None
         result["income_max_lpa"] = None
-    return result
+    
+    return result if any([
+        result.get("profession"),
+        result.get("job_title"),
+        result.get("company"),
+        result.get("industry"),
+        result.get("income_min_lpa")
+    ]) else None
 
 
-def _filter_family(family: Optional[dict]) -> Optional[dict]:
+def _normalize_education(education: Optional[dict]) -> Optional[dict]:
+    """Normalize education data."""
+    if not education:
+        return None
+    result = dict(education)
+    
+    # Normalize text fields
+    for field in ["highest_qualification", "degree", "field_of_study", "college_university", "additional_qualifications"]:
+        if result.get(field):
+            result[field] = _normalize_text(result[field])
+    
+    return result if any(result.values()) else None
+
+
+def _normalize_family(family: Optional[dict]) -> Optional[dict]:
+    """Normalize family data and respect privacy settings."""
     if not family:
         return None
-    return family  # Already filtered in get_profile for own view
+    result = dict(family)
+    
+    # Apply privacy filter for parent information
+    if not result.get("show_parents_info"):
+        result["father_name"] = None
+        result["father_occupation"] = None
+        result["father_is_alive"] = None
+        result["mother_name"] = None
+        result["mother_occupation"] = None
+        result["mother_is_alive"] = None
+    else:
+        # Normalize text fields only if showing parent info
+        for field in ["father_name", "father_occupation", "mother_name", "mother_occupation"]:
+            if result.get(field):
+                result[field] = _normalize_text(result[field])
+    
+    # Always normalize non-parent fields
+    for field in ["family_location", "additional_info"]:
+        if result.get(field):
+            result[field] = _normalize_text(result[field])
+    
+    # Format family type and values
+    if result.get("family_type"):
+        result["family_type"] = _normalize_text(result["family_type"])
+    if result.get("family_values"):
+        result["family_values"] = _normalize_text(result["family_values"])
+    
+    # Return None if no displayable family data exists
+    return result if any([
+        result.get("father_name"),
+        result.get("mother_name"),
+        result.get("brothers_count") is not None,
+        result.get("sisters_count") is not None,
+        result.get("family_type"),
+        result.get("family_values"),
+        result.get("family_location"),
+        result.get("additional_info")
+    ]) else None
+
+
+def _normalize_lifestyle(lifestyle: Optional[dict]) -> Optional[dict]:
+    """Normalize lifestyle data."""
+    if not lifestyle:
+        return None
+    result = dict(lifestyle)
+    
+    # Normalize text fields
+    for field in ["fitness", "other_info"]:
+        if result.get(field):
+            result[field] = _normalize_text(result[field])
+    
+    # Normalize arrays
+    if result.get("hobbies"):
+        result["hobbies"] = _normalize_array(result["hobbies"])
+    if result.get("interests"):
+        result["interests"] = _normalize_array(result["interests"])
+    if result.get("pet_types"):
+        result["pet_types"] = _normalize_array(result["pet_types"])
+    
+    return result if any([
+        result.get("diet"),
+        result.get("smoking"),
+        result.get("drinking"),
+        result.get("fitness"),
+        result.get("hobbies"),
+        result.get("interests"),
+        result.get("travel"),
+        result.get("pets"),
+        result.get("other_info")
+    ]) else None
 
 
 def _compute_profile_hash(profile_data: dict) -> str:
@@ -254,3 +400,88 @@ async def _fetch_partner_preferences(db: AsyncSession, user_id: UUID) -> Optiona
         elif val is None:
             d[key] = []
     return d if any(d.values()) else None
+
+
+async def _optimize_image_for_pdf(image_url: str, supabase, storage_path: str) -> Optional[str]:
+    """
+    Optimize image for PDF embedding to reduce file size.
+    Downloads, resizes, compresses, and re-uploads optimized version.
+    Returns optimized URL or None if optimization fails.
+    """
+    try:
+        import httpx
+        from io import BytesIO
+        
+        # Download image
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(image_url)
+            if response.status_code != 200:
+                return None
+            
+            image_bytes = response.content
+            
+            # Check if image is already small enough
+            size_mb = len(image_bytes) / (1024 * 1024)
+            if size_mb < 0.5:  # Already small, skip optimization
+                return None
+            
+            # Open image with Pillow
+            img = PILImage.open(BytesIO(image_bytes))
+            
+            # Convert RGBA to RGB if needed
+            if img.mode in ('RGBA', 'LA', 'P'):
+                background = PILImage.new('RGB', img.size, (255, 255, 255))
+                if img.mode == 'P':
+                    img = img.convert('RGBA')
+                background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
+                img = background
+            elif img.mode != 'RGB':
+                img = img.convert('RGB')
+            
+            # Calculate new dimensions maintaining aspect ratio
+            width, height = img.size
+            if width > MAX_IMAGE_WIDTH or height > MAX_IMAGE_HEIGHT:
+                ratio = min(MAX_IMAGE_WIDTH / width, MAX_IMAGE_HEIGHT / height)
+                new_width = int(width * ratio)
+                new_height = int(height * ratio)
+                img = img.resize((new_width, new_height), PILImage.Resampling.LANCZOS)
+            
+            # Save optimized image to bytes
+            output = BytesIO()
+            img.save(output, format='JPEG', quality=JPEG_QUALITY, optimize=True)
+            optimized_bytes = output.getvalue()
+            
+            # Only use optimized version if significantly smaller
+            optimized_size_mb = len(optimized_bytes) / (1024 * 1024)
+            if optimized_size_mb >= size_mb * 0.8:  # Less than 20% reduction, skip
+                return None
+            
+            # Upload optimized version with _optimized suffix
+            base_path = storage_path.rsplit('.', 1)[0]
+            ext = storage_path.rsplit('.', 1)[1] if '.' in storage_path else 'jpg'
+            optimized_path = f"{base_path}_optimized.jpg"
+            
+            try:
+                # Remove existing optimized version if any
+                supabase.storage.from_(settings.storage_bucket_profile_photos).remove([optimized_path])
+            except Exception:
+                pass
+            
+            # Upload new optimized version
+            supabase.storage.from_(settings.storage_bucket_profile_photos).upload(
+                path=optimized_path,
+                file=optimized_bytes,
+                file_options={"content-type": "image/jpeg"},
+            )
+            
+            # Return optimized URL
+            optimized_url = supabase.storage.from_(settings.storage_bucket_profile_photos).get_public_url(optimized_path)
+            logger.info("image_optimized", 
+                       original_size_mb=round(size_mb, 2), 
+                       optimized_size_mb=round(optimized_size_mb, 2),
+                       reduction_pct=round((1 - optimized_size_mb/size_mb) * 100, 1))
+            return optimized_url
+            
+    except Exception as exc:
+        logger.warning("image_optimization_failed", error=str(exc), storage_path=storage_path)
+        return None

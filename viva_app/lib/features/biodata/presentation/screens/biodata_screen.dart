@@ -31,7 +31,7 @@ class BiodataScreen extends ConsumerStatefulWidget {
 }
 
 class _BiodataScreenState extends ConsumerState<BiodataScreen> {
-  /// One of: 'traditional' | 'floral' | 'half_photo'
+  /// One of: 'traditional' | 'modern' | 'floral' | 'royal'
   String _template = 'traditional';
   bool _generating = false;
   bool _downloading = false;
@@ -166,33 +166,44 @@ class _BiodataScreenState extends ConsumerState<BiodataScreen> {
               const Text('Choose Template',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
               const SizedBox(height: 12),
-              Row(children: [
-                _TemplateCard(
-                  id: 'traditional',
-                  label: 'Traditional',
-                  description: 'Classic maroon & gold',
-                  icon: Icons.auto_awesome_outlined,
-                  selected: _template == 'traditional',
-                  onTap: () => setState(() => _template = 'traditional'),
-                ),
-                const SizedBox(width: 10),
-                _TemplateCard(
-                  id: 'floral',
-                  label: 'Floral',
-                  description: 'Soft plum & lilac',
-                  icon: Icons.local_florist_outlined,
-                  selected: _template == 'floral',
-                  onTap: () => setState(() => _template = 'floral'),
-                ),
-                const SizedBox(width: 10),
-                _TemplateCard(
-                  id: 'half_photo',
-                  label: 'Modern',
-                  description: 'Half photo layout',
-                  icon: Icons.view_column_outlined,
-                  selected: _template == 'half_photo',
-                  onTap: () => setState(() => _template = 'half_photo'),
-                ),              ]),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  _TemplateCard(
+                    id: 'traditional',
+                    label: 'Traditional',
+                    description: 'Classic maroon & gold',
+                    icon: Icons.auto_awesome_outlined,
+                    selected: _template == 'traditional',
+                    onTap: () => setState(() => _template = 'traditional'),
+                  ),
+                  _TemplateCard(
+                    id: 'modern',
+                    label: 'Modern',
+                    description: 'Clean minimal design',
+                    icon: Icons.view_column_outlined,
+                    selected: _template == 'modern',
+                    onTap: () => setState(() => _template = 'modern'),
+                  ),
+                  _TemplateCard(
+                    id: 'floral',
+                    label: 'Floral',
+                    description: 'Soft pastel colors',
+                    icon: Icons.local_florist_outlined,
+                    selected: _template == 'floral',
+                    onTap: () => setState(() => _template = 'floral'),
+                  ),
+                  _TemplateCard(
+                    id: 'royal',
+                    label: 'Royal',
+                    description: 'Premium gold accents',
+                    icon: Icons.diamond_outlined,
+                    selected: _template == 'royal',
+                    onTap: () => setState(() => _template = 'royal'),
+                  ),
+                ],
+              ),
 
               const SizedBox(height: 20),
 
