@@ -1150,8 +1150,8 @@ async def update_settings_endpoint(
 
 @router.get("/users/search")
 async def search_users_for_subscription(
-    query: str = Query(..., description="Search by member_id, phone, or name"),
-    limit: int = Query(default=10, ge=1, le=50),
+    query: str,
+    limit: int = 10,
     admin: AdminUser = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
@@ -1163,11 +1163,15 @@ async def search_users_for_subscription(
     admin.require("view_users")
     
     # Validate query length
-    if len(query.strip()) < 3:
+    if not query or len(query.strip()) < 3:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Search query must be at least 3 characters"
         )
+    
+    # Validate limit
+    if limit < 1 or limit > 50:
+        limit = 10
 
     result = await db.execute(
         text("""
