@@ -1252,57 +1252,76 @@ async def create_subscription(
     db: AsyncSession = Depends(get_db),
 ):
     """Record a manual payment for a member. Accepts either user_id (UUID) or member_id (e.g., VVA001234)."""
-    admin.require("ban")  # admin+ only (reuses existing 'ban' permission tier)
+    try:
+        admin.require("ban")  # admin+ only (reuses existing 'ban' permission tier)
 
-    # Must provide either user_id or member_id
-    if not body.user_id and not body.member_id:
-        raise HTTPException(status_code=422, detail="Either user_id or member_id is required")
+        # Must provide either user_id or member_id
+        if not body.user_id and not body.member_id:
+            raise HTTPException(status_code=422, detail="Either user_id or member_id is required")
 
-    # Lookup user by member_id if provided
-    if body.member_id:
-        user_row = await db.execute(
-            text("SELECT id FROM users WHERE member_id = :mid AND deleted_at IS NULL"),
-            {"mid": body.member_id},
+        # Lookup user by member_id if provided
+        if body.member_id:
+            user_row = await db.execute(
+                text("SELECT id FROM users WHERE member_id = :mid AND deleted_at IS NULL"),
+                {"mid": body.member_id},
+            )
+            row = user_row.fetchone()
+            if not row:
+                raise HTTPException(status_code=404, detail=f"User not found with member_id: {body.member_id}")
+            user_id = row.id
+        else:
+            # Verify user exists by UUID
+            user_row = await db.execute(
+                text("SELECT id FROM users WHERE id = :uid AND deleted_at IS NULL"),
+                {"uid": body.user_id},
+            )
+            row = user_row.fetchone()
+            if not row:
+                raise HTTPException(status_code=404, detail="User not found")
+            user_id = body.user_id
+
+        from datetime import datetime, timezone
+        paid_at = body.paid_at or datetime.now(timezone.utc)
+
+        result = await db.execute(
+            text("""
+                INSERT INTO member_subscriptions (user_id, amount, paid_at, expires_at, recorded_by, notes)
+                VALUES (:user_id, :amount, :paid_at, :paid_at + INTERVAL '6 months', :recorded_by, :notes)
+                RETURNING id, expires_at
+            """),
+            {
+                "user_id": user_id,
+                "amount": body.amount,
+                "paid_at": paid_at,
+                "recorded_by": admin.admin_id,
+                "notes": body.notes,
+            },
         )
-        row = user_row.fetchone()
-        if not row:
-            raise HTTPException(status_code=404, detail=f"User not found with member_id: {body.member_id}")
-        user_id = row.id
-    else:
-        # Verify user exists by UUID
-        user_row = await db.execute(
-            text("SELECT id FROM users WHERE id = :uid AND deleted_at IS NULL"),
-            {"uid": body.user_id},
+        row = result.fetchone()
+        await db.commit()
+        await log_action(
+            db, "admin", admin.admin_id, "record_subscription",
+            "member_subscription", row.id,
+            {"user_id": str(user_id), "member_id": body.member_id, "amount": body.amount},
         )
-        row = user_row.fetchone()
-        if not row:
-            raise HTTPException(status_code=404, detail="User not found")
-        user_id = body.user_id
-
-    paid_at = body.paid_at or datetime.utcnow()
-
-    result = await db.execute(
-        text("""
-            INSERT INTO member_subscriptions (user_id, amount, paid_at, expires_at, recorded_by, notes)
-            VALUES (:user_id, :amount, :paid_at, :paid_at + INTERVAL '6 months', :recorded_by, :notes)
-            RETURNING id, expires_at
-        """),
-        {
-            "user_id": user_id,
+        
+        return {
+            "id": row.id,
+            "user_id": str(user_id),
             "amount": body.amount,
-            "paid_at": paid_at,
-            "recorded_by": admin.admin_id,
-            "notes": body.notes,
-        },
-    )
-    row = result.fetchone()
-    await db.commit()
-    await log_action(
-        db, "admin", admin.admin_id, "record_subscription",
-        "member_subscription", row.id,
-        {"user_id": str(user_id), "member_id": body.member_id, "amount": body.amount},
-    )
-    return {"subscription_id": str(row.id), "expires_at": row.expires_at}
+            "paid_at": paid_at.isoformat(),
+            "expires_at": row.expires_at.isoformat(),
+            "recorded_by": str(admin.admin_id),
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create subscription: {str(e)}"
+        )
 
 
 @router.get("/subscriptions")
