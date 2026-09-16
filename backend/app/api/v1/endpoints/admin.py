@@ -229,7 +229,7 @@ async def search_users_for_subscription(
                 "phone": r.phone_normalized or "",
                 "full_name": r.full_name or "No Name",
                 "gender": r.gender or "Unknown",
-                "age": (datetime.utcnow().year - r.date_of_birth.year) if r.date_of_birth else None,
+                "age": (datetime.now().year - r.date_of_birth.year) if r.date_of_birth else None,
             }
             for r in rows
         ]
