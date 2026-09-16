@@ -192,7 +192,8 @@ class _StatusBody extends StatelessWidget {
 
           const SizedBox(height: 28),
 
-          if (!status.isVerified) ...[
+          // Only show "Change Method" if no pending request
+          if (!status.isVerified && !status.isPending) ...[
             VivaButton(
               label: 'Change Verification Method',
               isOutlined: true,
