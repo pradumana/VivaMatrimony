@@ -15,6 +15,15 @@ function isExpired(expires_at: string) {
   return new Date(expires_at) < new Date();
 }
 
+interface UserSearchResult {
+  user_id: string;
+  member_id: string;
+  phone: string;
+  full_name: string;
+  gender: string;
+  age: number | null;
+}
+
 export default function SubscriptionsPage() {
   useTitle('Subscriptions');
 
@@ -27,7 +36,11 @@ export default function SubscriptionsPage() {
 
   // Add payment form
   const [showForm, setShowForm]     = useState(false);
-  const [formUserId, setFormUserId] = useState('');
+  const [formMemberId, setFormMemberId] = useState(''); // Changed from formUserId
+  const [formUserSearch, setFormUserSearch] = useState(''); // New: search query
+  const [formSearchResults, setFormSearchResults] = useState<UserSearchResult[]>([]);
+  const [formSearching, setFormSearching] = useState(false);
+  const [formShowResults, setFormShowResults] = useState(false);
   const [formAmount, setFormAmount] = useState('500');
   const [formPaidAt, setFormPaidAt] = useState('');
   const [formNotes, setFormNotes]   = useState('');
@@ -36,6 +49,7 @@ export default function SubscriptionsPage() {
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
 
   const [csvLoading, setCsvLoading] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const fetchSubs = useCallback(async (q: string, pg: number) => {
     setLoading(true);
@@ -69,13 +83,59 @@ export default function SubscriptionsPage() {
     setPage(1);
   }
 
+  // User search for payment form
+  const searchUsers = useCallback(async (query: string) => {
+    if (query.length < 3) {
+      setFormSearchResults([]);
+      return;
+    }
+    setFormSearching(true);
+    try {
+      const res = await api.searchUsers(query);
+      setFormSearchResults(res.data.users || []);
+      setFormShowResults(true);
+    } catch (err) {
+      console.error('User search failed:', err);
+      setFormSearchResults([]);
+    } finally {
+      setFormSearching(false);
+    }
+  }, []);
+
+  const debouncedUserSearch = useRef(
+    debounce((q: string) => searchUsers(q), 300),
+  ).current;
+
+  useEffect(() => {
+    if (formUserSearch) {
+      debouncedUserSearch(formUserSearch);
+    } else {
+      setFormSearchResults([]);
+      setFormShowResults(false);
+    }
+  }, [formUserSearch, debouncedUserSearch]);
+
+  function handleSelectUser(user: UserSearchResult) {
+    setFormMemberId(user.member_id);
+    setFormUserSearch(`${user.full_name} (${user.member_id})`);
+    setFormShowResults(false);
+    setFormSearchResults([]);
+  }
+
+  function handleClearUser() {
+    setFormMemberId('');
+    setFormUserSearch('');
+    setFormSearchResults([]);
+    setFormShowResults(false);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setFormError(null);
     setFormSuccess(null);
 
     const amount = parseInt(formAmount, 10);
-    if (!formUserId.trim()) { setFormError('User ID is required.'); return; }
+    if (!formMemberId.trim()) { setFormError('Please search and select a member.'); return; }
     if (isNaN(amount) || amount < 300 || amount > 800) {
       setFormError('Amount must be between ₹300 and ₹800.');
       return;
@@ -84,14 +144,17 @@ export default function SubscriptionsPage() {
     setSubmitting(true);
     try {
       const res = await api.createSubscription({
-        user_id: formUserId.trim(),
+        member_id: formMemberId.trim(),
         amount,
         paid_at: formPaidAt || undefined,
         notes: formNotes.trim() || undefined,
       });
       const data = res.data as { expires_at: string };
       setFormSuccess(`Payment recorded. Valid until ${fmtDate(data.expires_at)}.`);
-      setFormUserId(''); setFormAmount('500'); setFormPaidAt(''); setFormNotes('');
+      handleClearUser();
+      setFormAmount('500');
+      setFormPaidAt('');
+      setFormNotes('');
       fetchSubs(search, page);
     } catch (err) {
       setFormError(apiErrorMessage(err));
@@ -159,17 +222,83 @@ export default function SubscriptionsPage() {
 
           <form onSubmit={handleSubmit}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 16px' }}>
-              <div>
-                <label className="field-label" htmlFor="sub-user-id">User ID *</label>
+              <div style={{ position: 'relative' }}>
+                <label className="field-label" htmlFor="sub-user-search">Member Search *</label>
                 <input
-                  id="sub-user-id"
+                  id="sub-user-search"
+                  ref={searchInputRef}
                   className="input"
-                  placeholder="Paste user UUID"
-                  value={formUserId}
-                  onChange={e => setFormUserId(e.target.value)}
-                  required
+                  placeholder="Type name, phone, or member ID..."
+                  value={formUserSearch}
+                  onChange={e => {
+                    setFormUserSearch(e.target.value);
+                    if (!e.target.value) handleClearUser();
+                  }}
+                  onFocus={() => {
+                    if (formSearchResults.length > 0) setFormShowResults(true);
+                  }}
                   disabled={submitting}
+                  autoComplete="off"
                 />
+                {formSearching && (
+                  <div style={{ position: 'absolute', right: 12, top: 34, color: 'var(--c-text-tertiary)', fontSize: 12 }}>
+                    Searching...
+                  </div>
+                )}
+                {formShowResults && formSearchResults.length > 0 && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    marginTop: 4,
+                    background: 'white',
+                    border: '1px solid var(--c-border)',
+                    borderRadius: 8,
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                    maxHeight: 240,
+                    overflowY: 'auto',
+                    zIndex: 1000,
+                  }}>
+                    {formSearchResults.map(user => (
+                      <button
+                        key={user.user_id}
+                        type="button"
+                        onClick={() => handleSelectUser(user)}
+                        style={{
+                          width: '100%',
+                          padding: '10px 12px',
+                          border: 'none',
+                          background: 'transparent',
+                          textAlign: 'left',
+                          cursor: 'pointer',
+                          borderBottom: '1px solid var(--c-border-light)',
+                          transition: 'background 0.15s',
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--c-bg-secondary)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <div style={{ fontWeight: 600, fontSize: 14 }}>{user.full_name}</div>
+                        <div style={{ display: 'flex', gap: 12, fontSize: 12, color: 'var(--c-text-secondary)', marginTop: 2 }}>
+                          <span>{user.member_id}</span>
+                          <span>•</span>
+                          <span>{maskPhone(user.phone)}</span>
+                          {user.age && (
+                            <>
+                              <span>•</span>
+                              <span>{user.age}y {user.gender}</span>
+                            </>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {formMemberId && (
+                  <div style={{ marginTop: 4, fontSize: 12, color: 'var(--c-success)', fontWeight: 600 }}>
+                    ✓ Selected: {formMemberId}
+                  </div>
+                )}
               </div>
               <div>
                 <label className="field-label" htmlFor="sub-amount">Amount (₹300–800) *</label>

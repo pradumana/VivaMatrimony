@@ -151,7 +151,9 @@ export const api = {
   // Subscriptions
   getSubscriptions: (params?: Record<string, string | number | undefined>) =>
     http.get('/admin/subscriptions', { params }),
-  createSubscription: (data: { user_id: string; amount: number; paid_at?: string; notes?: string }) =>
+  searchUsers: (query: string) =>
+    http.get('/admin/users/search', { params: { query, limit: 10 } }),
+  createSubscription: (data: { member_id?: string; user_id?: string; amount: number; paid_at?: string; notes?: string }) =>
     http.post('/admin/subscriptions', data),
   downloadSubscriptionsCSV: () =>
     http.get('/admin/subscriptions/report.csv', { responseType: 'blob' }),
