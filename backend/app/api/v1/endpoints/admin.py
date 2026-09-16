@@ -169,6 +169,76 @@ async def list_users(
     }
 
 
+# ---------------------------------------------------------------------------
+# User search (must come BEFORE /users/{user_id} to avoid route conflict)
+# ---------------------------------------------------------------------------
+
+@router.get("/users/search")
+async def search_users_for_subscription(
+    query: str,
+    limit: int = 10,
+    admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Quick user search for subscription payment recording.
+    Searches by member_id, phone, or full name.
+    Returns minimal user info needed for payment recording.
+    """
+    admin.require("view_users")
+    
+    # Validate query length
+    if not query or len(query.strip()) < 3:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Search query must be at least 3 characters"
+        )
+    
+    # Validate limit
+    if limit < 1 or limit > 50:
+        limit = 10
+
+    result = await db.execute(
+        text("""
+            SELECT u.id, u.member_id, u.phone_normalized,
+                   COALESCE(p.full_name, '') as full_name, 
+                   COALESCE(p.gender, '') as gender, 
+                   p.date_of_birth
+            FROM users u
+            LEFT JOIN profiles p ON p.user_id = u.id
+            WHERE u.deleted_at IS NULL
+              AND (
+                u.member_id ILIKE :query
+                OR u.phone_normalized ILIKE :query
+                OR COALESCE(p.full_name, '') ILIKE :query
+              )
+            ORDER BY 
+              CASE WHEN u.member_id ILIKE :query THEN 1 ELSE 2 END,
+              COALESCE(p.full_name, '')
+            LIMIT :limit
+        """),
+        {"query": f"%{query}%", "limit": limit},
+    )
+    rows = result.fetchall()
+
+    return {
+        "users": [
+            {
+                "user_id": str(r.id),
+                "member_id": r.member_id or "",
+                "phone": r.phone_normalized or "",
+                "full_name": r.full_name or "No Name",
+                "gender": r.gender or "Unknown",
+                "age": (datetime.utcnow().year - r.date_of_birth.year) if r.date_of_birth else None,
+            }
+            for r in rows
+        ]
+    }
+
+# ---------------------------------------------------------------------------
+# User management
+# ---------------------------------------------------------------------------
+
 @router.get("/users/{user_id}")
 async def get_user_detail(
     user_id: UUID,
@@ -1147,69 +1217,8 @@ async def update_settings_endpoint(
 # ---------------------------------------------------------------------------
 # Member Subscriptions
 # ---------------------------------------------------------------------------
-
-@router.get("/users/search")
-async def search_users_for_subscription(
-    query: str,
-    limit: int = 10,
-    admin: AdminUser = Depends(get_current_admin),
-    db: AsyncSession = Depends(get_db),
-):
-    """
-    Quick user search for subscription payment recording.
-    Searches by member_id, phone, or full name.
-    Returns minimal user info needed for payment recording.
-    """
-    admin.require("view_users")
-    
-    # Validate query length
-    if not query or len(query.strip()) < 3:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Search query must be at least 3 characters"
-        )
-    
-    # Validate limit
-    if limit < 1 or limit > 50:
-        limit = 10
-
-    result = await db.execute(
-        text("""
-            SELECT u.id, u.member_id, u.phone_normalized,
-                   COALESCE(p.full_name, '') as full_name, 
-                   COALESCE(p.gender, '') as gender, 
-                   p.date_of_birth
-            FROM users u
-            LEFT JOIN profiles p ON p.user_id = u.id
-            WHERE u.deleted_at IS NULL
-              AND (
-                u.member_id ILIKE :query
-                OR u.phone_normalized ILIKE :query
-                OR COALESCE(p.full_name, '') ILIKE :query
-              )
-            ORDER BY 
-              CASE WHEN u.member_id ILIKE :query THEN 1 ELSE 2 END,
-              COALESCE(p.full_name, '')
-            LIMIT :limit
-        """),
-        {"query": f"%{query}%", "limit": limit},
-    )
-    rows = result.fetchall()
-
-    return {
-        "users": [
-            {
-                "user_id": str(r.id),
-                "member_id": r.member_id or "",
-                "phone": r.phone_normalized or "",
-                "full_name": r.full_name or "No Name",
-                "gender": r.gender or "Unknown",
-                "age": (datetime.utcnow().year - r.date_of_birth.year) if r.date_of_birth else None,
-            }
-            for r in rows
-        ]
-    }
-
+# Subscriptions
+# ---------------------------------------------------------------------------
 
 class CreateSubscriptionRequest(BaseModel):
     user_id: Optional[UUID] = None
