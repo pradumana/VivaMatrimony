@@ -552,8 +552,12 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                       );
                       if (confirm == true) {
                         await ref.read(authProvider.notifier).logout();
-                        // context.go() replaces entire navigation stack
-                        if (context.mounted) context.go(AppRoutes.login);
+                        // Defer navigation to next frame to avoid Navigator lock
+                        if (context.mounted) {
+                          Future.microtask(() {
+                            if (context.mounted) context.go(AppRoutes.login);
+                          });
+                        }
                       }
                     },
                   ),

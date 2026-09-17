@@ -357,8 +357,12 @@ class _DeleteAccountDialogState
     final router = GoRouter.of(context);
     nav.pop(); // Close confirmation dialog
     await ref.read(authProvider.notifier).logout();
-    // router.go() replaces entire navigation stack
-    if (context.mounted) router.go(AppRoutes.login);
+    // Defer navigation to next frame to avoid Navigator lock
+    if (context.mounted) {
+      Future.microtask(() {
+        if (context.mounted) router.go(AppRoutes.login);
+      });
+    }
   }
 }
 

@@ -167,8 +167,12 @@ class _OnboardingBasicScreenState
       showBack: true,
       onBack: () async {
         await ref.read(authProvider.notifier).logout();
-        // context.go() replaces entire navigation stack
-        if (context.mounted) context.go(AppRoutes.login);
+        // Defer navigation to next frame to avoid Navigator lock
+        if (context.mounted) {
+          Future.microtask(() {
+            if (context.mounted) context.go(AppRoutes.login);
+          });
+        }
       },
       showSkip: false,
       child: Form(
