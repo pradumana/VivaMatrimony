@@ -552,8 +552,9 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                       );
                       if (confirm == true) {
                         await ref.read(authProvider.notifier).logout();
-                        // Explicit navigation needed to clear nested shell route stack
-                        if (context.mounted) context.go(AppRoutes.login);
+                        // Force exit app instead of navigating to avoid black screen
+                        // The next app launch will start fresh at login screen
+                        SystemNavigator.pop();
                       }
                     },
                   ),

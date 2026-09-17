@@ -60,9 +60,43 @@ class _ViewerCard extends StatelessWidget {
     final photoUrl = viewer['primary_photo_url'] as String?;
     final isVerified = viewer['is_verified'] as bool? ?? false;
     final viewedAt = viewer['viewed_at'] as String?;
+    final userId = viewer['user_id'] as String?;
 
+    // Edge case: if user_id is missing or invalid, don't make card tappable
+    if (userId == null || userId.isEmpty || userId == 'viewers') {
+      return _buildCard(
+        name: name,
+        age: age,
+        location: location,
+        photoUrl: photoUrl,
+        isVerified: isVerified,
+        viewedAt: viewedAt,
+        onTap: null, // Not tappable if invalid user_id
+      );
+    }
+
+    return _buildCard(
+      name: name,
+      age: age,
+      location: location,
+      photoUrl: photoUrl,
+      isVerified: isVerified,
+      viewedAt: viewedAt,
+      onTap: () => context.push('/profile/$userId'),
+    );
+  }
+
+  Widget _buildCard({
+    required String name,
+    required int? age,
+    required String location,
+    required String? photoUrl,
+    required bool isVerified,
+    required String? viewedAt,
+    required VoidCallback? onTap,
+  }) {
     return GestureDetector(
-      onTap: () => context.push('/profile/${viewer['user_id']}'),
+      onTap: onTap,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         padding: const EdgeInsets.all(14),

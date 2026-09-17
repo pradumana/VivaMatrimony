@@ -26,6 +26,17 @@ class ProfileDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Edge case: validate userId before making API call
+    if (userId.isEmpty || userId == 'viewers' || !_isValidUuid(userId)) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Profile')),
+        body: const ErrorView(
+          message: 'Invalid profile ID. Please try again.',
+          onRetry: null,
+        ),
+      );
+    }
+
     final profileAsync = ref.watch(_profileDetailProvider(userId));
 
     return Scaffold(
@@ -43,6 +54,15 @@ class ProfileDetailScreen extends ConsumerWidget {
         data: (data) => _ProfileBody(userId: userId, data: data),
       ),
     );
+  }
+
+  // Basic UUID validation (8-4-4-4-12 hex pattern)
+  bool _isValidUuid(String str) {
+    final uuidPattern = RegExp(
+      r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+      caseSensitive: false,
+    );
+    return uuidPattern.hasMatch(str);
   }
 }
 
