@@ -1,4 +1,6 @@
+import 'dart:developer' as dev;
 import 'package:dio/dio.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -37,31 +39,41 @@ class AuthScreenNotifier extends Notifier<AuthScreenState> {
     state = state.copyWith(isLoading: true, clearError: true);
 
     try {
+      dev.log('🔵 Registration: Starting for $email', name: 'Auth');
+
       final response = await Supabase.instance.client.auth.signUp(
         email: email.trim().toLowerCase(),
         password: password,
         emailRedirectTo: 'https://vivamatrimony.in/auth/callback',
       );
 
-      // Email confirmation required — Supabase returns a session=null user
+      dev.log('🟢 Supabase signUp OK. Session: ${response.session != null}', name: 'Auth');
+
       if (response.session == null) {
+        dev.log('📧 Email confirmation required', name: 'Auth');
         state = state.copyWith(isLoading: false);
         onEmailConfirmationRequired();
         return;
       }
 
-      // Auto-confirmed (email confirmation disabled in Supabase) — create row
+      dev.log('🔵 Calling backend POST /auth/register', name: 'Auth');
       await _postRegister();
+      dev.log('✅ Registration complete', name: 'Auth');
       state = state.copyWith(isLoading: false);
       onSuccess();
-    } on AuthException catch (e) {
+    } on AuthException catch (e, stack) {
+      dev.log('❌ AuthException: ${e.message}', name: 'Auth', error: e, stackTrace: stack);
+      FirebaseCrashlytics.instance.recordError(e, stack, reason: 'Registration AuthException');
       state = state.copyWith(isLoading: false, error: _authError(e.message));
-    } on DioException catch (e) {
-      state = state.copyWith(
-          isLoading: false, error: ApiException.fromDioError(e).message);
-    } catch (_) {
-      state = state.copyWith(
-          isLoading: false, error: 'Registration failed. Please try again.');
+    } on DioException catch (e, stack) {
+      final apiError = ApiException.fromDioError(e);
+      dev.log('❌ DioException: ${apiError.message} (${apiError.statusCode})', name: 'Auth', error: e, stackTrace: stack);
+      FirebaseCrashlytics.instance.recordError(e, stack, reason: 'Registration DioException');
+      state = state.copyWith(isLoading: false, error: apiError.message);
+    } catch (e, stack) {
+      dev.log('❌ Unexpected registration error', name: 'Auth', error: e, stackTrace: stack);
+      FirebaseCrashlytics.instance.recordError(e, stack, reason: 'Registration unexpected error', fatal: true);
+      state = state.copyWith(isLoading: false, error: 'Error: ${e.toString()}');
     }
   }
 
@@ -75,23 +87,34 @@ class AuthScreenNotifier extends Notifier<AuthScreenState> {
     state = state.copyWith(isLoading: true, clearError: true);
 
     try {
+      dev.log('🔵 Login: Starting for $email', name: 'Auth');
+
       await Supabase.instance.client.auth.signInWithPassword(
         email: email.trim().toLowerCase(),
         password: password,
       );
 
+      dev.log('🟢 Supabase signIn OK', name: 'Auth');
+      dev.log('🔵 Calling backend POST /auth/register', name: 'Auth');
+
       // Create/update users row idempotently
       await _postRegister();
+      dev.log('✅ Login complete', name: 'Auth');
       state = state.copyWith(isLoading: false);
       onSuccess();
-    } on AuthException catch (e) {
+    } on AuthException catch (e, stack) {
+      dev.log('❌ Login AuthException: ${e.message}', name: 'Auth', error: e);
+      FirebaseCrashlytics.instance.recordError(e, stack, reason: 'Login AuthException');
       state = state.copyWith(isLoading: false, error: _authError(e.message));
-    } on DioException catch (e) {
-      state = state.copyWith(
-          isLoading: false, error: ApiException.fromDioError(e).message);
-    } catch (_) {
-      state = state.copyWith(
-          isLoading: false, error: 'Login failed. Please try again.');
+    } on DioException catch (e, stack) {
+      final apiError = ApiException.fromDioError(e);
+      dev.log('❌ Login DioException: ${apiError.message}', name: 'Auth', error: e);
+      FirebaseCrashlytics.instance.recordError(e, stack, reason: 'Login DioException');
+      state = state.copyWith(isLoading: false, error: apiError.message);
+    } catch (e, stack) {
+      dev.log('❌ Unexpected login error', name: 'Auth', error: e, stackTrace: stack);
+      FirebaseCrashlytics.instance.recordError(e, stack, reason: 'Login unexpected error', fatal: true);
+      state = state.copyWith(isLoading: false, error: 'Error: ${e.toString()}');
     }
   }
 
