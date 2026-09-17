@@ -36,7 +36,7 @@ async def generate_biodata_pdf(
 ) -> bytes:
     """
     Generate matrimonial biodata PDF for a user.
-    template: 'traditional' | 'floral' | 'half_photo'
+    template: 'traditional' | 'floral' | 'half_photo' | 'modern' | 'royal'
     - Respects privacy settings
     - Never includes certificates, admin notes, phone numbers
     Returns raw PDF bytes.
@@ -123,6 +123,10 @@ async def generate_biodata_pdf(
         "app_name": "Viva",
         "app_tagline": "Find someone who feels like home.",
     }
+    
+    # Add premium template-specific display fields (for Royal template which uses Premium design)
+    if template == "royal":
+        context.update(_enrich_context_for_premium(context))
 
     # Try WeasyPrint; fallback message on failure
     try:
@@ -485,3 +489,129 @@ async def _optimize_image_for_pdf(image_url: str, supabase, storage_path: str) -
     except Exception as exc:
         logger.warning("image_optimization_failed", error=str(exc), storage_path=storage_path)
         return None
+
+
+def _enrich_context_for_premium(context: dict) -> dict:
+    """
+    Enrich context with premium template-specific display fields.
+    The Royal template (which uses Premium Wedding design) expects flat fields,
+    so we extract nested values and create formatted display strings.
+    """
+    enriched = {}
+    
+    # Education fields (from nested education dict)
+    education = context.get("education", {})
+    if education:
+        enriched["education.highest_qualification"] = education.get("highest_qualification") or education.get("degree")
+        enriched["education.college_university"] = education.get("college_university")
+        enriched["education.additional_qualifications"] = education.get("additional_qualifications")
+    
+    # Employment fields (from nested employment dict)
+    employment = context.get("employment", {})
+    if employment:
+        enriched["employment.profession"] = employment.get("profession") or employment.get("job_title")
+        enriched["employment.company"] = employment.get("company")
+        enriched["employment.employment_type"] = _format_enum(employment.get("employment_type", ""))
+        
+        # Format income display
+        income_min = employment.get("income_min_lpa")
+        income_max = employment.get("income_max_lpa")
+        if income_min and income_max:
+            enriched["employment.income_display"] = f"₹{income_min}-{income_max} LPA"
+        elif income_min:
+            enriched["employment.income_display"] = f"₹{income_min}+ LPA"
+        else:
+            enriched["employment.income_display"] = None
+    
+    # Family fields (from nested family dict)
+    family = context.get("family", {})
+    if family:
+        # Format father info
+        father_name = family.get("father_name")
+        father_occ = family.get("father_occupation")
+        if father_name:
+            enriched["family.father_name"] = f"{father_name}" + (f" ({father_occ})" if father_occ else "")
+        
+        # Format mother info
+        mother_name = family.get("mother_name")
+        mother_occ = family.get("mother_occupation")
+        if mother_name:
+            enriched["family.mother_name"] = f"{mother_name}" + (f" ({mother_occ})" if mother_occ else "")
+        
+        # Format siblings
+        brothers = family.get("brothers_count", 0)
+        sisters = family.get("sisters_count", 0)
+        brothers_married = family.get("brothers_married", 0)
+        sisters_married = family.get("sisters_married", 0)
+        
+        sibling_parts = []
+        if brothers:
+            sibling_parts.append(f"{brothers} Brother{'s' if brothers > 1 else ''}" + (f" ({brothers_married} married)" if brothers_married else ""))
+        if sisters:
+            sibling_parts.append(f"{sisters} Sister{'s' if sisters > 1 else ''}" + (f" ({sisters_married} married)" if sisters_married else ""))
+        enriched["family.siblings_display"] = ", ".join(sibling_parts) if sibling_parts else None
+        
+        enriched["family.family_type"] = _normalize_text(family.get("family_type"))
+        enriched["family.family_values"] = _normalize_text(family.get("family_values"))
+    
+    # Lifestyle fields (from nested lifestyle dict)
+    lifestyle = context.get("lifestyle", {})
+    if lifestyle:
+        # Format hobbies array as comma-separated string
+        hobbies = lifestyle.get("hobbies", [])
+        interests = lifestyle.get("interests", [])
+        all_hobbies = list(set((hobbies or []) + (interests or [])))  # Combine and dedupe
+        enriched["lifestyle.hobbies_display"] = ", ".join(all_hobbies) if all_hobbies else None
+        
+        enriched["lifestyle.diet"] = _format_enum(lifestyle.get("diet", ""))
+        enriched["lifestyle.smoking"] = _format_enum(lifestyle.get("smoking", ""))
+        enriched["lifestyle.drinking"] = _format_enum(lifestyle.get("drinking", ""))
+    
+    # Languages (from array)
+    languages = context.get("languages_known", [])
+    enriched["languages_display"] = ", ".join(languages) if languages else context.get("mother_tongue")
+    
+    # Partner preferences (from nested dict)
+    prefs = context.get("partner_preferences", {})
+    if prefs:
+        # Age range
+        min_age = prefs.get("min_age")
+        max_age = prefs.get("max_age")
+        if min_age and max_age:
+            enriched["partner_preferences.age_range_display"] = f"{min_age}-{max_age} Years"
+        elif min_age:
+            enriched["partner_preferences.age_range_display"] = f"{min_age}+ Years"
+        else:
+            enriched["partner_preferences.age_range_display"] = None
+        
+        # Education
+        min_edu = prefs.get("min_education")
+        enriched["partner_preferences.education_display"] = _format_enum(min_edu) if min_edu else None
+        
+        # Profession
+        professions = prefs.get("preferred_professions", [])
+        enriched["partner_preferences.profession_display"] = ", ".join(professions) if professions else None
+        
+        # Location
+        states = prefs.get("preferred_states", [])
+        enriched["partner_preferences.location_display"] = ", ".join(states) if states else "Open to all locations"
+        
+        # Values (combine family types and values)
+        family_types = prefs.get("preferred_family_types", [])
+        family_vals = prefs.get("preferred_family_values", [])
+        all_values = list(set((family_types or []) + (family_vals or [])))
+        enriched["partner_preferences.values_display"] = ", ".join(all_values) if all_values else None
+        
+        # Height (not in current prefs structure, skip)
+        enriched["partner_preferences.height_display"] = None
+    
+    # Photo quote (use first 60 chars of about_me)
+    about_me = context.get("about_me")
+    if about_me and len(about_me) > 60:
+        enriched["photo_quote"] = about_me[:60].rsplit(' ', 1)[0] + "..."
+    elif about_me:
+        enriched["photo_quote"] = about_me
+    else:
+        enriched["photo_quote"] = "Grateful for the journey, excited for the life ahead."
+    
+    return enriched

@@ -5,13 +5,27 @@
   <title>{{ full_name }} — Matrimonial Biodata</title>
   <style>
     /* ══════════════════════════════════════════════════════════════════════
-       BIODATA ENGINE 3.0 — ROYAL TEMPLATE
-       Premium wedding aesthetic with deep wine and antique gold
+       PREMIUM INDIAN MATRIMONIAL BIODATA TEMPLATE
+       Wedding-card-inspired design with warm ivory, deep maroon, antique gold
+       Single A4 page, WeasyPrint-compatible, Jinja2-ready
        ══════════════════════════════════════════════════════════════════════ */
     
     @page {
       size: A4 portrait;
-      margin: 15mm 12mm 12mm 12mm;
+      margin: 0;
+    }
+
+    :root {
+      --cream: #FBF6ED;
+      --ivory: #FFFDF8;
+      --maroon: #7B1737;
+      --deep-maroon: #64142F;
+      --gold: #B88A52;
+      --light-gold: #D9B982;
+      --blush: #F7E4DF;
+      --text: #292126;
+      --muted: #6E6264;
+      --border: #DFCDBB;
     }
 
     * {
@@ -21,759 +35,968 @@
     }
 
     body {
-      font-family: 'Georgia', 'Times New Roman', serif;
-      font-size: 10.5pt;
-      color: #2a1810;
-      background: #fffdf9;
-      line-height: 1.5;
-      overflow-wrap: break-word;
-      word-wrap: break-word;
-      hyphens: auto;
-    }
-
-    /* Brand header — regal */
-    .brand-header {
-      text-align: center;
-      margin-bottom: 10px;
-    }
-
-    .brand {
+      font-family: "Helvetica Neue", Arial, sans-serif;
       font-size: 9pt;
-      font-weight: 700;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      font-family: 'Arial', 'Helvetica', sans-serif;
-      color: #6B1A1A;
+      color: var(--text);
+      background: #e5e5e5;
+      line-height: 1.4;
     }
 
-    .doc-title {
-      font-size: 11pt;
-      font-weight: 400;
-      letter-spacing: 1.5px;
-      font-style: italic;
-      color: #a07856;
+    .page {
+      width: 210mm;
+      height: 297mm;
+      background: var(--ivory);
+      margin: 10mm auto;
+      box-shadow: 0 2px 10mm rgba(0, 0, 0, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    @media print {
+      body {
+        background: none;
+      }
+      .page {
+        margin: 0;
+        box-shadow: none;
+      }
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       HERO — LARGE PHOTO (180x220px) + NAME DOMINANCE (34pt)
+       DECORATIVE FLORAL ELEMENTS (Subtle corner decorations)
        ══════════════════════════════════════════════════════════════════════ */
     
-    .hero {
-      background: linear-gradient(135deg, #6B1A1A 0%, #8B2424 100%);
-      padding: 28px 32px;
-      border-radius: 6px;
-      margin-bottom: 18px;
+    .floral-corner-tl {
+      position: absolute;
+      top: 8mm;
+      left: 8mm;
+      width: 25mm;
+      height: 25mm;
+      opacity: 0.3;
+    }
+
+    .floral-corner-tr {
+      position: absolute;
+      top: 8mm;
+      right: 8mm;
+      width: 25mm;
+      height: 25mm;
+      opacity: 0.3;
+      transform: scaleX(-1);
+    }
+
+    .floral-corner-bl {
+      position: absolute;
+      bottom: 8mm;
+      left: 8mm;
+      width: 20mm;
+      height: 20mm;
+      opacity: 0.25;
+      transform: scaleY(-1);
+    }
+
+    .floral-corner-br {
+      position: absolute;
+      bottom: 8mm;
+      right: 8mm;
+      width: 20mm;
+      height: 20mm;
+      opacity: 0.25;
+      transform: scale(-1);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       HEADER — Brand identity and quote (Top 18-20%)
+       ══════════════════════════════════════════════════════════════════════ */
+    
+    .header {
+      background: linear-gradient(135deg, var(--cream) 0%, var(--ivory) 100%);
+      border-bottom: 2px solid var(--gold);
+      padding: 12mm 15mm 10mm 15mm;
       display: flex;
-      align-items: center;
-      gap: 28px;
-      page-break-inside: avoid;
-      box-shadow: 0 2px 12px rgba(139, 26, 26, 0.2);
+      justify-content: space-between;
+      align-items: flex-start;
+      position: relative;
     }
 
-    .hero-photo {
-      flex: 0 0 180px;
-      width: 180px;
-      height: 220px;
-      border-radius: 4px;
-      border: 5px solid rgba(255, 255, 255, 0.95);
+    .brand-section {
+      flex: 0 0 45%;
+    }
+
+    .brand-logo {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 32pt;
+      font-weight: 700;
+      color: var(--maroon);
+      letter-spacing: 2px;
+      margin-bottom: 2mm;
+    }
+
+    .brand-tagline {
+      font-family: "Helvetica Neue", Arial, sans-serif;
+      font-size: 8pt;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 3mm;
+    }
+
+    .brand-heart {
+      width: 12mm;
+      height: 12mm;
+      fill: var(--maroon);
+      opacity: 0.8;
+    }
+
+    .quote-section {
+      flex: 0 0 50%;
+      text-align: right;
+      padding-top: 3mm;
+    }
+
+    .quote-text {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 11pt;
+      font-style: italic;
+      color: var(--deep-maroon);
+      margin-bottom: 4mm;
+      line-height: 1.5;
+    }
+
+    .quote-values {
+      font-size: 7.5pt;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-top: 3mm;
+    }
+
+    .header-divider {
+      margin-top: 3mm;
+      text-align: right;
+    }
+
+    .header-divider svg {
+      width: 40mm;
+      height: 3mm;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       MAIN CONTENT — Two-column layout
+       ══════════════════════════════════════════════════════════════════════ */
+    
+    .main-content {
+      padding: 8mm 15mm 8mm 15mm;
+      display: flex;
+      gap: 8mm;
+    }
+
+    .left-column {
+      flex: 0 0 75mm;
+    }
+
+    .right-column {
+      flex: 1;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       PROFILE PHOTO (Left column)
+       ══════════════════════════════════════════════════════════════════════ */
+    
+    .photo-container {
+      position: relative;
+      width: 75mm;
+      height: 93mm;
+      margin-bottom: 6mm;
+      border-radius: 4mm;
       overflow: hidden;
-      background: rgba(255, 255, 255, 0.1);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+      border: 1.5pt solid var(--gold);
+      box-shadow: 0 2mm 6mm rgba(0, 0, 0, 0.15);
+      background: var(--cream);
     }
 
-    .hero-photo img {
+    .photo-container img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: block;
     }
 
-    .hero-photo-placeholder {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 9pt;
-      text-align: center;
-      padding: 12px;
-      background: rgba(255, 255, 255, 0.15);
-      color: rgba(255, 255, 255, 0.6);
-    }
-
-    .hero-info {
-      flex: 1;
-      min-width: 0;
+    .photo-quote-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(to top, rgba(123, 23, 55, 0.9), rgba(123, 23, 55, 0));
+      padding: 8mm 5mm 4mm 5mm;
       color: white;
     }
 
-    /* PERSON NAME — Large (34pt), elegant serif */
-    .person-name {
-      font-size: 34pt;
-      font-weight: 700;
-      line-height: 1.1;
-      letter-spacing: 0.3px;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-      color: white;
-    }
-
-    .person-subtitle {
-      font-size: 11.5pt;
-      font-weight: 400;
-      line-height: 1.4;
-      font-family: 'Arial', 'Helvetica', sans-serif;
-      opacity: 0.92;
-      margin-top: 6px;
-    }
-
-    .badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 12px;
-    }
-
-    .badge {
+    .photo-quote-text {
+      font-family: Georgia, "Times New Roman", serif;
       font-size: 8.5pt;
-      font-weight: 600;
-      padding: 4px 14px;
-      border-radius: 3px;
-      font-family: 'Arial', 'Helvetica', sans-serif;
-      letter-spacing: 0.4px;
-      background: rgba(255, 255, 255, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.4);
-    }
-
-    .badge.verified {
-      background: rgba(76, 175, 80, 0.25);
-      border-color: rgba(76, 175, 80, 0.5);
-    }
-
-    .badge.id {
-      opacity: 0.7;
-      font-size: 8pt;
+      font-style: italic;
+      line-height: 1.4;
+      text-align: center;
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       SECTIONS — Editorial typography, not database tables
+       PROFILE INTRODUCTION (Right column top)
        ══════════════════════════════════════════════════════════════════════ */
     
-    .section {
-      margin-bottom: 18px;
+    .profile-intro {
+      margin-bottom: 6mm;
+    }
+
+    .profile-name {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 26pt;
+      font-weight: 700;
+      color: var(--maroon);
+      margin-bottom: 2mm;
+      letter-spacing: 0.5px;
+    }
+
+    .profile-basics {
+      font-size: 9.5pt;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 1.5mm;
+    }
+
+    .profile-basics .sep {
+      margin: 0 2mm;
+      color: var(--gold);
+    }
+
+    .profile-location {
+      font-size: 9pt;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .intro-divider {
+      margin-top: 3mm;
+      text-align: center;
+    }
+
+    .intro-divider svg {
+      width: 50mm;
+      height: 3mm;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       HIGHLIGHT ICONS (5 circular badges)
+       ══════════════════════════════════════════════════════════════════════ */
+    
+    .highlight-icons {
+      display: flex;
+      justify-content: space-between;
+      margin: 5mm 0 6mm 0;
+      gap: 2mm;
+    }
+
+    .icon-badge {
+      flex: 1;
+      text-align: center;
+    }
+
+    .icon-circle {
+      width: 14mm;
+      height: 14mm;
+      border-radius: 50%;
+      border: 1.5pt solid var(--gold);
+      background: var(--cream);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 2mm auto;
+    }
+
+    .icon-circle svg {
+      width: 7mm;
+      height: 7mm;
+      fill: var(--maroon);
+    }
+
+    .icon-label {
+      font-size: 7pt;
+      font-weight: 600;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      line-height: 1.2;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       PERSONAL STATEMENT (Pink box)
+       ══════════════════════════════════════════════════════════════════════ */
+    
+    .statement-box {
+      background: var(--blush);
+      border: 1pt solid var(--border);
+      border-radius: 3mm;
+      padding: 5mm 6mm;
+      margin-bottom: 6mm;
+      text-align: center;
+    }
+
+    .statement-text {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 10pt;
+      font-style: italic;
+      color: var(--deep-maroon);
+      line-height: 1.5;
+    }
+
+    .statement-heart {
+      margin-top: 3mm;
+    }
+
+    .statement-heart svg {
+      width: 5mm;
+      height: 5mm;
+      fill: var(--maroon);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       INFORMATION SECTIONS (Cards with borders)
+       ══════════════════════════════════════════════════════════════════════ */
+    
+    .info-section {
+      border: 1pt solid var(--border);
+      border-radius: 2mm;
+      padding: 4mm 5mm;
+      margin-bottom: 5mm;
+      background: white;
       page-break-inside: avoid;
     }
 
-    .section-heading {
-      font-size: 11pt;
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 2mm;
+      margin-bottom: 3mm;
+      padding-bottom: 2mm;
+      border-bottom: 1pt solid var(--border);
+    }
+
+    .section-icon svg {
+      width: 5mm;
+      height: 5mm;
+      fill: var(--maroon);
+    }
+
+    .section-title {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 10pt;
       font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1.8px;
-      font-family: 'Arial', 'Helvetica', sans-serif;
-      color: #6B1A1A;
-      border-bottom: 2.5px solid #c8a876;
-      padding-bottom: 5px;
-      margin-bottom: 12px;
-    }
-
-    /* Two-column grid for personal details */
-    .detail-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px 32px;
-    }
-
-    .detail-item {
-      margin-bottom: 4px;
-    }
-
-    .field-label {
-      font-size: 8.5pt;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      font-family: 'Arial', 'Helvetica', sans-serif;
-      color: #8B4513;
-      margin-bottom: 2px;
-    }
-
-    .field-value {
-      font-size: 10.5pt;
-      font-weight: 600;
-      color: #2a1810;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-    }
-
-    /* About block */
-    .editorial-block {
-      padding: 16px 20px;
-      border-radius: 4px;
-      margin-bottom: 12px;
-      background: #fdf6f2;
-      border-left: 4px solid #c8a876;
-      border-radius: 0 4px 4px 0;
-    }
-
-    .prose-text {
-      font-size: 10.5pt;
-      line-height: 1.7;
-      font-style: italic;
-      color: #3a2520;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-    }
-
-    /* Career/Education blocks */
-    .career-block {
-      margin-bottom: 14px;
-    }
-
-    .subsection-heading {
-      font-size: 9pt;
-      font-weight: 700;
+      color: var(--maroon);
       text-transform: uppercase;
       letter-spacing: 1px;
-      font-family: 'Arial', 'Helvetica', sans-serif;
-      color: #8B4513;
-      margin-bottom: 6px;
     }
 
-    .display-value {
-      font-size: 13pt;
-      font-weight: 700;
-      line-height: 1.3;
-      margin-bottom: 4px;
-      color: #2a1810;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2mm 4mm;
     }
 
-    .supporting-text {
-      font-size: 10pt;
-      font-weight: 400;
-      line-height: 1.5;
-      color: #4a3830;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
+    .info-row {
+      display: flex;
+      flex-direction: column;
+      gap: 1mm;
     }
 
-    /* Family members */
-    .family-member {
-      margin-bottom: 12px;
+    .info-row.full-width {
+      grid-column: 1 / -1;
     }
 
-    .family-role {
-      font-size: 8.5pt;
+    .info-label {
+      font-size: 7.5pt;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.7px;
-      font-family: 'Arial', 'Helvetica', sans-serif;
-      color: #8B4513;
-      margin-bottom: 3px;
+      letter-spacing: 0.5px;
+      color: var(--muted);
     }
 
-    .family-name {
+    .info-value {
+      font-size: 9pt;
+      font-weight: 500;
+      color: var(--text);
+      word-wrap: break-word;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       PARTNER PREFERENCES (Prominent card)
+       ══════════════════════════════════════════════════════════════════════ */
+    
+    .partner-section {
+      background: var(--blush);
+      border: 1.5pt solid var(--gold);
+      border-radius: 3mm;
+      padding: 5mm 6mm;
+      margin-bottom: 5mm;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       BOTTOM DECORATION
+       ══════════════════════════════════════════════════════════════════════ */
+    
+    .bottom-decoration {
+      position: absolute;
+      bottom: 18mm;
+      left: 15mm;
+      font-family: "Brush Script MT", "Segoe Script", cursive;
       font-size: 12pt;
-      font-weight: 700;
-      margin-bottom: 2px;
-      color: #2a1810;
-      word-wrap: break-word;
+      color: var(--maroon);
+      opacity: 0.7;
     }
 
-    .family-occupation {
+    .bottom-decoration .line2 {
       font-size: 10pt;
-      font-style: italic;
-      color: #5a4530;
-      word-wrap: break-word;
+      margin-top: 1mm;
     }
 
-    /* Tags */
-    .tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 7px;
-      margin-top: 8px;
-    }
-
-    .tag {
-      font-size: 9pt;
-      font-weight: 600;
-      padding: 4px 12px;
-      border-radius: 14px;
-      font-family: 'Arial', 'Helvetica', sans-serif;
-      background: #faf5ed;
-      border: 1px solid #d4b482;
-      color: #6B1A1A;
-      white-space: nowrap;
-    }
-
-    /* Preference table */
-    .pref-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    .pref-table tr {
-      border-bottom: 1px solid #f5e8e2;
-    }
-
-    .pref-table tr:last-child {
-      border-bottom: none;
-    }
-
-    .pref-table td {
-      padding: 6px 0;
-      vertical-align: top;
-    }
-
-    .pref-label {
-      width: 130px;
-      padding-right: 14px;
-    }
-
-    /* Photo gallery */
-    .photo-gallery {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 14px;
-      margin-top: 12px;
-    }
-
-    .gallery-photo {
-      width: 140px;
-      height: 175px;
-      object-fit: cover;
-      border-radius: 4px;
-      background: #e8dcc8;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    /* Divider */
-    .divider {
-      height: 1px;
-      background: linear-gradient(90deg, transparent, #d9b8ad 20%, #d9b8ad 80%, transparent);
-      margin: 18px 0;
-      opacity: 0.6;
-    }
-
-    /* Footer */
+    /* ══════════════════════════════════════════════════════════════════════
+       FOOTER (Full-width maroon bar)
+       ══════════════════════════════════════════════════════════════════════ */
+    
     .footer {
-      margin-top: 24px;
-      padding-top: 12px;
-      border-top: 1px solid #efe4dc;
-      text-align: center;
-      font-size: 8pt;
-      font-family: 'Arial', 'Helvetica', sans-serif;
-      color: #a08875;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--maroon);
+      color: var(--ivory);
+      padding: 3mm 15mm;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
-    .footer-brand {
+    .footer-left {
+      font-family: Georgia, "Times New Roman", serif;
       font-size: 9pt;
-      font-weight: 700;
-      letter-spacing: 2px;
-      color: #6B1A1A;
-      margin-bottom: 3px;
-    }
-
-    .footer-note {
-      margin-top: 4px;
       font-style: italic;
+      font-weight: 600;
     }
 
-    /* Utilities */
-    .page-break {
-      page-break-before: always;
+    .footer-center svg {
+      width: 30mm;
+      height: 4mm;
+      fill: var(--ivory);
     }
 
-    .avoid-break {
-      page-break-inside: avoid;
+    .footer-right {
+      font-size: 8pt;
+      font-weight: 600;
+      letter-spacing: 0.5px;
     }
 
-    .long-text {
-      max-width: 100%;
-      overflow-wrap: break-word;
-      word-wrap: break-word;
-      hyphens: auto;
-    }
-
-    .sep {
-      margin: 0 8px;
-      opacity: 0.5;
-    }
-
-    .block-mb-md {
-      margin-bottom: 10px;
-    }
+    /* ══════════════════════════════════════════════════════════════════════
+       UTILITY CLASSES
+       ══════════════════════════════════════════════════════════════════════ */
+    
+    .mb-small { margin-bottom: 3mm; }
+    .mb-medium { margin-bottom: 5mm; }
+    .text-center { text-align: center; }
+    .text-muted { color: var(--muted); }
   </style>
 </head>
 <body>
 
-  <!-- Brand header — subtle -->
-  <div class="brand-header">
-    <div class="brand">{{ app_name or 'VIVA' }} MATRIMONY</div>
-    <div class="doc-title">Matrimonial Biodata</div>
-  </div>
+  <div class="page">
+    
+    <!-- Floral Corner Decorations -->
+    <svg class="floral-corner-tl" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <path d="M10,10 Q20,5 30,10 T50,10" stroke="#B88A52" stroke-width="1.5" fill="none"/>
+      <circle cx="15" cy="15" r="3" fill="#B88A52" opacity="0.6"/>
+      <circle cx="30" cy="8" r="2" fill="#B88A52" opacity="0.5"/>
+      <path d="M5,25 Q10,30 15,25 T25,25" stroke="#B88A52" stroke-width="1" fill="none"/>
+      <path d="M25,5 L28,10 L23,12 Z" fill="#B88A52" opacity="0.5"/>
+    </svg>
 
-  <!-- HERO — LARGE PHOTO + NAME DOMINANCE -->
-  <div class="hero avoid-break">
-    <div class="hero-photo">
-      {% if photo_url %}
-        <img src="{{ photo_url }}" alt="{{ full_name }}">
-      {% else %}
-        <div class="hero-photo-placeholder">Profile Photo</div>
-      {% endif %}
-    </div>
-    <div class="hero-info">
-      <div class="person-name long-text">{{ full_name | title }}</div>
-      <div class="person-subtitle">
-        {% if education and education.degree %}{{ education.degree }}{% endif %}
-        {% if employment and employment.profession %}
-          {% if education and education.degree %}<span class="sep">•</span>{% endif %}
-          {{ employment.profession }}
-        {% endif %}
-        {% if current_location %}
-          {% if (education and education.degree) or (employment and employment.profession) %}<span class="sep">•</span>{% endif %}
-          {{ current_location }}
-        {% endif %}
+    <svg class="floral-corner-tr" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <path d="M10,10 Q20,5 30,10 T50,10" stroke="#B88A52" stroke-width="1.5" fill="none"/>
+      <circle cx="15" cy="15" r="3" fill="#B88A52" opacity="0.6"/>
+      <circle cx="30" cy="8" r="2" fill="#B88A52" opacity="0.5"/>
+      <path d="M5,25 Q10,30 15,25 T25,25" stroke="#B88A52" stroke-width="1" fill="none"/>
+    </svg>
+
+    <svg class="floral-corner-bl" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20,20 Q30,15 40,20" stroke="#7B1737" stroke-width="1.5" fill="none"/>
+      <circle cx="25" cy="25" r="2.5" fill="#7B1737" opacity="0.5"/>
+    </svg>
+
+    <svg class="floral-corner-br" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20,20 Q30,15 40,20" stroke="#7B1737" stroke-width="1.5" fill="none"/>
+      <circle cx="25" cy="25" r="2.5" fill="#7B1737" opacity="0.5"/>
+    </svg>
+
+    <!-- HEADER -->
+    <div class="header">
+      <div class="brand-section">
+        <div class="brand-logo">Viva</div>
+        <div class="brand-tagline">Brings Families Together</div>
+        <svg class="brand-heart" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"/>
+        </svg>
       </div>
-      <div class="badges">
-        {% if is_verified %}
-          <span class="badge verified">✓ Verified</span>
-        {% endif %}
-        {% if member_id %}
-          <span class="badge id">{{ app_name or 'Viva' }} • {{ member_id }}</span>
-        {% endif %}
-      </div>
-    </div>
-  </div>
 
-  <!-- PERSONAL DETAILS -->
-  <div class="section">
-    <div class="section-heading">Personal Details</div>
-    <div class="detail-grid">
-      {% if age %}
-      <div class="detail-item">
-        <div class="field-label">Age</div>
-        <div class="field-value">{{ age }} Years</div>
-      </div>
-      {% endif %}
-
-      {% if height %}
-      <div class="detail-item">
-        <div class="field-label">Height</div>
-        <div class="field-value">{{ height }}</div>
-      </div>
-      {% endif %}
-
-      {% if marital_status %}
-      <div class="detail-item">
-        <div class="field-label">Marital Status</div>
-        <div class="field-value">{{ marital_status }}</div>
-      </div>
-      {% endif %}
-
-      {% if religion %}
-      <div class="detail-item">
-        <div class="field-label">Religion</div>
-        <div class="field-value long-text">{{ religion }}</div>
-      </div>
-      {% endif %}
-
-      {% if caste %}
-      <div class="detail-item">
-        <div class="field-label">Caste</div>
-        <div class="field-value long-text">{{ caste }}</div>
-      </div>
-      {% endif %}
-
-      {% if sub_caste %}
-      <div class="detail-item">
-        <div class="field-label">Sub-caste</div>
-        <div class="field-value long-text">{{ sub_caste }}</div>
-      </div>
-      {% endif %}
-
-      {% if gotra %}
-      <div class="detail-item">
-        <div class="field-label">Gotra</div>
-        <div class="field-value long-text">{{ gotra }}</div>
-      </div>
-      {% endif %}
-
-      {% if mother_tongue %}
-      <div class="detail-item">
-        <div class="field-label">Mother Tongue</div>
-        <div class="field-value long-text">{{ mother_tongue }}</div>
-      </div>
-      {% endif %}
-
-      {% if native_place %}
-      <div class="detail-item">
-        <div class="field-label">Native Place</div>
-        <div class="field-value long-text">{{ native_place }}</div>
-      </div>
-      {% endif %}
-
-      {% if current_location %}
-      <div class="detail-item">
-        <div class="field-label">Current Location</div>
-        <div class="field-value long-text">{{ current_location }}</div>
-      </div>
-      {% endif %}
-    </div>
-  </div>
-
-  <!-- ABOUT ME -->
-  {% if about_me %}
-  <div class="section">
-    <div class="section-heading">About Me</div>
-    <div class="editorial-block">
-      <div class="prose-text long-text">{{ about_me }}</div>
-    </div>
-  </div>
-  {% endif %}
-
-  <!-- EDUCATION & CAREER -->
-  {% if education or employment %}
-  <div class="section">
-    <div class="section-heading">Education &amp; Career</div>
-
-    {% if education %}
-    <div class="career-block">
-      <div class="subsection-heading">Education</div>
-      {% if education.degree %}
-        <div class="display-value long-text">{{ education.degree }}</div>
-      {% endif %}
-      {% if education.field_of_study %}
-        <div class="supporting-text long-text">{{ education.field_of_study }}</div>
-      {% endif %}
-      {% if education.college_university %}
-        <div class="supporting-text long-text">{{ education.college_university }}</div>
-      {% endif %}
-      {% if education.graduation_year %}
-        <div class="supporting-text">{{ education.graduation_year }}</div>
-      {% endif %}
-    </div>
-    {% endif %}
-
-    {% if employment %}
-    <div class="career-block">
-      <div class="subsection-heading">Career</div>
-      {% if employment.job_title %}
-        <div class="display-value long-text">{{ employment.job_title }}</div>
-      {% elif employment.profession %}
-        <div class="display-value long-text">{{ employment.profession }}</div>
-      {% endif %}
-      {% if employment.company %}
-        <div class="supporting-text long-text">{{ employment.company }}</div>
-      {% endif %}
-      {% if employment.employment_type %}
-        <div class="supporting-text">
-          {{ employment.employment_type | replace('_', ' ') | title }}
-          {% if employment.income_min_lpa %} • ₹{{ employment.income_min_lpa }}{% if employment.income_max_lpa %}–{{ employment.income_max_lpa }}{% endif %} LPA{% endif %}
-        </div>
-      {% endif %}
-    </div>
-    {% endif %}
-  </div>
-  {% endif %}
-
-  <!-- FAMILY -->
-  {% if family %}
-  <div class="section">
-    <div class="section-heading">Family</div>
-
-    {% if family.father_name %}
-    <div class="family-member">
-      <div class="family-role">Father</div>
-      <div class="family-name long-text">{{ family.father_name }}</div>
-      {% if family.father_occupation %}
-        <div class="family-occupation long-text">{{ family.father_occupation }}</div>
-      {% endif %}
-    </div>
-    {% endif %}
-
-    {% if family.mother_name %}
-    <div class="family-member">
-      <div class="family-role">Mother</div>
-      <div class="family-name long-text">{{ family.mother_name }}</div>
-      {% if family.mother_occupation %}
-        <div class="family-occupation long-text">{{ family.mother_occupation }}</div>
-      {% endif %}
-    </div>
-    {% endif %}
-
-    <div class="detail-grid block-mb-md">
-      {% if family.brothers_count is not none or family.sisters_count is not none %}
-      <div class="detail-item">
-        <div class="field-label">Siblings</div>
-        <div class="field-value">
-          {% if family.brothers_count is not none %}{{ family.brothers_count }} Brother{% if family.brothers_count != 1 %}s{% endif %}{% if family.brothers_married %} ({{ family.brothers_married }} married){% endif %}{% endif %}
-          {% if family.brothers_count is not none and family.sisters_count is not none %}, {% endif %}
-          {% if family.sisters_count is not none %}{{ family.sisters_count }} Sister{% if family.sisters_count != 1 %}s{% endif %}{% if family.sisters_married %} ({{ family.sisters_married }} married){% endif %}{% endif %}
+      <div class="quote-section">
+        <div class="quote-text">"Good people make great life partners."</div>
+        <div class="quote-values">Tradition | Values | A Brighter Tomorrow</div>
+        <div class="header-divider">
+          <svg viewBox="0 0 150 10" xmlns="http://www.w3.org/2000/svg">
+            <line x1="0" y1="5" x2="60" y2="5" stroke="#B88A52" stroke-width="1"/>
+            <path d="M75,2 L78,5 L75,8 L72,5 Z" fill="#7B1737"/>
+            <line x1="90" y1="5" x2="150" y2="5" stroke="#B88A52" stroke-width="1"/>
+          </svg>
         </div>
       </div>
-      {% endif %}
-
-      {% if family.family_type %}
-      <div class="detail-item">
-        <div class="field-label">Family Type</div>
-        <div class="field-value">{{ family.family_type | replace('_', ' ') | title }}</div>
-      </div>
-      {% endif %}
-
-      {% if family.family_values %}
-      <div class="detail-item">
-        <div class="field-label">Family Values</div>
-        <div class="field-value">{{ family.family_values | title }}</div>
-      </div>
-      {% endif %}
-
-      {% if family.family_location %}
-      <div class="detail-item">
-        <div class="field-label">Family Location</div>
-        <div class="field-value long-text">{{ family.family_location }}</div>
-      </div>
-      {% endif %}
-    </div>
-  </div>
-  {% endif %}
-
-  <!-- LIFESTYLE -->
-  {% if lifestyle %}
-  <div class="section">
-    <div class="section-heading">Lifestyle</div>
-    <div class="detail-grid">
-      {% if lifestyle.diet %}
-      <div class="detail-item">
-        <div class="field-label">Diet</div>
-        <div class="field-value">{{ lifestyle.diet | replace('_', ' ') | title }}</div>
-      </div>
-      {% endif %}
-
-      {% if lifestyle.smoking %}
-      <div class="detail-item">
-        <div class="field-label">Smoking</div>
-        <div class="field-value">{{ lifestyle.smoking | title }}</div>
-      </div>
-      {% endif %}
-
-      {% if lifestyle.drinking %}
-      <div class="detail-item">
-        <div class="field-label">Drinking</div>
-        <div class="field-value">{{ lifestyle.drinking | title }}</div>
-      </div>
-      {% endif %}
     </div>
 
-    {% if lifestyle.hobbies or lifestyle.interests %}
-    <div class="block-mb-md">
-      <div class="field-label">Hobbies &amp; Interests</div>
-      <div class="tags">
-        {% if lifestyle.hobbies %}
-          {% for h in lifestyle.hobbies %}
-            <span class="tag">{{ h }}</span>
-          {% endfor %}
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+      
+      <!-- LEFT COLUMN -->
+      <div class="left-column">
+        
+        <!-- Profile Photo -->
+        <div class="photo-container">
+          {% if photo_url %}
+            <img src="{{ photo_url }}" alt="{{ full_name }}">
+          {% else %}
+            <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#F7E4DF;color:#6E6264;font-size:9pt;">Profile Photo</div>
+          {% endif %}
+          {% if photo_quote %}
+          <div class="photo-quote-overlay">
+            <div class="photo-quote-text">{{ photo_quote }}</div>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Personal Details -->
+        <div class="info-section">
+          <div class="section-header">
+            <div class="section-icon">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
+              </svg>
+            </div>
+            <div class="section-title">Personal Details</div>
+          </div>
+          <div class="info-grid">
+            {% if date_of_birth %}
+            <div class="info-row">
+              <div class="info-label">Date of Birth</div>
+              <div class="info-value">{{ date_of_birth }}</div>
+            </div>
+            {% endif %}
+            {% if age %}
+            <div class="info-row">
+              <div class="info-label">Age</div>
+              <div class="info-value">{{ age }} Years</div>
+            </div>
+            {% endif %}
+            {% if height %}
+            <div class="info-row">
+              <div class="info-label">Height</div>
+              <div class="info-value">{{ height }}</div>
+            </div>
+            {% endif %}
+            {% if weight %}
+            <div class="info-row">
+              <div class="info-label">Weight</div>
+              <div class="info-value">{{ weight }}</div>
+            </div>
+            {% endif %}
+            {% if blood_group %}
+            <div class="info-row">
+              <div class="info-label">Blood Group</div>
+              <div class="info-value">{{ blood_group }}</div>
+            </div>
+            {% endif %}
+            {% if marital_status %}
+            <div class="info-row">
+              <div class="info-label">Marital Status</div>
+              <div class="info-value">{{ marital_status }}</div>
+            </div>
+            {% endif %}
+            {% if religion %}
+            <div class="info-row">
+              <div class="info-label">Religion</div>
+              <div class="info-value">{{ religion }}</div>
+            </div>
+            {% endif %}
+            {% if caste %}
+            <div class="info-row">
+              <div class="info-label">Caste</div>
+              <div class="info-value">{{ caste }}</div>
+            </div>
+            {% endif %}
+            {% if sub_caste %}
+            <div class="info-row full-width">
+              <div class="info-label">Sub-Caste</div>
+              <div class="info-value">{{ sub_caste }}</div>
+            </div>
+            {% endif %}
+            {% if gotra %}
+            <div class="info-row">
+              <div class="info-label">Gotra</div>
+              <div class="info-value">{{ gotra }}</div>
+            </div>
+            {% endif %}
+            {% if manglik %}
+            <div class="info-row">
+              <div class="info-label">Manglik</div>
+              <div class="info-value">{{ manglik }}</div>
+            </div>
+            {% endif %}
+            {% if native_place %}
+            <div class="info-row full-width">
+              <div class="info-label">Native Place</div>
+              <div class="info-value">{{ native_place }}</div>
+            </div>
+            {% endif %}
+            {% if current_location %}
+            <div class="info-row full-width">
+              <div class="info-label">Current City</div>
+              <div class="info-value">{{ current_location }}</div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Family Details -->
+        <div class="info-section">
+          <div class="section-header">
+            <div class="section-icon">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16,4C16.88,4 17.67,4.25 18.33,4.67C20.11,5.72 20.11,8.28 18.33,9.33C17.67,9.75 16.88,10 16,10C15.12,10 14.33,9.75 13.67,9.33C11.89,8.28 11.89,5.72 13.67,4.67C14.33,4.25 15.12,4 16,4M16,11.5C18.14,11.5 19.88,12.5 20.5,14.08C20.82,14.92 20.96,15.81 20.96,16.72V18H11.04V16.72C11.04,15.81 11.18,14.92 11.5,14.08C12.12,12.5 13.86,11.5 16,11.5M8,6C9.1,6 10,6.9 10,8C10,9.1 9.1,10 8,10C6.9,10 6,9.1 6,8C6,6.9 6.9,6 8,6M8,11.5C9.86,11.5 11.4,12.5 11.89,14.08C11.96,14.32 12,14.57 12,14.83V16H4V14.83C4,14.57 4.04,14.32 4.11,14.08C4.6,12.5 6.14,11.5 8,11.5Z"/>
+              </svg>
+            </div>
+            <div class="section-title">Family Details</div>
+          </div>
+          <div class="info-grid">
+            {% if family.father_name %}
+            <div class="info-row full-width">
+              <div class="info-label">Father</div>
+              <div class="info-value">{{ family.father_name }}</div>
+            </div>
+            {% endif %}
+            {% if family.mother_name %}
+            <div class="info-row full-width">
+              <div class="info-label">Mother</div>
+              <div class="info-value">{{ family.mother_name }}</div>
+            </div>
+            {% endif %}
+            {% if family.siblings_display %}
+            <div class="info-row full-width">
+              <div class="info-label">Siblings</div>
+              <div class="info-value">{{ family.siblings_display }}</div>
+            </div>
+            {% endif %}
+            {% if family.family_type %}
+            <div class="info-row">
+              <div class="info-label">Family Type</div>
+              <div class="info-value">{{ family.family_type }}</div>
+            </div>
+            {% endif %}
+            {% if family.family_values %}
+            <div class="info-row">
+              <div class="info-label">Family Values</div>
+              <div class="info-value">{{ family.family_values }}</div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="right-column">
+        
+        <!-- Profile Introduction -->
+        <div class="profile-intro">
+          <div class="profile-name">{{ full_name }}</div>
+          <div class="profile-basics">
+            {% if age %}{{ age }} Years{% endif %}
+            {% if height %}<span class="sep">|</span>{{ height }}{% endif %}
+            {% if religion %}<span class="sep">|</span>{{ religion }}{% endif %}
+          </div>
+          <div class="profile-location">
+            {% if employment.profession %}{{ employment.profession }}{% endif %}
+            {% if current_location %}<span class="sep">|</span>{{ current_location }}{% endif %}
+          </div>
+          <div class="intro-divider">
+            <svg viewBox="0 0 200 10" xmlns="http://www.w3.org/2000/svg">
+              <line x1="0" y1="5" x2="85" y2="5" stroke="#B88A52" stroke-width="1"/>
+              <path d="M100,2 L103,5 L100,8 L97,5 Z" fill="#7B1737"/>
+              <line x1="115" y1="5" x2="200" y2="5" stroke="#B88A52" stroke-width="1"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Highlight Icons -->
+        <div class="highlight-icons">
+          <div class="icon-badge">
+            <div class="icon-circle">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12,3L1,9L12,15L21,10.09V17H23V9M5,13.18V17.18L12,21L19,17.18V13.18L12,17L5,13.18Z"/>
+              </svg>
+            </div>
+            <div class="icon-label">Well<br/>Educated</div>
+          </div>
+          <div class="icon-badge">
+            <div class="icon-circle">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20,6C20.58,6 21.05,6.2 21.42,6.59C21.8,7 22,7.45 22,8V19C22,19.55 21.8,20 21.42,20.41C21.05,20.8 20.58,21 20,21H4C3.42,21 2.95,20.8 2.58,20.41C2.2,20 2,19.55 2,19V8C2,7.45 2.2,7 2.58,6.59C2.95,6.2 3.42,6 4,6H8V4C8,3.42 8.2,2.95 8.58,2.58C8.95,2.2 9.42,2 10,2H14C14.58,2 15.05,2.2 15.42,2.58C15.8,2.95 16,3.42 16,4V6H20M4,8V19H20V8H4M14,6V4H10V6H14Z"/>
+              </svg>
+            </div>
+            <div class="icon-label">Professionally<br/>Stable</div>
+          </div>
+          <div class="icon-badge">
+            <div class="icon-circle">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"/>
+              </svg>
+            </div>
+            <div class="icon-label">Family<br/>Oriented</div>
+          </div>
+          <div class="icon-badge">
+            <div class="icon-circle">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M12.5,7V12.25L17,14.92L16.25,16.15L11,13V7H12.5Z"/>
+              </svg>
+            </div>
+            <div class="icon-label">Values &<br/>Traditions</div>
+          </div>
+          <div class="icon-badge">
+            <div class="icon-circle">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12,11.5A2.5,2.5 0 0,1 9.5,9A2.5,2.5 0 0,1 12,6.5A2.5,2.5 0 0,1 14.5,9A2.5,2.5 0 0,1 12,11.5M12,2A7,7 0 0,0 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9A7,7 0 0,0 12,2Z"/>
+              </svg>
+            </div>
+            <div class="icon-label">Open to<br/>Relocation</div>
+          </div>
+        </div>
+
+        <!-- Personal Statement -->
+        {% if about_me %}
+        <div class="statement-box">
+          <div class="statement-text">{{ about_me }}</div>
+          <div class="statement-heart">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z" fill="#7B1737"/>
+            </svg>
+          </div>
+        </div>
         {% endif %}
-        {% if lifestyle.interests %}
-          {% for i in lifestyle.interests %}
-            <span class="tag">{{ i }}</span>
-          {% endfor %}
+
+        <!-- Education -->
+        {% if profile.highest_qualification or profile.university or profile.additional_education %}
+        <div class="info-section">
+          <div class="section-header">
+            <div class="section-icon">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12,3L1,9L12,15L21,10.09V17H23V9M5,13.18V17.18L12,21L19,17.18V13.18L12,17L5,13.18Z"/>
+              </svg>
+            </div>
+            <div class="section-title">Education</div>
+          </div>
+          <div class="info-grid">
+            {% if education.highest_qualification %}
+            <div class="info-row full-width">
+              <div class="info-label">Highest Qualification</div>
+              <div class="info-value">{{ education.highest_qualification }}</div>
+            </div>
+            {% endif %}
+            {% if education.college_university %}
+            <div class="info-row full-width">
+              <div class="info-label">University</div>
+              <div class="info-value">{{ education.college_university }}</div>
+            </div>
+            {% endif %}
+            {% if education.additional_qualifications %}
+            <div class="info-row full-width">
+              <div class="info-label">Additional</div>
+              <div class="info-value">{{ education.additional_qualifications }}</div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
         {% endif %}
+
+        <!-- Professional Details -->
+        {% if profile.occupation or profile.company or profile.annual_income or profile.work_mode or profile.career_focus %}
+        <div class="info-section">
+          <div class="section-header">
+            <div class="section-icon">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20,6C20.58,6 21.05,6.2 21.42,6.59C21.8,7 22,7.45 22,8V19C22,19.55 21.8,20 21.42,20.41C21.05,20.8 20.58,21 20,21H4C3.42,21 2.95,20.8 2.58,20.41C2.2,20 2,19.55 2,19V8C2,7.45 2.2,7 2.58,6.59C2.95,6.2 3.42,6 4,6H8V4C8,3.42 8.2,2.95 8.58,2.58C8.95,2.2 9.42,2 10,2H14C14.58,2 15.05,2.2 15.42,2.58C15.8,2.95 16,3.42 16,4V6H20M4,8V19H20V8H4M14,6V4H10V6H14Z"/>
+              </svg>
+            </div>
+            <div class="section-title">Professional Details</div>
+          </div>
+          <div class="info-grid">
+            {% if employment.profession %}
+            <div class="info-row full-width">
+              <div class="info-label">Occupation</div>
+              <div class="info-value">{{ employment.profession }}</div>
+            </div>
+            {% endif %}
+            {% if employment.company %}
+            <div class="info-row full-width">
+              <div class="info-label">Company</div>
+              <div class="info-value">{{ employment.company }}</div>
+            </div>
+            {% endif %}
+            {% if employment.income_display %}
+            <div class="info-row">
+              <div class="info-label">Annual Income</div>
+              <div class="info-value">{{ employment.income_display }}</div>
+            </div>
+            {% endif %}
+            {% if employment.employment_type %}
+            <div class="info-row">
+              <div class="info-label">Work Mode</div>
+              <div class="info-value">{{ employment.employment_type }}</div>
+            </div>
+            {% endif %}
+            {% if employment.career_goals %}
+            <div class="info-row full-width">
+              <div class="info-label">Career Focus</div>
+              <div class="info-value">{{ employment.career_goals }}</div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Lifestyle & Interests -->
+        {% if profile.hobbies or profile.diet or profile.smoking or profile.drinking or profile.languages %}
+        <div class="info-section">
+          <div class="section-header">
+            <div class="section-icon">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M7,10L12,15L17,10H7Z"/>
+              </svg>
+            </div>
+            <div class="section-title">Lifestyle & Interests</div>
+          </div>
+          <div class="info-grid">
+            {% if lifestyle.hobbies_display %}
+            <div class="info-row full-width">
+              <div class="info-label">Hobbies</div>
+              <div class="info-value">{{ lifestyle.hobbies_display }}</div>
+            </div>
+            {% endif %}
+            {% if lifestyle.diet %}
+            <div class="info-row">
+              <div class="info-label">Diet</div>
+              <div class="info-value">{{ lifestyle.diet }}</div>
+            </div>
+            {% endif %}
+            {% if lifestyle.smoking %}
+            <div class="info-row">
+              <div class="info-label">Smoking</div>
+              <div class="info-value">{{ lifestyle.smoking }}</div>
+            </div>
+            {% endif %}
+            {% if lifestyle.drinking %}
+            <div class="info-row">
+              <div class="info-label">Drinking</div>
+              <div class="info-value">{{ lifestyle.drinking }}</div>
+            </div>
+            {% endif %}
+            {% if languages_display %}
+            <div class="info-row full-width">
+              <div class="info-label">Languages</div>
+              <div class="info-value">{{ languages_display }}</div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Partner Preferences -->
+        {% if profile.partner_age or profile.partner_height or profile.partner_education or profile.partner_profession or profile.partner_location or profile.partner_values %}
+        <div class="partner-section">
+          <div class="section-header">
+            <div class="section-icon">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"/>
+              </svg>
+            </div>
+            <div class="section-title">Partner Preferences</div>
+          </div>
+          <div class="info-grid">
+            {% if partner_preferences.age_range_display %}
+            <div class="info-row">
+              <div class="info-label">Age Range</div>
+              <div class="info-value">{{ partner_preferences.age_range_display }}</div>
+            </div>
+            {% endif %}
+            {% if partner_preferences.height_display %}
+            <div class="info-row">
+              <div class="info-label">Height</div>
+              <div class="info-value">{{ partner_preferences.height_display }}</div>
+            </div>
+            {% endif %}
+            {% if partner_preferences.education_display %}
+            <div class="info-row full-width">
+              <div class="info-label">Education</div>
+              <div class="info-value">{{ partner_preferences.education_display }}</div>
+            </div>
+            {% endif %}
+            {% if partner_preferences.profession_display %}
+            <div class="info-row full-width">
+              <div class="info-label">Profession</div>
+              <div class="info-value">{{ partner_preferences.profession_display }}</div>
+            </div>
+            {% endif %}
+            {% if partner_preferences.location_display %}
+            <div class="info-row full-width">
+              <div class="info-label">Location</div>
+              <div class="info-value">{{ partner_preferences.location_display }}</div>
+            </div>
+            {% endif %}
+            {% if partner_preferences.values_display %}
+            <div class="info-row full-width">
+              <div class="info-label">Values</div>
+              <div class="info-value">{{ partner_preferences.values_display }}</div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+
       </div>
     </div>
-    {% endif %}
-  </div>
-  {% endif %}
 
-  <!-- PARTNER EXPECTATIONS -->
-  {% if partner_preferences %}
-  <div class="section">
-    <div class="section-heading">Partner Expectations</div>
-    <table class="pref-table">
-      {% if partner_preferences.min_age or partner_preferences.max_age %}
-      <tr>
-        <td class="pref-label field-label">Age Range</td>
-        <td class="field-value">{{ partner_preferences.min_age or '—' }} to {{ partner_preferences.max_age or '—' }} years</td>
-      </tr>
-      {% endif %}
-
-      {% if partner_preferences.preferred_castes %}
-      <tr>
-        <td class="pref-label field-label">Caste</td>
-        <td class="field-value long-text">
-          {% if partner_preferences.preferred_castes is iterable and partner_preferences.preferred_castes is not string %}
-            {{ partner_preferences.preferred_castes | join(', ') }}
-          {% else %}
-            {{ partner_preferences.preferred_castes }}
-          {% endif %}
-        </td>
-      </tr>
-      {% endif %}
-
-      {% if partner_preferences.min_education %}
-      <tr>
-        <td class="pref-label field-label">Min. Education</td>
-        <td class="field-value">{{ partner_preferences.min_education | replace('_', ' ') | title }}</td>
-      </tr>
-      {% endif %}
-
-      {% if partner_preferences.preferred_professions %}
-      <tr>
-        <td class="pref-label field-label">Profession</td>
-        <td class="field-value long-text">
-          {% if partner_preferences.preferred_professions is iterable and partner_preferences.preferred_professions is not string %}
-            {{ partner_preferences.preferred_professions | join(', ') }}
-          {% else %}
-            {{ partner_preferences.preferred_professions }}
-          {% endif %}
-        </td>
-      </tr>
-      {% endif %}
-
-      {% if partner_preferences.min_income_lpa %}
-      <tr>
-        <td class="pref-label field-label">Min. Income</td>
-        <td class="field-value">₹{{ partner_preferences.min_income_lpa }} LPA</td>
-      </tr>
-      {% endif %}
-
-      {% if partner_preferences.preferred_states %}
-      <tr>
-        <td class="pref-label field-label">Location</td>
-        <td class="field-value long-text">
-          {% if partner_preferences.preferred_states is iterable and partner_preferences.preferred_states is not string %}
-            {{ partner_preferences.preferred_states | join(', ') }}
-          {% else %}
-            {{ partner_preferences.preferred_states }}
-          {% endif %}
-        </td>
-      </tr>
-      {% endif %}
-    </table>
-  </div>
-  {% endif %}
-
-  <!-- PHOTO GALLERY — Only if 4+ photos exist -->
-  {% if all_photo_urls and all_photo_urls | length >= 4 %}
-  <div class="divider"></div>
-  <div class="section page-break">
-    <div class="section-heading">Photo Gallery</div>
-    <div class="photo-gallery">
-      {% for url in all_photo_urls[1:] %}
-        <img src="{{ url }}" alt="Photo {{ loop.index + 1 }}" class="gallery-photo">
-      {% endfor %}
+    <!-- Bottom Decoration -->
+    <div class="bottom-decoration">
+      <div>Rooted in Values ♥</div>
+      <div class="line2">Growing Together</div>
     </div>
-  </div>
-  {% endif %}
 
-  <div class="divider"></div>
+    <!-- Footer -->
+    <div class="footer">
+      <div class="footer-left">"Better Together"</div>
+      <div class="footer-center">
+        <svg viewBox="0 0 120 16" xmlns="http://www.w3.org/2000/svg">
+          <line x1="0" y1="8" x2="45" y2="8" stroke="#FFFDF8" stroke-width="1.5"/>
+          <path d="M60,4 L63,8 L60,12 L57,8 Z" fill="#FFFDF8"/>
+          <line x1="75" y1="8" x2="120" y2="8" stroke="#FFFDF8" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <div class="footer-right">A Step Towards a Happier Tomorrow</div>
+    </div>
 
-  <!-- FOOTER -->
-  <div class="footer">
-    <div class="footer-brand">{{ app_name or 'VIVA' }}</div>
-    <div class="footer-note">Information as provided by the member. {{ app_name or 'Viva' }} • Profile ID {{ member_id }}</div>
   </div>
 
 </body>

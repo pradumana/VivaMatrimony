@@ -229,9 +229,9 @@ class _BiodataScreenState extends ConsumerState<BiodataScreen> {
                   Expanded(
                     child: _TemplateCard(
                       id: 'royal',
-                      label: 'Royal',
-                      description: 'Premium gold accents',
-                      icon: Icons.diamond_outlined,
+                      label: 'Premium',
+                      description: 'Wedding card style',
+                      icon: Icons.auto_awesome_mosaic_outlined,
                       selected: _template == 'royal',
                       onTap: () => setState(() => _template = 'royal'),
                     ),
