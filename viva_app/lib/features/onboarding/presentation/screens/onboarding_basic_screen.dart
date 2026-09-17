@@ -167,8 +167,7 @@ class _OnboardingBasicScreenState
       showBack: true,
       onBack: () async {
         await ref.read(authProvider.notifier).logout();
-        // Router redirect handles navigation to /login when state → unauthenticated.
-        // No manual router.go needed — doing so causes double-navigation freeze.
+        if (context.mounted) context.go(AppRoutes.login);
       },
       showSkip: false,
       child: Form(

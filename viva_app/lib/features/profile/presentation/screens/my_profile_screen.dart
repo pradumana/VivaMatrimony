@@ -552,8 +552,8 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                       );
                       if (confirm == true) {
                         await ref.read(authProvider.notifier).logout();
-                        // Router redirect handles navigation once state → unauthenticated.
-                        // No manual navigation needed here.
+                        // Explicit navigation needed to clear nested shell route stack
+                        if (context.mounted) context.go(AppRoutes.login);
                       }
                     },
                   ),

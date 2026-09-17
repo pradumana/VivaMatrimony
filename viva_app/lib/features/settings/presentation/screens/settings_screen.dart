@@ -353,8 +353,11 @@ class _DeleteAccountDialogState
       return;
     }
     if (!mounted) return;
-    Navigator.pop(context);
+    final nav = Navigator.of(context);
+    final router = GoRouter.of(context);
+    nav.pop();
     await ref.read(authProvider.notifier).logout();
+    if (context.mounted) router.go(AppRoutes.login);
   }
 }
 
