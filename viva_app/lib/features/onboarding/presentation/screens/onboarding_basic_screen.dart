@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -168,8 +167,12 @@ class _OnboardingBasicScreenState
       showBack: true,
       onBack: () async {
         await ref.read(authProvider.notifier).logout();
-        // Force exit app to restart fresh at login
-        SystemNavigator.pop();
+        // Clear navigation and go to login
+        if (!context.mounted) return;
+        while (context.canPop()) {
+          context.pop();
+        }
+        context.go(AppRoutes.login);
       },
       showSkip: false,
       child: Form(

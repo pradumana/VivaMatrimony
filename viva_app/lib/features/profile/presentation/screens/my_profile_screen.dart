@@ -552,9 +552,13 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                       );
                       if (confirm == true) {
                         await ref.read(authProvider.notifier).logout();
-                        // Force exit app instead of navigating to avoid black screen
-                        // The next app launch will start fresh at login screen
-                        SystemNavigator.pop();
+                        // Clear all navigation and go to login
+                        if (!context.mounted) return;
+                        // Use replace to completely replace navigation stack
+                        while (context.canPop()) {
+                          context.pop();
+                        }
+                        context.go(AppRoutes.login);
                       }
                     },
                   ),

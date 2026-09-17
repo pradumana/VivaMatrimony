@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -355,10 +354,16 @@ class _DeleteAccountDialogState
     }
     if (!mounted) return;
     final nav = Navigator.of(context);
+    final router = GoRouter.of(context);
     nav.pop();
     await ref.read(authProvider.notifier).logout();
-    // Force exit app to avoid navigation issues
-    SystemNavigator.pop();
+    // Clear navigation stack and go to login
+    if (context.mounted) {
+      while (router.canPop()) {
+        router.pop();
+      }
+      router.go(AppRoutes.login);
+    }
   }
 }
 

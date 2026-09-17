@@ -62,16 +62,22 @@ class _ViewerCard extends StatelessWidget {
     final viewedAt = viewer['viewed_at'] as String?;
     final userId = viewer['user_id'] as String?;
 
-    // Edge case: if user_id is missing or invalid, don't make card tappable
-    if (userId == null || userId.isEmpty || userId == 'viewers') {
+    // Debug: Print viewer data to understand what's being passed
+    debugPrint('Viewer card data: $viewer');
+    debugPrint('Extracted userId: $userId');
+
+    // Edge case: if user_id is missing or invalid, show error card
+    if (userId == null || userId.isEmpty || userId == 'viewers' || !_isValidUuid(userId)) {
+      debugPrint('WARNING: Invalid userId detected: $userId');
       return _buildCard(
-        name: name,
+        name: name.isNotEmpty ? name : 'Unknown User',
         age: age,
         location: location,
         photoUrl: photoUrl,
         isVerified: isVerified,
         viewedAt: viewedAt,
         onTap: null, // Not tappable if invalid user_id
+        showError: true,
       );
     }
 
@@ -82,8 +88,21 @@ class _ViewerCard extends StatelessWidget {
       photoUrl: photoUrl,
       isVerified: isVerified,
       viewedAt: viewedAt,
-      onTap: () => context.push('/profile/$userId'),
+      onTap: () {
+        debugPrint('Navigating to profile: $userId');
+        context.push('/profile/$userId');
+      },
+      showError: false,
     );
+  }
+
+  // UUID validation
+  bool _isValidUuid(String str) {
+    final uuidPattern = RegExp(
+      r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+      caseSensitive: false,
+    );
+    return uuidPattern.hasMatch(str);
   }
 
   Widget _buildCard({
@@ -94,6 +113,7 @@ class _ViewerCard extends StatelessWidget {
     required bool isVerified,
     required String? viewedAt,
     required VoidCallback? onTap,
+    bool showError = false,
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -101,9 +121,10 @@ class _ViewerCard extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: showError ? Colors.red.shade50 : Colors.white,
           borderRadius: BorderRadius.circular(AppRadius.lg),
           boxShadow: AppShadows.card,
+          border: showError ? Border.all(color: Colors.red.shade300, width: 1) : null,
         ),
         child: Row(children: [
           ClipRRect(
@@ -150,11 +171,19 @@ class _ViewerCard extends StatelessWidget {
                         fontSize: 11, color: AppTheme.textTertiary),
                   ),
                 ],
+                if (showError) ...[
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Invalid profile data',
+                    style: TextStyle(
+                        fontSize: 11, color: Colors.red, fontWeight: FontWeight.w600),
+                  ),
+                ],
               ],
             ),
           ),
-          const Icon(Icons.chevron_right_rounded,
-              color: AppTheme.textTertiary, size: 20),
+          Icon(Icons.chevron_right_rounded,
+              color: showError ? Colors.grey : AppTheme.textTertiary, size: 20),
         ]),
       ),
     );
