@@ -1,0 +1,49 @@
+{
+  "name": "Priya Sharma",
+  "photo_url": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=500&fit=crop",
+  "age": "28",
+  "date_of_birth": "15th March 1996",
+  "height": "5'5\"",
+  "weight": "55 kg",
+  "blood_group": "B+",
+  "marital_status": "Never Married",
+  "religion": "Hindu",
+  "caste": "Brahmin",
+  "sub_caste": "Saryupari",
+  "gotra": "Kashyap",
+  "manglik": "No",
+  "native_place": "Varanasi, Uttar Pradesh",
+  "current_city": "Bangalore, Karnataka",
+  
+  "highest_qualification": "Master of Computer Applications (MCA)",
+  "university": "Delhi University",
+  "additional_education": "AWS Certified Solutions Architect",
+  
+  "occupation": "Senior Software Engineer",
+  "company": "Tech Mahindra",
+  "annual_income": "₹18 LPA",
+  "work_mode": "Hybrid (3 days office)",
+  "career_focus": "Moving towards cloud architecture and team leadership",
+  
+  "father": "Mr. Rajesh Sharma (Retired IAS Officer)",
+  "mother": "Mrs. Sunita Sharma (Homemaker)",
+  "siblings": "1 Elder Brother (Married, Software Engineer)",
+  "family_type": "Nuclear Family",
+  "family_values": "Traditional with modern outlook",
+  
+  "hobbies": "Reading, Classical Dance (Kathak), Yoga, Traveling",
+  "diet": "Vegetarian",
+  "smoking": "No",
+  "drinking": "Occasionally (Social)",
+  "languages": "Hindi, English, Kannada",
+  
+  "partner_age": "28-33 Years",
+  "partner_height": "5'8\" and above",
+  "partner_education": "Graduate or higher in any field",
+  "partner_profession": "Well-settled professional (Engineer/Doctor/Business)",
+  "partner_location": "Open to Bangalore, Mumbai, Delhi NCR or abroad",
+  "partner_values": "Family-oriented, respectful, believes in mutual growth",
+  
+  "photo_quote": "Grateful for the journey, excited for the life ahead.",
+  "about_partner": "Looking for a life partner to share a journey of love, respect, growth and happiness."
+}
