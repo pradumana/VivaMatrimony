@@ -40,6 +40,9 @@ services:
       - type: rewrite
         source: /auth/callback
         destination: /auth/callback/index.html
+      - type: rewrite
+        source: /auth/callback/*
+        destination: /auth/callback/index.html
 
   # ── Viva Admin Panel — Static Site ────────────────────────────────────────
   - type: web
