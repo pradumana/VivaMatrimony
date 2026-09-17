@@ -125,10 +125,11 @@ async def list_users(
         conditions.append("u.verification_status = :verification_status")
         params["verification_status"] = verification_status
 
-    where = " AND ".join(conditions)
+    where_clause = " AND ".join(conditions)
 
+    # Safe: conditions are built from constants, only params contain user input
     count_result = await db.execute(
-        text(f"SELECT COUNT(*) as total FROM users u LEFT JOIN profiles p ON p.user_id = u.id WHERE {where}"),
+        text(f"SELECT COUNT(*) as total FROM users u LEFT JOIN profiles p ON p.user_id = u.id WHERE {where_clause}"),
         params,
     )
     total = count_result.fetchone().total
@@ -140,7 +141,7 @@ async def list_users(
                    p.full_name, p.gender, p.date_of_birth, p.completion_percentage
             FROM users u
             LEFT JOIN profiles p ON p.user_id = u.id
-            WHERE {where}
+            WHERE {where_clause}
             ORDER BY u.created_at DESC
             LIMIT :limit OFFSET :offset
         """),
@@ -1251,7 +1252,11 @@ async def create_subscription(
     admin: AdminUser = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
-    """Record a manual payment for a member. Accepts either user_id (UUID) or member_id (e.g., VVA001234)."""
+    """
+    Record a manual payment for a member. Accepts either user_id (UUID) or member_id (e.g., VVA001234).
+    
+    Idempotent: prevents duplicate subscriptions within 60 seconds of same amount to same user.
+    """
     try:
         admin.require("ban")  # admin+ only (reuses existing 'ban' permission tier)
 
@@ -1282,6 +1287,30 @@ async def create_subscription(
 
         from datetime import datetime, timezone, timedelta
         paid_at = body.paid_at or datetime.now(timezone.utc)
+        
+        # Idempotency check: prevent duplicate subscription within 60 seconds of same amount
+        duplicate_check = await db.execute(
+            text("""
+                SELECT id FROM member_subscriptions
+                WHERE user_id = :user_id 
+                  AND amount = :amount
+                  AND paid_at BETWEEN :check_start AND :check_end
+                LIMIT 1
+            """),
+            {
+                "user_id": user_id,
+                "amount": body.amount,
+                "check_start": paid_at - timedelta(seconds=60),
+                "check_end": paid_at + timedelta(seconds=60),
+            },
+        )
+        existing = duplicate_check.fetchone()
+        if existing:
+            raise HTTPException(
+                status_code=409, 
+                detail="Duplicate subscription detected. A similar payment was recorded within the last minute."
+            )
+        
         expires_at = paid_at + timedelta(days=180)  # 6 months = ~180 days
 
         result = await db.execute(
@@ -1405,8 +1434,16 @@ async def subscriptions_csv_report(
     admin: AdminUser = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
-    """Download all subscription records as CSV."""
+    """
+    Download all subscription records as CSV.
+    Limited to most recent 50,000 records to prevent OOM.
+    """
     admin.require("view_users")
+
+    # ponytail: Hard limit to prevent OOM on large datasets.
+    # 50k rows ~= 5MB CSV, safe for memory and network.
+    # Upgrade path: streaming CSV writer or paginated exports.
+    MAX_ROWS = 50000
 
     result = await db.execute(text("""
         SELECT ms.id, p.full_name, u.phone_normalized, u.member_id,
@@ -1417,7 +1454,8 @@ async def subscriptions_csv_report(
         LEFT JOIN profiles p ON p.user_id = ms.user_id
         JOIN admin_users au ON au.id = ms.recorded_by
         ORDER BY ms.paid_at DESC
-    """))
+        LIMIT :max_rows
+    """), {"max_rows": MAX_ROWS})
     rows = result.fetchall()
 
     buf = io.StringIO()
@@ -1442,5 +1480,9 @@ async def subscriptions_csv_report(
     return Response(
         content=buf.getvalue(),
         media_type="text/csv",
-        headers={"Content-Disposition": f"attachment; filename={filename}"},
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}",
+            "X-Total-Records": str(len(rows)),
+            "X-Max-Records": str(MAX_ROWS),
+        },
     )

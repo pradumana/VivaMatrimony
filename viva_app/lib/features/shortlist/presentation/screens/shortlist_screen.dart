@@ -40,8 +40,12 @@ class _ShortlistItem {
       );
 }
 
+// ponytail: Remove autoDispose and add keepAlive() to persist shortlist across navigation.
+// Shortlist changes infrequently, so keeping it cached reduces API calls.
 final _shortlistProvider =
-    FutureProvider.autoDispose<List<_ShortlistItem>>((ref) async {
+    FutureProvider<List<_ShortlistItem>>((ref) async {
+  ref.keepAlive();
+  
   final client = ref.read(apiClientProvider);
   final r = await client.get('/shortlist');
   return (r.data['shortlist'] as List)
@@ -59,34 +63,43 @@ class ShortlistScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(title: Text(l.shortlisted)),
-      body: async.when(
-        loading: () => const LoadingView(),
-        error: (e, _) => ErrorView(
-          message: e.toString(),
-          onRetry: () => ref.invalidate(_shortlistProvider),
-        ),
-        data: (items) => items.isEmpty
-            ? EmptyStateView(
-                icon: Icons.bookmark_border_rounded,
-                title: l.noShortlist,
-                subtitle: l.noShortlistSubtitle,
-              )
-            : ListView.builder(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                itemCount: items.length,
-                itemBuilder: (context, i) => _ShortlistCard(
-                  item: items[i],
-                  onRemove: () async {
-                    try {
-                      await ref
-                          .read(apiClientProvider)
-                          .delete('/shortlist/${items[i].userId}');
-                      ref.invalidate(_shortlistProvider);
-                    } catch (_) {}
-                  },
-                  onEditNote: () => _editNote(context, ref, items[i]),
+      body: RefreshIndicator(
+        color: AppTheme.primary,
+        onRefresh: () async {
+          ref.invalidate(_shortlistProvider);
+          try {
+            await ref.read(_shortlistProvider.future);
+          } catch (_) {}
+        },
+        child: async.when(
+          loading: () => const LoadingView(),
+          error: (e, _) => ErrorView(
+            message: e.toString(),
+            onRetry: () => ref.invalidate(_shortlistProvider),
+          ),
+          data: (items) => items.isEmpty
+              ? EmptyStateView(
+                  icon: Icons.bookmark_border_rounded,
+                  title: l.noShortlist,
+                  subtitle: l.noShortlistSubtitle,
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  itemCount: items.length,
+                  itemBuilder: (context, i) => _ShortlistCard(
+                    item: items[i],
+                    onRemove: () async {
+                      try {
+                        await ref
+                            .read(apiClientProvider)
+                            .delete('/shortlist/${items[i].userId}');
+                        ref.invalidate(_shortlistProvider);
+                      } catch (_) {}
+                    },
+                    onEditNote: () => _editNote(context, ref, items[i]),
+                  ),
                 ),
-              ),
+        ),
       ),
     );
   }

@@ -26,7 +26,7 @@ class ProfileSummary {
   final String userId;
   final String? memberId;
   final String fullName;
-  final int age;
+  final int? age;  // Changed from required to nullable
   final String? location;
   final String? photoUrl;
   final String? qualification;
@@ -45,7 +45,7 @@ class ProfileSummary {
     required this.userId,
     this.memberId,
     required this.fullName,
-    required this.age,
+    this.age,  // Now nullable
     this.location,
     this.photoUrl,
     this.qualification,
@@ -60,26 +60,31 @@ class ProfileSummary {
     this.gotra,
   });
 
-  factory ProfileSummary.fromJson(Map<String, dynamic> json) => ProfileSummary(
-        userId: json['user_id'] as String,
-        memberId: json['member_id'] as String?,
-        fullName: json['full_name'] as String? ?? '',
-        // age may be null when a profile has no date_of_birth — guard the cast
-        age: (json['age'] as num?)?.toInt() ?? 0,
-        location: json['location'] as String?,
-        photoUrl: json['primary_photo_url'] as String?,
-        qualification: json['highest_qualification'] as String?,
-        profession: json['profession'] as String?,
-        isVerified: json['is_verified'] as bool? ?? false,
-        compatibilityScore: (json['compatibility_score'] as num?)?.toInt(),
-        heightCm: (json['height_cm'] as num?)?.toInt(),
-        lastActiveAt: json['last_active_at'] as String?,
-        compatibilityBreakdown: (json['compatibility_breakdown'] as Map<String, dynamic>?)
-            ?.map((k, v) => MapEntry(k, (v as num).toInt())),
-        caste: json['caste'] as String?,
-        subCaste: json['sub_caste'] as String?,
-        gotra: json['gotra'] as String?,
-      );
+  factory ProfileSummary.fromJson(Map<String, dynamic> json) {
+    // Age validation: only accept positive integers, return null for 0 or negative
+    final ageRaw = (json['age'] as num?)?.toInt();
+    final validAge = (ageRaw != null && ageRaw > 0) ? ageRaw : null;
+    
+    return ProfileSummary(
+      userId: json['user_id'] as String,
+      memberId: json['member_id'] as String?,
+      fullName: json['full_name'] as String? ?? '',
+      age: validAge,
+      location: json['location'] as String?,
+      photoUrl: json['primary_photo_url'] as String?,
+      qualification: json['highest_qualification'] as String?,
+      profession: json['profession'] as String?,
+      isVerified: json['is_verified'] as bool? ?? false,
+      compatibilityScore: (json['compatibility_score'] as num?)?.toInt(),
+      heightCm: (json['height_cm'] as num?)?.toInt(),
+      lastActiveAt: json['last_active_at'] as String?,
+      compatibilityBreakdown: (json['compatibility_breakdown'] as Map<String, dynamic>?)
+          ?.map((k, v) => MapEntry(k, (v as num).toInt())),
+      caste: json['caste'] as String?,
+      subCaste: json['sub_caste'] as String?,
+      gotra: json['gotra'] as String?,
+    );
+  }
 }
 
 class InterestModel {

@@ -13,8 +13,13 @@ import '../../../../shared/extensions/string_extensions.dart';
 import '../../../../shared/widgets/verified_badge.dart';
 import '../../../../shared/widgets/viva_button.dart';
 
+// ponytail: Provider already lacks autoDispose, now add keepAlive() for explicit persistence.
+// Profile details don't change frequently, so keeping them cached reduces
+// unnecessary API calls when user navigates back to a profile they've already viewed.
 final _profileDetailProvider =
     FutureProvider.family<Map<String, dynamic>, String>((ref, userId) async {
+  ref.keepAlive();
+  
   final client = ref.read(apiClientProvider);
   final response = await client.get('/profile/$userId');
   return response.data as Map<String, dynamic>;
@@ -51,7 +56,20 @@ class ProfileDetailScreen extends ConsumerWidget {
                 message: e.toString(),
                 onRetry: () =>
                     ref.invalidate(_profileDetailProvider(userId)))),
-        data: (data) => _ProfileBody(userId: userId, data: data),
+        data: (data) {
+          // Edge case: validate profile data is not empty
+          final profile = data['profile'] as Map<String, dynamic>?;
+          if (profile == null || profile.isEmpty || profile['full_name'] == null) {
+            return Scaffold(
+              appBar: AppBar(title: const Text('Profile')),
+              body: ErrorView(
+                message: 'Profile data is incomplete or unavailable.',
+                onRetry: () => ref.invalidate(_profileDetailProvider(userId)),
+              ),
+            );
+          }
+          return _ProfileBody(userId: userId, data: data);
+        },
       ),
     );
   }
@@ -724,6 +742,10 @@ class _Grid extends StatelessWidget {
     // of the actual available space — never hard-coded pixel math that can
     // go negative on small phones or when nested inside padding.
     return LayoutBuilder(builder: (context, constraints) {
+      // Edge case: handle zero or negative width constraints
+      if (constraints.maxWidth <= 16) {
+        return const SizedBox.shrink();
+      }
       final colWidth = (constraints.maxWidth - 16) / 2;
       return Wrap(
         spacing: 16,

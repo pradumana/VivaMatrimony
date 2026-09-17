@@ -33,6 +33,7 @@ def _handle_social_error(exc: SocialError) -> HTTPException:
         "self_shortlist": 400, "self_block": 400,
         "self_report": 400, "invalid_reason": 422,
         "empty_message": 422, "message_too_long": 422,
+        "rate_limit_exceeded": 429,
         "error": 400,
     }
     return HTTPException(

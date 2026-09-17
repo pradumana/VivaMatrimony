@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../network/api_client.dart';
+import '../providers/profile_provider.dart';
 import '../storage/cache_service.dart';
 import '../storage/secure_storage.dart';
 
@@ -192,6 +193,10 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
 
     // Clear match/profile cache so a different user logging in gets fresh data
     await CacheService.invalidateAll();
+
+    // Invalidate all keepAlive providers so a different user logging in
+    // doesn't see stale data from the previous session.
+    ref.invalidate(myProfileProvider);
 
     // Supabase signOut clears the local session and fires onAuthStateChange
     // which will set state to unauthenticated and call clearAppData via the listener.

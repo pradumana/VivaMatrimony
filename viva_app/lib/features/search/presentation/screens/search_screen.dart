@@ -69,8 +69,21 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         'page_size': AppConstants.defaultPageSize,
       };
       final query = _searchCtrl.text.trim();
-      if (query.toUpperCase().startsWith('VIVA')) {
-        params['member_id'] = query.toUpperCase();
+      final upperQuery = query.toUpperCase();
+      
+      // Member ID validation: must be at least VIVA + 3 digits (e.g., VIVA123)
+      if (upperQuery.startsWith('VIVA')) {
+        if (upperQuery.length < 7) {
+          // Too short - show error without making API call
+          setState(() {
+            _loading = false;
+            _error = 'Enter complete member ID (e.g., VIVA001234)';
+            _results = [];
+            _total = 0;
+          });
+          return;
+        }
+        params['member_id'] = upperQuery;
       } else {
         if (query.isNotEmpty) params['q'] = query;
         if (_minAge != null) params['min_age'] = _minAge;

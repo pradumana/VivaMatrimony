@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/network/api_client.dart';
+import '../../../../core/providers/notification_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/constants/app_constants.dart';
 import '../../../../shared/extensions/string_extensions.dart';
@@ -10,7 +11,8 @@ import '../../../../shared/models/user_model.dart';
 import '../../../../shared/widgets/error_view.dart';
 
 final _notificationsProvider =
-    FutureProvider.autoDispose<List<NotificationModel>>((ref) async {
+    FutureProvider<List<NotificationModel>>((ref) async {
+  ref.keepAlive();
   final client = ref.read(apiClientProvider);
   final r = await client
       .get('/notifications', queryParameters: {'limit': 50});
@@ -40,28 +42,36 @@ class NotificationsScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: async.when(
-        loading: () => const LoadingView(),
-        error: (e, _) => ErrorView(
-          message: e.toString(),
-          onRetry: () => ref.invalidate(_notificationsProvider),
-        ),
-        data: (items) => items.isEmpty
-            ? const EmptyStateView(
-                icon: Icons.notifications_none_outlined,
-                title: 'No notifications yet',
-                subtitle:
-                    'Interests, matches and profile updates will appear here.',
-              )
-            : ListView.builder(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                itemCount: items.length,
-                itemBuilder: (context, i) => _NotificationCard(
-                  item: items[i],
-                  onTap: () =>
-                      _handleTap(context, ref, items[i]),
+      body: RefreshIndicator(
+        color: AppTheme.primary,
+        onRefresh: () async {
+          ref.invalidate(_notificationsProvider);
+          ref.invalidate(unreadNotificationCountProvider);
+          try { await ref.read(_notificationsProvider.future); } catch (_) {}
+        },
+        child: async.when(
+          loading: () => const LoadingView(),
+          error: (e, _) => ErrorView(
+            message: e.toString(),
+            onRetry: () => ref.invalidate(_notificationsProvider),
+          ),
+          data: (items) => items.isEmpty
+              ? const EmptyStateView(
+                  icon: Icons.notifications_none_outlined,
+                  title: 'No notifications yet',
+                  subtitle:
+                      'Interests, matches and profile updates will appear here.',
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  itemCount: items.length,
+                  itemBuilder: (context, i) => _NotificationCard(
+                    item: items[i],
+                    onTap: () =>
+                        _handleTap(context, ref, items[i]),
+                  ),
                 ),
-              ),
+        ),
       ),
     );
   }
@@ -73,6 +83,7 @@ class NotificationsScreen extends ConsumerWidget {
       // Best-effort: even if the API fails, refresh the list below
     }
     ref.invalidate(_notificationsProvider);
+    ref.invalidate(unreadNotificationCountProvider);
   }
 
   Future<void> _handleTap(
@@ -83,6 +94,7 @@ class NotificationsScreen extends ConsumerWidget {
             .read(apiClientProvider)
             .put('/notifications/${n.id}/read');
         ref.invalidate(_notificationsProvider);
+        ref.invalidate(unreadNotificationCountProvider);
       } catch (_) {}
     }
     if (!context.mounted) return;

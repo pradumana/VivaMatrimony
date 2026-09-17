@@ -460,13 +460,17 @@ async def upload_photo(
     if width < 100 or height < 100:
         raise ValueError("Image too small. Minimum 100x100 pixels required")
 
-    # Compress and resize main image (max 1200px on longest side)
+    # Strip EXIF metadata for privacy (GPS, camera model, timestamps, etc.)
+    # Convert to RGB which removes all metadata, then save fresh
     img = img.convert("RGB")
+    
+    # Compress and resize main image (max 1200px on longest side)
     max_dim = 1200
     if max(width, height) > max_dim:
         img.thumbnail((max_dim, max_dim), PILImage.LANCZOS)
 
     compressed_bytes = io.BytesIO()
+    # Save without EXIF - PIL doesn't carry over metadata when saving to fresh BytesIO
     img.save(compressed_bytes, format="JPEG", quality=85, optimize=True)
     compressed_bytes.seek(0)
     final_bytes = compressed_bytes.read()
@@ -529,6 +533,11 @@ async def upload_photo(
     except Exception as exc:
         logger.warning("orphaned_storage_cleanup_failed", error=str(exc), user_id=str(user_id))
 
+    # ponytail: Upload storage first, then DB insert in transaction.
+    # If storage succeeds but DB fails, we leak one file (acceptable — cleanup job can handle it).
+    # If DB succeeds but storage failed, we'd have broken metadata (worse — prevented by try/except).
+    # Upgrade path: use a two-phase commit protocol or queue-based retry.
+    storage_uploaded = False
     try:
         supabase.storage.from_(settings.storage_bucket_profile_photos).upload(
             path=safe_filename,
@@ -540,62 +549,83 @@ async def upload_photo(
             file=thumb_bytes,
             file_options={"content-type": "image/jpeg"},
         )
+        storage_uploaded = True
     except Exception as exc:
         logger.error("photo_upload_failed", error=str(exc), user_id=str(user_id))
         raise ValueError("Failed to upload photo. Please try again.")
 
-    # If primary, demote existing primary
-    if is_primary:
-        await db.execute(
-            text("UPDATE photos SET is_primary = FALSE WHERE user_id = :uid AND is_primary = TRUE AND deleted_at IS NULL"),
-            {"uid": user_id},
+    # Begin database transaction - if this fails, we clean up storage
+    try:
+        # If primary, demote existing primary with row-level locking to prevent race conditions
+        if is_primary:
+            await db.execute(
+                text("""
+                    UPDATE photos SET is_primary = FALSE 
+                    WHERE id IN (
+                        SELECT id FROM photos 
+                        WHERE user_id = :uid AND is_primary = TRUE AND deleted_at IS NULL
+                        FOR UPDATE
+                    )
+                """),
+                {"uid": user_id},
+            )
+
+        # Save metadata
+        insert_result = await db.execute(
+            text("""
+                INSERT INTO photos (
+                  user_id, storage_path, thumbnail_path, file_name,
+                  file_size_bytes, mime_type, width_px, height_px,
+                  is_primary, display_order
+                ) VALUES (
+                  :uid, :path, :thumb_path, :filename,
+                  :size, :mime, :w, :h, :primary, :order
+                ) RETURNING id, created_at
+            """),
+            {
+                "uid": user_id,
+                "path": safe_filename,
+                "thumb_path": thumb_filename,
+                "filename": filename,
+                "size": len(final_bytes),
+                "mime": "image/jpeg",
+                "w": img.width,
+                "h": img.height,
+                "primary": is_primary,
+                "order": display_order,
+            },
         )
+        photo_row = insert_result.fetchone()
+        photo_id = photo_row.id
+        photo_created_at = photo_row.created_at
 
-    # Save metadata
-    insert_result = await db.execute(
-        text("""
-            INSERT INTO photos (
-              user_id, storage_path, thumbnail_path, file_name,
-              file_size_bytes, mime_type, width_px, height_px,
-              is_primary, display_order
-            ) VALUES (
-              :uid, :path, :thumb_path, :filename,
-              :size, :mime, :w, :h, :primary, :order
-            ) RETURNING id, created_at
-        """),
-        {
-            "uid": user_id,
-            "path": safe_filename,
-            "thumb_path": thumb_filename,
-            "filename": filename,
-            "size": len(final_bytes),
-            "mime": "image/jpeg",
-            "w": img.width,
-            "h": img.height,
-            "primary": is_primary,
-            "order": display_order,
-        },
-    )
-    photo_row = insert_result.fetchone()
-    photo_id = photo_row.id
-    photo_created_at = photo_row.created_at
+        await _update_completion(db, user_id)
+        await db.commit()
 
-    await _update_completion(db, user_id)
-    await db.commit()
+        public_url = supabase.storage.from_(settings.storage_bucket_profile_photos).get_public_url(safe_filename)
+        thumb_url = supabase.storage.from_(settings.storage_bucket_profile_photos).get_public_url(thumb_filename)
 
-    public_url = supabase.storage.from_(settings.storage_bucket_profile_photos).get_public_url(safe_filename)
-    thumb_url = supabase.storage.from_(settings.storage_bucket_profile_photos).get_public_url(thumb_filename)
-
-    logger.info("photo_uploaded", user_id=str(user_id), photo_id=str(photo_id))
-    return {
-        "id": photo_id,
-        "url": public_url,
-        "thumbnail_url": thumb_url,
-        "is_primary": is_primary,
-        "display_order": display_order,
-        "file_size_bytes": len(final_bytes),
-        "created_at": photo_created_at.isoformat(),
-    }
+        logger.info("photo_uploaded", user_id=str(user_id), photo_id=str(photo_id))
+        return {
+            "id": photo_id,
+            "url": public_url,
+            "thumbnail_url": thumb_url,
+            "is_primary": is_primary,
+            "display_order": display_order,
+            "file_size_bytes": len(final_bytes),
+            "created_at": photo_created_at.isoformat(),
+        }
+    except Exception as exc:
+        # Database operation failed - rollback and clean up storage
+        await db.rollback()
+        if storage_uploaded:
+            try:
+                supabase.storage.from_(settings.storage_bucket_profile_photos).remove([safe_filename, thumb_filename])
+                logger.info("photo_storage_cleaned_after_db_failure", user_id=str(user_id))
+            except Exception as cleanup_exc:
+                logger.error("photo_cleanup_failed", error=str(cleanup_exc), user_id=str(user_id))
+        logger.error("photo_db_insert_failed", error=str(exc), user_id=str(user_id))
+        raise ValueError(f"Failed to save photo metadata: {str(exc)}")
 
 
 async def delete_photo(db: AsyncSession, user_id: UUID, photo_id: UUID) -> dict:
@@ -620,13 +650,14 @@ async def delete_photo(db: AsyncSession, user_id: UUID, photo_id: UUID) -> dict:
     )
 
     if was_primary:
-        # Assign primary to next available photo
+        # Assign primary to next available photo with row-level locking
         next_photo = await db.execute(
             text("""
                 SELECT id FROM photos
                 WHERE user_id = :uid AND deleted_at IS NULL AND is_approved = TRUE
                 ORDER BY display_order ASC
                 LIMIT 1
+                FOR UPDATE
             """),
             {"uid": user_id},
         )

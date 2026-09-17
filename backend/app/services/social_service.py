@@ -27,9 +27,30 @@ class SocialError(Exception):
 # ---------------------------------------------------------------------------
 
 async def send_interest(db: AsyncSession, sender_id: UUID, receiver_id: UUID) -> dict:
-    """Send interest to another user."""
+    """
+    Send interest to another user.
+    
+    Rate limit: max 50 interests per user per day to prevent spam.
+    """
     if sender_id == receiver_id:
         raise SocialError("Cannot send interest to yourself.", code="self_interest")
+
+    # Rate limit check: max 50 interests per day
+    from datetime import datetime, timedelta
+    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    rate_limit_check = await db.execute(
+        text("""
+            SELECT COUNT(*) as count FROM interests
+            WHERE sender_id = :sender AND created_at >= :today_start
+        """),
+        {"sender": sender_id, "today_start": today_start},
+    )
+    daily_count = rate_limit_check.fetchone().count
+    if daily_count >= 50:
+        raise SocialError(
+            "You've reached the daily limit of 50 interests. Please try again tomorrow.",
+            code="rate_limit_exceeded"
+        )
 
     # Check receiver exists and is active
     result = await db.execute(
@@ -109,7 +130,11 @@ async def accept_interest(db: AsyncSession, interest_id: UUID, user_id: UUID) ->
     After acceptance both parties can communicate directly on WhatsApp.
     Returns the other user's phone number (E.164) for the WhatsApp deep-link.
     Phone is only disclosed after verified mutual acceptance — never before.
+    
+    Uses row-level locking (FOR UPDATE) to prevent race conditions when
+    multiple requests try to accept the same interest simultaneously.
     """
+    # Lock the row for update to prevent concurrent modifications
     result = await db.execute(
         text("""
             SELECT i.id, i.sender_id, i.receiver_id, i.status,
@@ -121,6 +146,7 @@ async def accept_interest(db: AsyncSession, interest_id: UUID, user_id: UUID) ->
             JOIN profiles ps ON ps.user_id = i.sender_id
             JOIN profiles pr ON pr.user_id = i.receiver_id
             WHERE i.id = :iid
+            FOR UPDATE OF i
         """),
         {"iid": interest_id},
     )

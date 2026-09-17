@@ -11,8 +11,12 @@ import '../../../../shared/constants/app_constants.dart';
 import '../../../../shared/models/user_model.dart';
 import '../../../../shared/widgets/error_view.dart';
 
+// ponytail: Remove autoDispose and add keepAlive() to persist sent interests across navigation.
+// Reduces re-fetching when user switches tabs or navigates away and back.
 final _sentInterestsProvider =
-    FutureProvider.autoDispose<List<InterestModel>>((ref) async {
+    FutureProvider<List<InterestModel>>((ref) async {
+  ref.keepAlive();
+  
   final client = ref.read(apiClientProvider);
   final r = await client.get('/interests/sent');
   return (r.data['interests'] as List)
@@ -20,8 +24,12 @@ final _sentInterestsProvider =
       .toList();
 });
 
+// ponytail: Remove autoDispose and add keepAlive() to persist received interests.
+// Manual cache invalidation happens after accept/decline actions.
 final _receivedInterestsProvider =
-    FutureProvider.autoDispose<List<InterestModel>>((ref) async {
+    FutureProvider<List<InterestModel>>((ref) async {
+  ref.keepAlive();
+  
   final client = ref.read(apiClientProvider);
   final r = await client.get('/interests/received');
   return (r.data['interests'] as List)
@@ -110,31 +118,43 @@ class _InterestList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(provider);
-    return async.when(
-      loading: () => const LoadingView(),
-      error: (e, _) => ErrorView(
-          message: e.toString(),
-          onRetry: () => ref.invalidate(provider)),
-      data: (items) => items.isEmpty
-          ? EmptyStateView(
-              icon: Icons.favorite_border_rounded,
-              title: isReceived
-                  ? 'No interests received yet'
-                  : 'No interests sent yet',
-              subtitle: isReceived
-                  ? 'Complete your profile so others can find you.'
-                  : 'Browse matches and send interests to connect.',
-              actionLabel:
-                  isReceived ? 'Edit Profile' : 'Browse Matches',
-              onAction: () => context
-                  .go(isReceived ? AppRoutes.myProfile : AppRoutes.home),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              itemCount: items.length,
-              itemBuilder: (context, i) =>
-                  _InterestCard(item: items[i], isReceived: isReceived),
-            ),
+    return RefreshIndicator(
+      color: AppTheme.primary,
+      onRefresh: () async {
+        ref.invalidate(provider);
+        // Wait for provider to rebuild after invalidation
+        try {
+          await ref.read(provider.future);
+        } catch (_) {
+          // Ignore errors - they'll be shown in the UI
+        }
+      },
+      child: async.when(
+        loading: () => const LoadingView(),
+        error: (e, _) => ErrorView(
+            message: e.toString(),
+            onRetry: () => ref.invalidate(provider)),
+        data: (items) => items.isEmpty
+            ? EmptyStateView(
+                icon: Icons.favorite_border_rounded,
+                title: isReceived
+                    ? 'No interests received yet'
+                    : 'No interests sent yet',
+                subtitle: isReceived
+                    ? 'Complete your profile so others can find you.'
+                    : 'Browse matches and send interests to connect.',
+                actionLabel:
+                    isReceived ? 'Edit Profile' : 'Browse Matches',
+                onAction: () => context
+                    .go(isReceived ? AppRoutes.myProfile : AppRoutes.home),
+              )
+            : ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                itemCount: items.length,
+                itemBuilder: (context, i) =>
+                    _InterestCard(item: items[i], isReceived: isReceived),
+              ),
+      ),
     );
   }
 }

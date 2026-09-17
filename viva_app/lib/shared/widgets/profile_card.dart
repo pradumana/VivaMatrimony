@@ -9,7 +9,7 @@ import 'verified_badge.dart';
 class ProfileCard extends StatelessWidget {
   final String userId;
   final String name;
-  final int age;
+  final int? age;  // Changed to nullable
   final String location;
   final String? photoUrl;
   final String? qualification;
@@ -27,7 +27,7 @@ class ProfileCard extends StatelessWidget {
     super.key,
     required this.userId,
     required this.name,
-    required this.age,
+    this.age,  // Now optional
     required this.location,
     this.photoUrl,
     this.qualification,
@@ -192,7 +192,7 @@ class ProfileCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      '$name, $age',
+                      age != null ? '$name, $age' : name,
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,

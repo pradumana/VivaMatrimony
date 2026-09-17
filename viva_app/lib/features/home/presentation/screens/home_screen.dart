@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/network/api_client.dart';
+import '../../../../core/providers/notification_provider.dart';
 import '../../../../core/providers/profile_provider.dart';
 import '../../../../core/storage/cache_service.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -13,8 +14,15 @@ import '../../../../shared/widgets/error_view.dart';
 import '../../../../shared/widgets/profile_card.dart';
 import '../../../../shared/widgets/viva_logo.dart';
 
+// ponytail: Remove autoDispose to keep data cached across navigation.
+// keepAlive() allows the provider to persist even when no widget is watching.
+// This prevents re-fetching when navigating back to home screen.
+// Cache invalidation is handled manually via pull-to-refresh or time-based expiry.
 final _matchesProvider =
-    FutureProvider.autoDispose<List<ProfileSummary>>((ref) async {
+    FutureProvider<List<ProfileSummary>>((ref) async {
+  // Keep provider alive even when no listeners
+  ref.keepAlive();
+  
   const cacheKey = 'matches_home';
   final cached = await CacheService.get(cacheKey);
   final fresh = await CacheService.isFresh(cacheKey);
@@ -34,9 +42,6 @@ final _matchesProvider =
   if (cachedList != null && fresh) return cachedList;
 
   // Cache is stale or absent — fetch from network.
-  // ponytail: true stale-while-revalidate (serve stale, refresh in background)
-  // would require a separate background isolate. For our 5-min TTL and
-  // Riverpod's autoDispose model, cache-first-then-network is sufficient.
   try {
     final client = ref.read(apiClientProvider);
     final response =
@@ -66,6 +71,7 @@ class HomeScreen extends ConsumerWidget {
     final nameAsync = profileAsync.whenData(
       (data) => (data['profile'] as Map<String, dynamic>?)?['full_name'] as String?,
     );
+    final unreadCount = ref.watch(unreadNotificationCountProvider).valueOrNull ?? 0;
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -109,17 +115,48 @@ class HomeScreen extends ConsumerWidget {
             ),
             actions: [
               IconButton(
-                icon: Container(
-                  width: 38,
-                  height: 38,
-                  decoration: const BoxDecoration(
-                    color: AppTheme.surfaceVariant,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.notifications_outlined,
-                      color: AppTheme.textPrimary, size: 20),
+                icon: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: const BoxDecoration(
+                        color: AppTheme.surfaceVariant,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.notifications_outlined,
+                          color: AppTheme.textPrimary, size: 20),
+                    ),
+                    if (unreadCount > 0)
+                      Positioned(
+                        top: -2,
+                        right: -2,
+                        child: Container(
+                          padding: const EdgeInsets.all(3),
+                          decoration: const BoxDecoration(
+                            color: AppTheme.error,
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                          child: Text(
+                            unreadCount > 99 ? '99+' : '$unreadCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
-                onPressed: () => context.push(AppRoutes.notifications),
+                onPressed: () {
+                  context.push(AppRoutes.notifications);
+                  // Invalidate badge count so it refreshes on return
+                  ref.invalidate(unreadNotificationCountProvider);
+                },
               ),
               const SizedBox(width: 8),
             ],
