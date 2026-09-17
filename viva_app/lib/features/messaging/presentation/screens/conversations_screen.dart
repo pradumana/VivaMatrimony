@@ -208,12 +208,16 @@ class _ConnectionCardState extends ConsumerState<_ConnectionCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(children: [
-                    Text(
-                      '${c.fullName}${c.age != null ? ", ${c.age}" : ""}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                        color: AppTheme.textPrimary,
+                    Flexible(
+                      child: Text(
+                        '${c.fullName}${c.age != null ? ", ${c.age}" : ""}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                          color: AppTheme.textPrimary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                     ),
                     const SizedBox(width: 6),
@@ -225,11 +229,15 @@ class _ConnectionCardState extends ConsumerState<_ConnectionCard> {
                       const Icon(Icons.location_on_outlined,
                           size: 12, color: AppTheme.textSecondary),
                       const SizedBox(width: 3),
-                      Text(c.location!,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppTheme.textSecondary,
-                          )),
+                      Flexible(
+                        child: Text(c.location!,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.textSecondary,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1),
+                      ),
                     ]),
                   ],
                   const SizedBox(height: 6),

@@ -113,9 +113,30 @@ class _BiodataScreenState extends ConsumerState<BiodataScreen> {
       appBar: AppBar(title: Text(l.biodata)),
       body: statusAsync.when(
         loading: () => const Center(child: CircularProgressIndicator(color: AppTheme.primary)),
-        error: (_, __) => const Center(
-            child: Text('Could not load biodata status.',
-                style: TextStyle(color: AppTheme.textSecondary))),
+        error: (error, stack) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 60, color: AppTheme.error),
+                const SizedBox(height: 16),
+                const Text('Could not load biodata status',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 8),
+                Text(error.toString(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('Retry'),
+                  onPressed: () => ref.invalidate(_biodataProvider(_template)),
+                ),
+              ],
+            ),
+          ),
+        ),
         data: (status) => SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
