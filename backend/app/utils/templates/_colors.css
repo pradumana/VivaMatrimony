@@ -1,0 +1,147 @@
+/**
+ * Viva Matrimony — Color Palettes for Each Template
+ * 
+ * Each template has 4 genuinely distinct palettes:
+ * - Traditional: Ivory, deep maroon, antique gold
+ * - Modern: Warm white, charcoal, muted blue/green
+ * - Floral: Ivory, dusty rose, muted green
+ * - Royal: Ivory, deep wine, antique gold
+ */
+
+/* ══════════════════════════════════════════════════════════════════════════
+   TRADITIONAL — Ivory, Deep Maroon, Antique Gold
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.traditional {
+  /* Backgrounds */
+  --bg-primary: #fdfaf7;
+  --bg-secondary: #fdf8f5;
+  --bg-accent: #fdf0ec;
+  
+  /* Text */
+  --text-primary: #2a1810;
+  --text-secondary: #4a3830;
+  --text-muted: #8B4513;
+  
+  /* Brand/Accent */
+  --color-primary: #8B1A1A;
+  --color-primary-dark: #6B1414;
+  --color-primary-light: #A62F2F;
+  --color-accent: #B8342F;
+  --color-gold: #c8a876;
+  
+  /* Borders */
+  --border-primary: #e8c5b8;
+  --border-secondary: #f5e8e4;
+  --border-accent: #d9b8ad;
+  
+  /* Shadows */
+  --shadow-color: rgba(139, 26, 26, 0.2);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MODERN — Warm White, Charcoal, Muted Blue
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.modern {
+  /* Backgrounds */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-accent: #ecf0f1;
+  
+  /* Text */
+  --text-primary: #1a1a1a;
+  --text-secondary: #4a4a4a;
+  --text-muted: #7f8c8d;
+  
+  /* Brand/Accent */
+  --color-primary: #2c3e50;
+  --color-primary-dark: #1a252f;
+  --color-primary-light: #34495e;
+  --color-accent: #3498db;
+  --color-accent-alt: #16a085;
+  
+  /* Borders */
+  --border-primary: #bdc3c7;
+  --border-secondary: #e0e4e8;
+  --border-accent: #95a5a6;
+  
+  /* Shadows */
+  --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   FLORAL — Ivory, Dusty Rose, Muted Green
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.floral {
+  /* Backgrounds */
+  --bg-primary: #fdfaf7;
+  --bg-secondary: #fdf8f5;
+  --bg-accent: #fdf0f2;
+  
+  /* Text */
+  --text-primary: #4a3c36;
+  --text-secondary: #6a5550;
+  --text-muted: #8d7066;
+  
+  /* Brand/Accent */
+  --color-primary: #a85f6b;
+  --color-primary-dark: #8a4a55;
+  --color-primary-light: #c27885;
+  --color-accent: #d8968c;
+  --color-green: #9ba892;
+  
+  /* Borders */
+  --border-primary: #e8d5d0;
+  --border-secondary: #f0e5e0;
+  --border-accent: #d8c0b8;
+  
+  /* Shadows */
+  --shadow-color: rgba(168, 95, 107, 0.15);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ROYAL — Ivory, Deep Wine, Antique Gold
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.royal {
+  /* Backgrounds */
+  --bg-primary: #fffdf9;
+  --bg-secondary: #faf6ef;
+  --bg-accent: #f5ede0;
+  
+  /* Text */
+  --text-primary: #3a2618;
+  --text-secondary: #5a4230;
+  --text-muted: #7a6050;
+  
+  /* Brand/Accent */
+  --color-primary: #6B1A1A;
+  --color-primary-dark: #4d1212;
+  --color-primary-light: #8B2F2F;
+  --color-accent: #A62929;
+  --color-gold: #c8a876;
+  --color-gold-light: #d4b482;
+  
+  /* Borders */
+  --border-primary: #d4b482;
+  --border-secondary: #e8d5c0;
+  --border-accent: #c8a876;
+  
+  /* Shadows */
+  --shadow-color: rgba(107, 26, 26, 0.2);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SHARED SEMANTIC COLORS (all templates)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Verification badge */
+  --color-verified: #4CAF50;
+  --color-verified-bg: rgba(76, 175, 80, 0.1);
+  
+  /* Warnings/placeholders */
+  --color-muted-placeholder: #95a5a6;
+}
