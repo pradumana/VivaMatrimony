@@ -102,7 +102,6 @@ class _ViewerCard extends StatelessWidget {
       onTap: (userId != null && userId.isNotEmpty)
           ? () => context.push('/profile/$userId')
           : null,
-      showError: false,
     );
   }
 

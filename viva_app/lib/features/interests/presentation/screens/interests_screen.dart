@@ -122,12 +122,10 @@ class _InterestList extends ConsumerWidget {
       color: AppTheme.primary,
       onRefresh: () async {
         ref.invalidate(provider);
-        // Wait for provider to rebuild after invalidation
-        try {
-          await ref.read(provider.future);
-        } catch (_) {
-          // Ignore errors - they'll be shown in the UI
-        }
+        // RefreshIndicator dismisses after this future resolves.
+        // We can't call .future on ProviderBase, so just yield briefly
+        // — the widget rebuilds into loading state immediately after invalidate.
+        await Future<void>.delayed(const Duration(milliseconds: 300));
       },
       child: async.when(
         loading: () => const LoadingView(),
