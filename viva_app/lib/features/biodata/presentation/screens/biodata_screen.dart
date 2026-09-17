@@ -187,41 +187,54 @@ class _BiodataScreenState extends ConsumerState<BiodataScreen> {
               const Text('Choose Template',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
               const SizedBox(height: 12),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
+              Row(
                 children: [
-                  _TemplateCard(
-                    id: 'traditional',
-                    label: 'Traditional',
-                    description: 'Classic maroon & gold',
-                    icon: Icons.auto_awesome_outlined,
-                    selected: _template == 'traditional',
-                    onTap: () => setState(() => _template = 'traditional'),
+                  Expanded(
+                    child: _TemplateCard(
+                      id: 'traditional',
+                      label: 'Traditional',
+                      description: 'Classic maroon & gold',
+                      icon: Icons.auto_awesome_outlined,
+                      selected: _template == 'traditional',
+                      onTap: () => setState(() => _template = 'traditional'),
+                    ),
                   ),
-                  _TemplateCard(
-                    id: 'modern',
-                    label: 'Modern',
-                    description: 'Clean minimal design',
-                    icon: Icons.view_column_outlined,
-                    selected: _template == 'modern',
-                    onTap: () => setState(() => _template = 'modern'),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _TemplateCard(
+                      id: 'modern',
+                      label: 'Modern',
+                      description: 'Clean minimal design',
+                      icon: Icons.view_column_outlined,
+                      selected: _template == 'modern',
+                      onTap: () => setState(() => _template = 'modern'),
+                    ),
                   ),
-                  _TemplateCard(
-                    id: 'floral',
-                    label: 'Floral',
-                    description: 'Soft pastel colors',
-                    icon: Icons.local_florist_outlined,
-                    selected: _template == 'floral',
-                    onTap: () => setState(() => _template = 'floral'),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: _TemplateCard(
+                      id: 'floral',
+                      label: 'Floral',
+                      description: 'Soft pastel colors',
+                      icon: Icons.local_florist_outlined,
+                      selected: _template == 'floral',
+                      onTap: () => setState(() => _template = 'floral'),
+                    ),
                   ),
-                  _TemplateCard(
-                    id: 'royal',
-                    label: 'Royal',
-                    description: 'Premium gold accents',
-                    icon: Icons.diamond_outlined,
-                    selected: _template == 'royal',
-                    onTap: () => setState(() => _template = 'royal'),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _TemplateCard(
+                      id: 'royal',
+                      label: 'Royal',
+                      description: 'Premium gold accents',
+                      icon: Icons.diamond_outlined,
+                      selected: _template == 'royal',
+                      onTap: () => setState(() => _template = 'royal'),
+                    ),
                   ),
                 ],
               ),
@@ -299,42 +312,40 @@ class _TemplateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-          decoration: BoxDecoration(
-            color: selected ? AppTheme.primaryContainer : Colors.white,
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            border: Border.all(
-              color: selected ? AppTheme.primary : AppTheme.border,
-              width: selected ? 2 : 1,
-            ),
-            boxShadow: selected ? AppShadows.primary : AppShadows.card,
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+        decoration: BoxDecoration(
+          color: selected ? AppTheme.primaryContainer : Colors.white,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          border: Border.all(
+            color: selected ? AppTheme.primary : AppTheme.border,
+            width: selected ? 2 : 1,
           ),
-          child: Column(children: [
-            Icon(icon, size: 26, color: selected ? AppTheme.primary : AppTheme.textTertiary),
-            const SizedBox(height: 6),
-            Text(label, style: TextStyle(
-              fontSize: 12, fontWeight: FontWeight.w700,
-              color: selected ? AppTheme.primary : AppTheme.textPrimary,
-            )),
-            const SizedBox(height: 2),
-            Text(description, textAlign: TextAlign.center, style: TextStyle(
-              fontSize: 9, color: selected ? AppTheme.primary : AppTheme.textTertiary,
-            )),
-            if (selected) ...[
-              const SizedBox(height: 6),
-              Container(
-                width: 18, height: 18,
-                decoration: const BoxDecoration(color: AppTheme.primary, shape: BoxShape.circle),
-                child: const Icon(Icons.check_rounded, size: 11, color: Colors.white),
-              ),
-            ],
-          ]),
+          boxShadow: selected ? AppShadows.primary : AppShadows.card,
         ),
+        child: Column(children: [
+          Icon(icon, size: 26, color: selected ? AppTheme.primary : AppTheme.textTertiary),
+          const SizedBox(height: 6),
+          Text(label, style: TextStyle(
+            fontSize: 12, fontWeight: FontWeight.w700,
+            color: selected ? AppTheme.primary : AppTheme.textPrimary,
+          )),
+          const SizedBox(height: 2),
+          Text(description, textAlign: TextAlign.center, style: TextStyle(
+            fontSize: 9, color: selected ? AppTheme.primary : AppTheme.textTertiary,
+          )),
+          if (selected) ...[
+            const SizedBox(height: 6),
+            Container(
+              width: 18, height: 18,
+              decoration: const BoxDecoration(color: AppTheme.primary, shape: BoxShape.circle),
+              child: const Icon(Icons.check_rounded, size: 11, color: Colors.white),
+            ),
+          ],
+        ]),
       ),
     );
   }
