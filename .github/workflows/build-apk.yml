@@ -20,14 +20,15 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.47.2'
+          flutter-version: '3.47.1'
           channel: stable
           cache: true
 
-      - name: Decode keystore and google-services.json
+      - name: Decode keystore, google-services.json, and .env
         run: |
           printf '%s' "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > viva_app/android/keystore.jks
           printf '%s' "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > viva_app/android/app/google-services.json
+          printf '%s' "${{ secrets.ENV_FILE }}" | base64 --decode > viva_app/.env
 
       - name: Flutter pub get
         run: flutter pub get
@@ -41,6 +42,15 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: flutter build apk --release
+
+      - name: Verify APK exists
+        run: |
+          if [ ! -f viva_app/build/app/outputs/flutter-apk/app-release.apk ]; then
+            echo "❌ APK build failed - file not found"
+            exit 1
+          fi
+          echo "✅ APK built successfully"
+          ls -lh viva_app/build/app/outputs/flutter-apk/app-release.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

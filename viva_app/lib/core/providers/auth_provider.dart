@@ -194,11 +194,8 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     await CacheService.invalidateAll();
 
     // Supabase signOut clears the local session and fires onAuthStateChange
-    // which will set state to unauthenticated via the listener above.
+    // which will set state to unauthenticated and call clearAppData via the listener.
     await Supabase.instance.client.auth.signOut();
-
-    // Clear app-level local data (memberId, onboarding flag)
-    await ref.read(secureStorageProvider).clearAppData();
   }
 }
 
