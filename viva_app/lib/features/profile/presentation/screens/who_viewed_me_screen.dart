@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -11,8 +12,29 @@ import '../../../../shared/widgets/verified_badge.dart';
 
 final _viewersProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
-  final r = await ref.read(apiClientProvider).get('/profile/viewers');
-  return (r.data['viewers'] as List).cast<Map<String, dynamic>>();
+  try {
+    final r = await ref.read(apiClientProvider).get('/profile/viewers');
+    debugPrint('Profile viewers response: ${r.data}');
+    
+    if (r.data == null || r.data is! Map) {
+      throw Exception('Invalid response format');
+    }
+    
+    final viewers = r.data['viewers'];
+    if (viewers == null) {
+      return [];
+    }
+    
+    if (viewers is! List) {
+      throw Exception('Expected viewers to be a list, got ${viewers.runtimeType}');
+    }
+    
+    return viewers.cast<Map<String, dynamic>>();
+  } catch (e, stack) {
+    debugPrint('Error fetching profile viewers: $e');
+    debugPrint('Stack trace: $stack');
+    rethrow;
+  }
 });
 
 class WhoViewedMeScreen extends ConsumerWidget {
@@ -28,9 +50,16 @@ class WhoViewedMeScreen extends ConsumerWidget {
       body: async.when(
         loading: () => const Center(
             child: CircularProgressIndicator(color: AppTheme.primary)),
-        error: (e, _) => ErrorView(
-            message: e.toString(),
-            onRetry: () => ref.invalidate(_viewersProvider)),
+        error: (e, stack) {
+          debugPrint('Who viewed me error: $e');
+          debugPrint('Stack: $stack');
+          return ErrorView(
+            message: e.toString().contains('ApiException')
+                ? e.toString().replaceAll('ApiException', '').replaceAll('(', '').replaceAll(')', '').replaceAll(':', '')
+                : 'Unable to load profile viewers. ${e.toString()}',
+            onRetry: () => ref.invalidate(_viewersProvider),
+          );
+        },
         data: (viewers) => viewers.isEmpty
             ? const EmptyStateView(
                 icon: Icons.visibility_off_outlined,

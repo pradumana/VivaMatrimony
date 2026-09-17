@@ -477,54 +477,64 @@ async def get_profile_viewers(
     db: AsyncSession = Depends(get_db),
 ):
     """Who recently viewed my profile."""
-    result = await db.execute(
-        text("""
-            SELECT pv.viewer_id, pv.viewed_at,
-                   p.full_name, p.date_of_birth,
-                   ph.storage_path AS photo_path,
-                   u.verification_status,
-                   cl.state, cl.city
-            FROM profile_views pv
-            JOIN users u  ON u.id = pv.viewer_id AND u.deleted_at IS NULL
-            JOIN profiles p ON p.user_id = pv.viewer_id
-            LEFT JOIN photos ph ON ph.user_id = pv.viewer_id
-                               AND ph.is_primary = TRUE AND ph.deleted_at IS NULL
-            LEFT JOIN current_locations cl ON cl.user_id = pv.viewer_id
-            WHERE pv.viewed_id = :uid
-              AND NOT EXISTS (
-                SELECT 1 FROM blocks b
-                WHERE (b.blocker_id = :uid AND b.blocked_id = pv.viewer_id)
-                   OR (b.blocker_id = pv.viewer_id AND b.blocked_id = :uid)
-              )
-            ORDER BY pv.viewed_at DESC
-            LIMIT :limit OFFSET :offset
-        """),
-        {"uid": current_user.user_id, "limit": limit, "offset": offset},
-    )
-    rows = result.fetchall()
-    from app.utils import compute_age
-    from app.config import get_settings
-    cfg = get_settings()
-    supabase = get_supabase()
-    viewers = []
-    for row in rows:
-        age = compute_age(row.date_of_birth) if row.date_of_birth else None
-        photo_url = None
-        if row.photo_path:
-            try:
-                photo_url = supabase.storage.from_(cfg.storage_bucket_profile_photos).get_public_url(row.photo_path)
-            except Exception:
-                pass
-        viewers.append({
-            "user_id": str(row.viewer_id),
-            "full_name": row.full_name or "",
-            "age": age,
-            "location": f"{row.city}, {row.state}" if row.city and row.state else (row.state or ""),
-            "is_verified": row.verification_status == "verified",
-            "primary_photo_url": photo_url,
-            "viewed_at": row.viewed_at.isoformat() if row.viewed_at else None,
-        })
-    return {"viewers": viewers, "count": len(viewers)}
+    try:
+        result = await db.execute(
+            text("""
+                SELECT pv.viewer_id, pv.viewed_at,
+                       p.full_name, p.date_of_birth,
+                       ph.storage_path AS photo_path,
+                       u.verification_status,
+                       cl.state, cl.city
+                FROM profile_views pv
+                JOIN users u  ON u.id = pv.viewer_id AND u.deleted_at IS NULL
+                JOIN profiles p ON p.user_id = pv.viewer_id
+                LEFT JOIN photos ph ON ph.user_id = pv.viewer_id
+                                   AND ph.is_primary = TRUE AND ph.deleted_at IS NULL
+                LEFT JOIN current_locations cl ON cl.user_id = pv.viewer_id
+                WHERE pv.viewed_id = :uid
+                  AND NOT EXISTS (
+                    SELECT 1 FROM blocks b
+                    WHERE (b.blocker_id = :uid AND b.blocked_id = pv.viewer_id)
+                       OR (b.blocker_id = pv.viewer_id AND b.blocked_id = :uid)
+                  )
+                ORDER BY pv.viewed_at DESC
+                LIMIT :limit OFFSET :offset
+            """),
+            {"uid": current_user.user_id, "limit": limit, "offset": offset},
+        )
+        rows = result.fetchall()
+        from app.utils import compute_age
+        from app.config import get_settings
+        cfg = get_settings()
+        supabase = get_supabase()
+        viewers = []
+        for row in rows:
+            age = compute_age(row.date_of_birth) if row.date_of_birth else None
+            photo_url = None
+            if row.photo_path:
+                try:
+                    photo_url = supabase.storage.from_(cfg.storage_bucket_profile_photos).get_public_url(row.photo_path)
+                except Exception as e:
+                    print(f"Error getting photo URL: {e}")
+                    pass
+            viewers.append({
+                "user_id": str(row.viewer_id),
+                "full_name": row.full_name or "",
+                "age": age,
+                "location": f"{row.city}, {row.state}" if row.city and row.state else (row.state or ""),
+                "is_verified": row.verification_status == "verified",
+                "primary_photo_url": photo_url,
+                "viewed_at": row.viewed_at.isoformat() if row.viewed_at else None,
+            })
+        return {"viewers": viewers, "count": len(viewers)}
+    except Exception as e:
+        print(f"Error fetching profile viewers: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch profile viewers: {str(e)}"
+        )
 
 
 # ---------------------------------------------------------------------------
