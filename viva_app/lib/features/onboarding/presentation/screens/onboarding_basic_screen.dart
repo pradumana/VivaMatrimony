@@ -167,12 +167,8 @@ class _OnboardingBasicScreenState
       showBack: true,
       onBack: () async {
         await ref.read(authProvider.notifier).logout();
-        // Clear navigation and go to login
-        if (!context.mounted) return;
-        while (context.canPop()) {
-          context.pop();
-        }
-        context.go(AppRoutes.login);
+        // context.go() replaces entire navigation stack
+        if (context.mounted) context.go(AppRoutes.login);
       },
       showSkip: false,
       child: Form(
