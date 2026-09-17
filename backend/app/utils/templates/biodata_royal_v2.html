@@ -4,9 +4,14 @@
   <meta charset="UTF-8">
   <title>{{ full_name }} — Matrimonial Biodata</title>
   <style>
+    /* ══════════════════════════════════════════════════════════════════════
+       BIODATA ENGINE 3.0 — ROYAL TEMPLATE
+       Premium wedding aesthetic with deep wine and antique gold
+       ══════════════════════════════════════════════════════════════════════ */
+    
     @page {
       size: A4 portrait;
-      margin: 16mm 14mm 16mm 14mm;
+      margin: 15mm 12mm 12mm 12mm;
     }
 
     * {
@@ -16,1028 +21,759 @@
     }
 
     body {
-      font-family: 'Noto Sans', 'DejaVu Sans', Arial, sans-serif;
-      font-size: 10pt;
-      color: #3a2618;
-      background: linear-gradient(135deg, #fdfbf7 0%, #f9f4ed 50%, #f5ede0 100%);
+      font-family: 'Georgia', 'Times New Roman', serif;
+      font-size: 10.5pt;
+      color: #2a1810;
+      background: #fffdf9;
       line-height: 1.5;
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+      hyphens: auto;
     }
 
-    /* ── Page Container ───────────────────────────────────────────────────── */
-    .page-wrapper {
-      position: relative;
-      min-height: 100%;
-      padding: 16px;
-      background: linear-gradient(to bottom, #fffdf9, #faf6ef);
-      border: 12px double #c8a876;
-      border-radius: 4px;
-      box-shadow: inset 0 0 0 2px #f5ede0, inset 0 0 0 3px #d4b482;
-    }
-
-    /* ── Ornamental Border Elements ───────────────────────────────────────── */
-    .corner-ornament {
-      position: fixed;
-      width: 80px;
-      height: 80px;
-      opacity: 0.25;
-      pointer-events: none;
-    }
-
-    .corner-ornament.top-left {
-      top: 14mm;
-      left: 12mm;
-    }
-
-    .corner-ornament.top-right {
-      top: 14mm;
-      right: 12mm;
-      transform: rotate(90deg);
-    }
-
-    .corner-ornament.bottom-left {
-      bottom: 14mm;
-      left: 12mm;
-      transform: rotate(-90deg);
-    }
-
-    .corner-ornament.bottom-right {
-      bottom: 14mm;
-      right: 12mm;
-      transform: rotate(180deg);
-    }
-
-    /* ── Header ───────────────────────────────────────────────────────────── */
-    .header {
+    /* Brand header — regal */
+    .brand-header {
       text-align: center;
-      margin-bottom: 22px;
-      padding: 18px;
-      background: linear-gradient(135deg, #8B1A1A 0%, #A62929 50%, #8B1A1A 100%);
-      border: 3px solid #c8a876;
-      border-radius: 8px;
-      position: relative;
-      box-shadow: 0 4px 16px rgba(139, 26, 26, 0.2);
-      page-break-inside: avoid;
+      margin-bottom: 10px;
     }
 
-    .header::before,
-    .header::after {
-      content: '';
-      position: absolute;
-      top: -6px;
-      width: 60px;
-      height: 3px;
-      background: #c8a876;
-    }
-
-    .header::before {
-      left: 50%;
-      transform: translateX(-150%);
-    }
-
-    .header::after {
-      left: 50%;
-      transform: translateX(50%);
-    }
-
-    .header-crown {
-      width: 50px;
-      height: 4px;
-      background: linear-gradient(90deg, #c8a876, #d4b482, #c8a876);
-      margin: 0 auto 6px;
-      border-radius: 2px;
-      position: relative;
-    }
-
-    .header-crown::before,
-    .header-crown::after {
-      content: '';
-      position: absolute;
-      width: 8px;
-      height: 8px;
-      background: #d4b482;
-      border-radius: 50%;
-      top: -2px;
-    }
-
-    .header-crown::before {
-      left: 50%;
-      transform: translateX(-50%);
-    }
-
-    .header-crown::after {
-      left: 20%;
-      right: 20%;
-      width: 6px;
-      height: 6px;
-      opacity: 0.7;
-    }
-
-    .header-brand {
-      font-size: 10pt;
+    .brand {
+      font-size: 9pt;
       font-weight: 700;
       letter-spacing: 3px;
       text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.9);
-      margin-bottom: 8px;
+      font-family: 'Arial', 'Helvetica', sans-serif;
+      color: #6B1A1A;
     }
 
-    .header-title {
-      font-size: 26pt;
-      font-weight: 800;
-      letter-spacing: 2px;
-      color: #ffffff;
-      text-transform: uppercase;
-      margin-bottom: 6px;
-      font-family: 'Georgia', serif;
-      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    }
-
-    .header-subtitle {
-      font-size: 9pt;
-      color: rgba(255, 255, 255, 0.85);
-      letter-spacing: 2px;
+    .doc-title {
+      font-size: 11pt;
+      font-weight: 400;
+      letter-spacing: 1.5px;
       font-style: italic;
+      color: #a07856;
     }
 
-    /* ── Profile Section ──────────────────────────────────────────────────── */
-    .profile-section {
+    /* ══════════════════════════════════════════════════════════════════════
+       HERO — LARGE PHOTO (180x220px) + NAME DOMINANCE (34pt)
+       ══════════════════════════════════════════════════════════════════════ */
+    
+    .hero {
+      background: linear-gradient(135deg, #6B1A1A 0%, #8B2424 100%);
+      padding: 28px 32px;
+      border-radius: 6px;
+      margin-bottom: 18px;
       display: flex;
-      gap: 26px;
-      margin-bottom: 24px;
-      padding: 22px;
-      background: linear-gradient(135deg, rgba(255, 253, 247, 0.95), rgba(250, 246, 239, 0.95));
-      border: 2px solid #d4b482;
-      border-radius: 8px;
-      box-shadow: 0 4px 16px rgba(139, 26, 26, 0.08);
-      page-break-inside: avoid;
-    }
-
-    .profile-photo-container {
-      flex: 0 0 150px;
-      display: flex;
-      flex-direction: column;
       align-items: center;
+      gap: 28px;
+      page-break-inside: avoid;
+      box-shadow: 0 2px 12px rgba(139, 26, 26, 0.2);
     }
 
-    .profile-photo-frame {
-      width: 150px;
-      height: 185px;
-      border: 4px solid #c8a876;
+    .hero-photo {
+      flex: 0 0 180px;
+      width: 180px;
+      height: 220px;
       border-radius: 4px;
+      border: 5px solid rgba(255, 255, 255, 0.95);
       overflow: hidden;
-      background: #f5ede0;
-      box-shadow: 0 6px 20px rgba(139, 26, 26, 0.15), inset 0 0 0 2px #e8d5b7;
-      position: relative;
+      background: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
     }
 
-    .profile-photo-frame::before {
-      content: '';
-      position: absolute;
-      top: -8px;
-      left: -8px;
-      right: -8px;
-      bottom: -8px;
-      border: 1px solid #d4b482;
-      border-radius: 8px;
-      pointer-events: none;
-    }
-
-    .profile-photo-frame img {
+    .hero-photo img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: block;
     }
 
-    .profile-photo-placeholder {
+    .hero-photo-placeholder {
       width: 100%;
       height: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #f5ede0;
-      color: #b89968;
       font-size: 9pt;
       text-align: center;
-      padding: 16px;
-      border: 2px dashed #d4b482;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.15);
+      color: rgba(255, 255, 255, 0.6);
     }
 
-    .profile-content {
+    .hero-info {
       flex: 1;
       min-width: 0;
+      color: white;
     }
 
-    .profile-name {
-      font-size: 24pt;
+    /* PERSON NAME — Large (34pt), elegant serif */
+    .person-name {
+      font-size: 34pt;
       font-weight: 700;
-      color: #8B1A1A;
-      margin-bottom: 8px;
-      font-family: 'Georgia', serif;
+      line-height: 1.1;
+      letter-spacing: 0.3px;
       word-wrap: break-word;
       overflow-wrap: break-word;
-      line-height: 1.2;
+      color: white;
     }
 
-    .profile-headline {
-      font-size: 11pt;
-      color: #5a4132;
-      margin-bottom: 14px;
-      line-height: 1.6;
-      padding-left: 14px;
-      border-left: 3px solid #c8a876;
+    .person-subtitle {
+      font-size: 11.5pt;
+      font-weight: 400;
+      line-height: 1.4;
+      font-family: 'Arial', 'Helvetica', sans-serif;
+      opacity: 0.92;
+      margin-top: 6px;
     }
 
-    .profile-badges {
+    .badges {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
       margin-top: 12px;
     }
 
-    .profile-badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 5px 14px;
-      background: #fff9f0;
-      border: 1.5px solid #d4b482;
-      border-radius: 18px;
+    .badge {
       font-size: 8.5pt;
-      color: #8B1A1A;
-      font-weight: 700;
-      letter-spacing: 0.3px;
+      font-weight: 600;
+      padding: 4px 14px;
+      border-radius: 3px;
+      font-family: 'Arial', 'Helvetica', sans-serif;
+      letter-spacing: 0.4px;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.4);
     }
 
-    .profile-badge.verified {
-      background: linear-gradient(135deg, #d4b482, #c8a876);
-      color: #ffffff;
-      border-color: #b89968;
+    .badge.verified {
+      background: rgba(76, 175, 80, 0.25);
+      border-color: rgba(76, 175, 80, 0.5);
     }
 
-    /* ── Ornamental Divider ───────────────────────────────────────────────── */
-    .ornamental-divider {
-      height: 3px;
-      background: linear-gradient(90deg, transparent, #c8a876 20%, #d4b482 50%, #c8a876 80%, transparent);
-      margin: 16px 0;
-      position: relative;
-    }
-
-    .ornamental-divider::before,
-    .ornamental-divider::after {
-      content: '';
-      position: absolute;
-      width: 8px;
-      height: 8px;
-      background: #c8a876;
-      top: -2.5px;
-    }
-
-    .ornamental-divider::before {
-      left: 50%;
-      transform: translateX(-50%) rotate(45deg);
-    }
-
-    .ornamental-divider::after {
-      left: calc(50% - 20px);
-      width: 6px;
-      height: 6px;
-      transform: rotate(45deg);
+    .badge.id {
       opacity: 0.7;
+      font-size: 8pt;
     }
 
-    /* ── Section ──────────────────────────────────────────────────────────── */
+    /* ══════════════════════════════════════════════════════════════════════
+       SECTIONS — Editorial typography, not database tables
+       ══════════════════════════════════════════════════════════════════════ */
+    
     .section {
-      margin-bottom: 20px;
+      margin-bottom: 18px;
       page-break-inside: avoid;
     }
 
-    .section-header {
-      position: relative;
-      margin-bottom: 14px;
-      padding: 8px 16px;
-      background: linear-gradient(135deg, #8B1A1A, #A62929);
-      border: 2px solid #c8a876;
-      border-radius: 6px;
-      text-align: center;
-    }
-
-    .section-title {
+    .section-heading {
       font-size: 11pt;
-      font-weight: 800;
-      color: #ffffff;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 2px;
-      font-family: 'Georgia', serif;
+      letter-spacing: 1.8px;
+      font-family: 'Arial', 'Helvetica', sans-serif;
+      color: #6B1A1A;
+      border-bottom: 2.5px solid #c8a876;
+      padding-bottom: 5px;
+      margin-bottom: 12px;
     }
 
-    /* ── Content Box ──────────────────────────────────────────────────────── */
-    .content-box {
-      background: rgba(255, 253, 247, 0.9);
-      border: 2px solid #e8d5b7;
-      border-radius: 6px;
-      padding: 16px;
-      box-shadow: 0 2px 8px rgba(139, 26, 26, 0.06);
+    /* Two-column grid for personal details */
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 32px;
     }
 
-    /* ── Info Table ───────────────────────────────────────────────────────── */
-    .info-table {
+    .detail-item {
+      margin-bottom: 4px;
+    }
+
+    .field-label {
+      font-size: 8.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      font-family: 'Arial', 'Helvetica', sans-serif;
+      color: #8B4513;
+      margin-bottom: 2px;
+    }
+
+    .field-value {
+      font-size: 10.5pt;
+      font-weight: 600;
+      color: #2a1810;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    /* About block */
+    .editorial-block {
+      padding: 16px 20px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      background: #fdf6f2;
+      border-left: 4px solid #c8a876;
+      border-radius: 0 4px 4px 0;
+    }
+
+    .prose-text {
+      font-size: 10.5pt;
+      line-height: 1.7;
+      font-style: italic;
+      color: #3a2520;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    /* Career/Education blocks */
+    .career-block {
+      margin-bottom: 14px;
+    }
+
+    .subsection-heading {
+      font-size: 9pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-family: 'Arial', 'Helvetica', sans-serif;
+      color: #8B4513;
+      margin-bottom: 6px;
+    }
+
+    .display-value {
+      font-size: 13pt;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 4px;
+      color: #2a1810;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .supporting-text {
+      font-size: 10pt;
+      font-weight: 400;
+      line-height: 1.5;
+      color: #4a3830;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    /* Family members */
+    .family-member {
+      margin-bottom: 12px;
+    }
+
+    .family-role {
+      font-size: 8.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      font-family: 'Arial', 'Helvetica', sans-serif;
+      color: #8B4513;
+      margin-bottom: 3px;
+    }
+
+    .family-name {
+      font-size: 12pt;
+      font-weight: 700;
+      margin-bottom: 2px;
+      color: #2a1810;
+      word-wrap: break-word;
+    }
+
+    .family-occupation {
+      font-size: 10pt;
+      font-style: italic;
+      color: #5a4530;
+      word-wrap: break-word;
+    }
+
+    /* Tags */
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 8px;
+    }
+
+    .tag {
+      font-size: 9pt;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 14px;
+      font-family: 'Arial', 'Helvetica', sans-serif;
+      background: #faf5ed;
+      border: 1px solid #d4b482;
+      color: #6B1A1A;
+      white-space: nowrap;
+    }
+
+    /* Preference table */
+    .pref-table {
       width: 100%;
       border-collapse: collapse;
     }
 
-    .info-table tr {
-      border-bottom: 1px solid #f0e4d0;
+    .pref-table tr {
+      border-bottom: 1px solid #f5e8e2;
     }
 
-    .info-table tr:last-child {
+    .pref-table tr:last-child {
       border-bottom: none;
     }
 
-    .info-table td {
-      padding: 7px 0;
+    .pref-table td {
+      padding: 6px 0;
       vertical-align: top;
     }
 
-    .info-table .label-col {
-      width: 140px;
-      font-size: 8.5pt;
-      font-weight: 700;
-      color: #8B1A1A;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+    .pref-label {
+      width: 130px;
       padding-right: 14px;
     }
 
-    .info-table .value-col {
-      font-size: 10pt;
-      color: #3a2618;
-      font-weight: 500;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-    }
-
-    /* ── Two Column Grid ──────────────────────────────────────────────────── */
-    .two-column-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px 24px;
-    }
-
-    .grid-item {
-      margin-bottom: 8px;
-    }
-
-    .grid-label {
-      font-size: 8.5pt;
-      font-weight: 700;
-      color: #8B1A1A;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-      margin-bottom: 3px;
-    }
-
-    .grid-value {
-      font-size: 10pt;
-      color: #3a2618;
-      font-weight: 500;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-    }
-
-    /* ── Text Block ───────────────────────────────────────────────────────── */
-    .text-block {
-      font-size: 10pt;
-      line-height: 1.7;
-      color: #3a2618;
-      background: rgba(250, 246, 239, 0.8);
-      padding: 14px 18px;
-      border-left: 4px solid #c8a876;
-      border-radius: 4px;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-    }
-
-    /* ── Tag Container ────────────────────────────────────────────────────── */
-    .tag-container {
+    /* Photo gallery */
+    .photo-gallery {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .tag {
-      display: inline-block;
-      padding: 4px 12px;
-      background: #fff9f0;
-      border: 1.5px solid #d4b482;
-      border-radius: 14px;
-      font-size: 8.5pt;
-      color: #8B1A1A;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-
-    /* ── Photo Gallery ────────────────────────────────────────────────────── */
-    .photo-gallery {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
       gap: 14px;
-      margin-top: 14px;
+      margin-top: 12px;
     }
 
     .gallery-photo {
-      width: 100%;
-      aspect-ratio: 3 / 4;
+      width: 140px;
+      height: 175px;
       object-fit: cover;
-      border: 3px solid #c8a876;
       border-radius: 4px;
-      box-shadow: 0 3px 12px rgba(139, 26, 26, 0.15);
+      background: #e8dcc8;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
 
-    /* ── Footer ───────────────────────────────────────────────────────────── */
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #d9b8ad 20%, #d9b8ad 80%, transparent);
+      margin: 18px 0;
+      opacity: 0.6;
+    }
+
+    /* Footer */
     .footer {
-      margin-top: 26px;
-      padding-top: 14px;
-      border-top: 2px solid #e8d5b7;
+      margin-top: 24px;
+      padding-top: 12px;
+      border-top: 1px solid #efe4dc;
       text-align: center;
       font-size: 8pt;
-      color: #9a7d60;
+      font-family: 'Arial', 'Helvetica', sans-serif;
+      color: #a08875;
     }
 
     .footer-brand {
-      font-size: 11pt;
-      font-weight: 800;
-      color: #8B1A1A;
-      letter-spacing: 3px;
-      margin-bottom: 4px;
-      font-family: 'Georgia', serif;
+      font-size: 9pt;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: #6B1A1A;
+      margin-bottom: 3px;
     }
 
-    .footer-tagline {
+    .footer-note {
+      margin-top: 4px;
       font-style: italic;
-      color: #b89968;
-      margin-bottom: 6px;
-      font-family: 'Georgia', serif;
     }
 
-    /* ── Divider ──────────────────────────────────────────────────────────── */
-    .divider {
-      height: 2px;
-      background: linear-gradient(90deg, transparent, #d4b482 20%, #c8a876 50%, #d4b482 80%, transparent);
-      margin: 18px 0;
-      opacity: 0.5;
-    }
-
-    /* ── Page Break Control ───────────────────────────────────────────────── */
-    .page-break-before {
+    /* Utilities */
+    .page-break {
       page-break-before: always;
     }
 
     .avoid-break {
       page-break-inside: avoid;
     }
+
+    .long-text {
+      max-width: 100%;
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+      hyphens: auto;
+    }
+
+    .sep {
+      margin: 0 8px;
+      opacity: 0.5;
+    }
+
+    .block-mb-md {
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
 
-  <div class="page-wrapper">
+  <!-- Brand header — subtle -->
+  <div class="brand-header">
+    <div class="brand">{{ app_name or 'VIVA' }} MATRIMONY</div>
+    <div class="doc-title">Matrimonial Biodata</div>
+  </div>
 
-    <!-- Ornamental corners -->
-    <svg class="corner-ornament top-left" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <path d="M 5,95 Q 25,75 45,65 Q 65,55 95,50" stroke="#c8a876" stroke-width="2" fill="none"/>
-      <path d="M 10,90 Q 30,70 50,60 Q 70,50 95,45" stroke="#d4b482" stroke-width="1.5" fill="none"/>
-      <circle cx="50" cy="65" r="4" fill="#b89968"/>
-      <circle cx="70" cy="55" r="3" fill="#c8a876"/>
-      <circle cx="30" cy="75" r="3" fill="#c8a876"/>
-    </svg>
+  <!-- HERO — LARGE PHOTO + NAME DOMINANCE -->
+  <div class="hero avoid-break">
+    <div class="hero-photo">
+      {% if photo_url %}
+        <img src="{{ photo_url }}" alt="{{ full_name }}">
+      {% else %}
+        <div class="hero-photo-placeholder">Profile Photo</div>
+      {% endif %}
+    </div>
+    <div class="hero-info">
+      <div class="person-name long-text">{{ full_name | title }}</div>
+      <div class="person-subtitle">
+        {% if education and education.degree %}{{ education.degree }}{% endif %}
+        {% if employment and employment.profession %}
+          {% if education and education.degree %}<span class="sep">•</span>{% endif %}
+          {{ employment.profession }}
+        {% endif %}
+        {% if current_location %}
+          {% if (education and education.degree) or (employment and employment.profession) %}<span class="sep">•</span>{% endif %}
+          {{ current_location }}
+        {% endif %}
+      </div>
+      <div class="badges">
+        {% if is_verified %}
+          <span class="badge verified">✓ Verified</span>
+        {% endif %}
+        {% if member_id %}
+          <span class="badge id">{{ app_name or 'Viva' }} • {{ member_id }}</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
 
-    <svg class="corner-ornament top-right" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <path d="M 5,95 Q 25,75 45,65 Q 65,55 95,50" stroke="#c8a876" stroke-width="2" fill="none"/>
-      <path d="M 10,90 Q 30,70 50,60 Q 70,50 95,45" stroke="#d4b482" stroke-width="1.5" fill="none"/>
-      <circle cx="50" cy="65" r="4" fill="#b89968"/>
-      <circle cx="70" cy="55" r="3" fill="#c8a876"/>
-    </svg>
+  <!-- PERSONAL DETAILS -->
+  <div class="section">
+    <div class="section-heading">Personal Details</div>
+    <div class="detail-grid">
+      {% if age %}
+      <div class="detail-item">
+        <div class="field-label">Age</div>
+        <div class="field-value">{{ age }} Years</div>
+      </div>
+      {% endif %}
 
-    <svg class="corner-ornament bottom-left" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <path d="M 5,95 Q 25,75 45,65 Q 65,55 95,50" stroke="#c8a876" stroke-width="2" fill="none"/>
-      <path d="M 10,90 Q 30,70 50,60 Q 70,50 95,45" stroke="#d4b482" stroke-width="1.5" fill="none"/>
-      <circle cx="50" cy="65" r="4" fill="#b89968"/>
-    </svg>
+      {% if height %}
+      <div class="detail-item">
+        <div class="field-label">Height</div>
+        <div class="field-value">{{ height }}</div>
+      </div>
+      {% endif %}
 
-    <svg class="corner-ornament bottom-right" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <path d="M 5,95 Q 25,75 45,65 Q 65,55 95,50" stroke="#c8a876" stroke-width="2" fill="none"/>
-      <path d="M 10,90 Q 30,70 50,60 Q 70,50 95,45" stroke="#d4b482" stroke-width="1.5" fill="none"/>
-      <circle cx="50" cy="65" r="4" fill="#b89968"/>
-      <circle cx="70" cy="55" r="3" fill="#c8a876"/>
-      <circle cx="30" cy="75" r="3" fill="#c8a876"/>
-    </svg>
+      {% if marital_status %}
+      <div class="detail-item">
+        <div class="field-label">Marital Status</div>
+        <div class="field-value">{{ marital_status }}</div>
+      </div>
+      {% endif %}
 
-    <!-- ═══════════════════════════════════════════════════════════════════════
-         HEADER
-         ═══════════════════════════════════════════════════════════════════════ -->
-    <div class="header">
-      <div class="header-crown"></div>
-      <div class="header-brand">{{ app_name or 'Viva' }} Matrimony</div>
-      <div class="header-title">Matrimonial Biodata</div>
-      <div class="header-subtitle">A Legacy of Love and Values</div>
+      {% if religion %}
+      <div class="detail-item">
+        <div class="field-label">Religion</div>
+        <div class="field-value long-text">{{ religion }}</div>
+      </div>
+      {% endif %}
+
+      {% if caste %}
+      <div class="detail-item">
+        <div class="field-label">Caste</div>
+        <div class="field-value long-text">{{ caste }}</div>
+      </div>
+      {% endif %}
+
+      {% if sub_caste %}
+      <div class="detail-item">
+        <div class="field-label">Sub-caste</div>
+        <div class="field-value long-text">{{ sub_caste }}</div>
+      </div>
+      {% endif %}
+
+      {% if gotra %}
+      <div class="detail-item">
+        <div class="field-label">Gotra</div>
+        <div class="field-value long-text">{{ gotra }}</div>
+      </div>
+      {% endif %}
+
+      {% if mother_tongue %}
+      <div class="detail-item">
+        <div class="field-label">Mother Tongue</div>
+        <div class="field-value long-text">{{ mother_tongue }}</div>
+      </div>
+      {% endif %}
+
+      {% if native_place %}
+      <div class="detail-item">
+        <div class="field-label">Native Place</div>
+        <div class="field-value long-text">{{ native_place }}</div>
+      </div>
+      {% endif %}
+
+      {% if current_location %}
+      <div class="detail-item">
+        <div class="field-label">Current Location</div>
+        <div class="field-value long-text">{{ current_location }}</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ABOUT ME -->
+  {% if about_me %}
+  <div class="section">
+    <div class="section-heading">About Me</div>
+    <div class="editorial-block">
+      <div class="prose-text long-text">{{ about_me }}</div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- EDUCATION & CAREER -->
+  {% if education or employment %}
+  <div class="section">
+    <div class="section-heading">Education &amp; Career</div>
+
+    {% if education %}
+    <div class="career-block">
+      <div class="subsection-heading">Education</div>
+      {% if education.degree %}
+        <div class="display-value long-text">{{ education.degree }}</div>
+      {% endif %}
+      {% if education.field_of_study %}
+        <div class="supporting-text long-text">{{ education.field_of_study }}</div>
+      {% endif %}
+      {% if education.college_university %}
+        <div class="supporting-text long-text">{{ education.college_university }}</div>
+      {% endif %}
+      {% if education.graduation_year %}
+        <div class="supporting-text">{{ education.graduation_year }}</div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% if employment %}
+    <div class="career-block">
+      <div class="subsection-heading">Career</div>
+      {% if employment.job_title %}
+        <div class="display-value long-text">{{ employment.job_title }}</div>
+      {% elif employment.profession %}
+        <div class="display-value long-text">{{ employment.profession }}</div>
+      {% endif %}
+      {% if employment.company %}
+        <div class="supporting-text long-text">{{ employment.company }}</div>
+      {% endif %}
+      {% if employment.employment_type %}
+        <div class="supporting-text">
+          {{ employment.employment_type | replace('_', ' ') | title }}
+          {% if employment.income_min_lpa %} • ₹{{ employment.income_min_lpa }}{% if employment.income_max_lpa %}–{{ employment.income_max_lpa }}{% endif %} LPA{% endif %}
+        </div>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- FAMILY -->
+  {% if family %}
+  <div class="section">
+    <div class="section-heading">Family</div>
+
+    {% if family.father_name %}
+    <div class="family-member">
+      <div class="family-role">Father</div>
+      <div class="family-name long-text">{{ family.father_name }}</div>
+      {% if family.father_occupation %}
+        <div class="family-occupation long-text">{{ family.father_occupation }}</div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% if family.mother_name %}
+    <div class="family-member">
+      <div class="family-role">Mother</div>
+      <div class="family-name long-text">{{ family.mother_name }}</div>
+      {% if family.mother_occupation %}
+        <div class="family-occupation long-text">{{ family.mother_occupation }}</div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="detail-grid block-mb-md">
+      {% if family.brothers_count is not none or family.sisters_count is not none %}
+      <div class="detail-item">
+        <div class="field-label">Siblings</div>
+        <div class="field-value">
+          {% if family.brothers_count is not none %}{{ family.brothers_count }} Brother{% if family.brothers_count != 1 %}s{% endif %}{% if family.brothers_married %} ({{ family.brothers_married }} married){% endif %}{% endif %}
+          {% if family.brothers_count is not none and family.sisters_count is not none %}, {% endif %}
+          {% if family.sisters_count is not none %}{{ family.sisters_count }} Sister{% if family.sisters_count != 1 %}s{% endif %}{% if family.sisters_married %} ({{ family.sisters_married }} married){% endif %}{% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+      {% if family.family_type %}
+      <div class="detail-item">
+        <div class="field-label">Family Type</div>
+        <div class="field-value">{{ family.family_type | replace('_', ' ') | title }}</div>
+      </div>
+      {% endif %}
+
+      {% if family.family_values %}
+      <div class="detail-item">
+        <div class="field-label">Family Values</div>
+        <div class="field-value">{{ family.family_values | title }}</div>
+      </div>
+      {% endif %}
+
+      {% if family.family_location %}
+      <div class="detail-item">
+        <div class="field-label">Family Location</div>
+        <div class="field-value long-text">{{ family.family_location }}</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- LIFESTYLE -->
+  {% if lifestyle %}
+  <div class="section">
+    <div class="section-heading">Lifestyle</div>
+    <div class="detail-grid">
+      {% if lifestyle.diet %}
+      <div class="detail-item">
+        <div class="field-label">Diet</div>
+        <div class="field-value">{{ lifestyle.diet | replace('_', ' ') | title }}</div>
+      </div>
+      {% endif %}
+
+      {% if lifestyle.smoking %}
+      <div class="detail-item">
+        <div class="field-label">Smoking</div>
+        <div class="field-value">{{ lifestyle.smoking | title }}</div>
+      </div>
+      {% endif %}
+
+      {% if lifestyle.drinking %}
+      <div class="detail-item">
+        <div class="field-label">Drinking</div>
+        <div class="field-value">{{ lifestyle.drinking | title }}</div>
+      </div>
+      {% endif %}
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════════════════
-         PROFILE SECTION
-         ═══════════════════════════════════════════════════════════════════════ -->
-    <div class="profile-section">
-      <div class="profile-photo-container">
-        <div class="profile-photo-frame">
-          {% if photo_url %}
-            <img src="{{ photo_url }}" alt="{{ full_name }}">
+    {% if lifestyle.hobbies or lifestyle.interests %}
+    <div class="block-mb-md">
+      <div class="field-label">Hobbies &amp; Interests</div>
+      <div class="tags">
+        {% if lifestyle.hobbies %}
+          {% for h in lifestyle.hobbies %}
+            <span class="tag">{{ h }}</span>
+          {% endfor %}
+        {% endif %}
+        {% if lifestyle.interests %}
+          {% for i in lifestyle.interests %}
+            <span class="tag">{{ i }}</span>
+          {% endfor %}
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- PARTNER EXPECTATIONS -->
+  {% if partner_preferences %}
+  <div class="section">
+    <div class="section-heading">Partner Expectations</div>
+    <table class="pref-table">
+      {% if partner_preferences.min_age or partner_preferences.max_age %}
+      <tr>
+        <td class="pref-label field-label">Age Range</td>
+        <td class="field-value">{{ partner_preferences.min_age or '—' }} to {{ partner_preferences.max_age or '—' }} years</td>
+      </tr>
+      {% endif %}
+
+      {% if partner_preferences.preferred_castes %}
+      <tr>
+        <td class="pref-label field-label">Caste</td>
+        <td class="field-value long-text">
+          {% if partner_preferences.preferred_castes is iterable and partner_preferences.preferred_castes is not string %}
+            {{ partner_preferences.preferred_castes | join(', ') }}
           {% else %}
-            <div class="profile-photo-placeholder">Profile<br>Photo</div>
+            {{ partner_preferences.preferred_castes }}
           {% endif %}
-        </div>
-      </div>
-      <div class="profile-content">
-        <div class="profile-name">{{ full_name }}</div>
-        <div class="profile-headline">
-          {% if age %}{{ age }} years{% endif %}
-          {% if age and gender %} · {% endif %}
-          {% if gender %}{{ gender }}{% endif %}
-          {% if (age or gender) and current_location %}<br>{% endif %}
-          {% if current_location %}{{ current_location }}{% endif %}
-        </div>
-        {% if about_me %}
-        <div class="text-block">{{ about_me }}</div>
-        {% endif %}
-        <div class="profile-badges">
-          {% if is_verified %}
-            <span class="profile-badge verified">✓ Verified Profile</span>
+        </td>
+      </tr>
+      {% endif %}
+
+      {% if partner_preferences.min_education %}
+      <tr>
+        <td class="pref-label field-label">Min. Education</td>
+        <td class="field-value">{{ partner_preferences.min_education | replace('_', ' ') | title }}</td>
+      </tr>
+      {% endif %}
+
+      {% if partner_preferences.preferred_professions %}
+      <tr>
+        <td class="pref-label field-label">Profession</td>
+        <td class="field-value long-text">
+          {% if partner_preferences.preferred_professions is iterable and partner_preferences.preferred_professions is not string %}
+            {{ partner_preferences.preferred_professions | join(', ') }}
+          {% else %}
+            {{ partner_preferences.preferred_professions }}
           {% endif %}
-          {% if member_id %}
-            <span class="profile-badge">Member ID: {{ member_id }}</span>
+        </td>
+      </tr>
+      {% endif %}
+
+      {% if partner_preferences.min_income_lpa %}
+      <tr>
+        <td class="pref-label field-label">Min. Income</td>
+        <td class="field-value">₹{{ partner_preferences.min_income_lpa }} LPA</td>
+      </tr>
+      {% endif %}
+
+      {% if partner_preferences.preferred_states %}
+      <tr>
+        <td class="pref-label field-label">Location</td>
+        <td class="field-value long-text">
+          {% if partner_preferences.preferred_states is iterable and partner_preferences.preferred_states is not string %}
+            {{ partner_preferences.preferred_states | join(', ') }}
+          {% else %}
+            {{ partner_preferences.preferred_states }}
           {% endif %}
-          {% if marital_status %}
-            <span class="profile-badge">{{ marital_status }}</span>
-          {% endif %}
-        </div>
-      </div>
+        </td>
+      </tr>
+      {% endif %}
+    </table>
+  </div>
+  {% endif %}
+
+  <!-- PHOTO GALLERY — Only if 4+ photos exist -->
+  {% if all_photo_urls and all_photo_urls | length >= 4 %}
+  <div class="divider"></div>
+  <div class="section page-break">
+    <div class="section-heading">Photo Gallery</div>
+    <div class="photo-gallery">
+      {% for url in all_photo_urls[1:] %}
+        <img src="{{ url }}" alt="Photo {{ loop.index + 1 }}" class="gallery-photo">
+      {% endfor %}
     </div>
+  </div>
+  {% endif %}
 
-    <div class="ornamental-divider"></div>
+  <div class="divider"></div>
 
-    <!-- ═══════════════════════════════════════════════════════════════════════
-         PERSONAL DETAILS
-         ═══════════════════════════════════════════════════════════════════════ -->
-    <div class="section">
-      <div class="section-header">
-        <div class="section-title">Personal Details</div>
-      </div>
-      <div class="content-box">
-        <div class="two-column-grid">
-          {% if age %}
-          <div class="grid-item">
-            <div class="grid-label">Age</div>
-            <div class="grid-value">{{ age }} Years</div>
-          </div>
-          {% endif %}
-
-          {% if height %}
-          <div class="grid-item">
-            <div class="grid-label">Height</div>
-            <div class="grid-value">{{ height }}</div>
-          </div>
-          {% endif %}
-
-          {% if mother_tongue %}
-          <div class="grid-item">
-            <div class="grid-label">Mother Tongue</div>
-            <div class="grid-value">{{ mother_tongue }}</div>
-          </div>
-          {% endif %}
-
-          {% if languages_known %}
-          <div class="grid-item">
-            <div class="grid-label">Languages Known</div>
-            <div class="grid-value">
-              {% if languages_known is iterable and languages_known is not string %}
-                {{ languages_known | join(', ') }}
-              {% else %}
-                {{ languages_known }}
-              {% endif %}
-            </div>
-          </div>
-          {% endif %}
-
-          {% if religion %}
-          <div class="grid-item">
-            <div class="grid-label">Religion</div>
-            <div class="grid-value">{{ religion }}</div>
-          </div>
-          {% endif %}
-
-          {% if caste %}
-          <div class="grid-item">
-            <div class="grid-label">Caste</div>
-            <div class="grid-value">{{ caste }}</div>
-          </div>
-          {% endif %}
-
-          {% if sub_caste %}
-          <div class="grid-item">
-            <div class="grid-label">Sub-caste</div>
-            <div class="grid-value">{{ sub_caste }}</div>
-          </div>
-          {% endif %}
-
-          {% if gotra %}
-          <div class="grid-item">
-            <div class="grid-label">Gotra</div>
-            <div class="grid-value">{{ gotra }}</div>
-          </div>
-          {% endif %}
-
-          {% if native_place %}
-          <div class="grid-item">
-            <div class="grid-label">Native Place</div>
-            <div class="grid-value">{{ native_place }}</div>
-          </div>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════════════════════════
-         EDUCATION & CAREER
-         ═══════════════════════════════════════════════════════════════════════ -->
-    {% if education or employment %}
-    <div class="section">
-      <div class="section-header">
-        <div class="section-title">Education &amp; Career</div>
-      </div>
-      <div class="content-box">
-        <table class="info-table">
-          {% if education %}
-            {% if education.highest_qualification %}
-            <tr>
-              <td class="label-col">Qualification</td>
-              <td class="value-col">{{ education.highest_qualification }}</td>
-            </tr>
-            {% endif %}
-
-            {% if education.degree %}
-            <tr>
-              <td class="label-col">Degree</td>
-              <td class="value-col">{{ education.degree }}</td>
-            </tr>
-            {% endif %}
-
-            {% if education.field_of_study %}
-            <tr>
-              <td class="label-col">Specialization</td>
-              <td class="value-col">{{ education.field_of_study }}</td>
-            </tr>
-            {% endif %}
-
-            {% if education.college_university %}
-            <tr>
-              <td class="label-col">Institution</td>
-              <td class="value-col">{{ education.college_university }}</td>
-            </tr>
-            {% endif %}
-
-            {% if education.graduation_year %}
-            <tr>
-              <td class="label-col">Year of Passing</td>
-              <td class="value-col">{{ education.graduation_year }}</td>
-            </tr>
-            {% endif %}
-
-            {% if education.additional_qualifications %}
-            <tr>
-              <td class="label-col">Additional</td>
-              <td class="value-col">{{ education.additional_qualifications }}</td>
-            </tr>
-            {% endif %}
-          {% endif %}
-
-          {% if employment %}
-            {% if employment.profession %}
-            <tr>
-              <td class="label-col">Profession</td>
-              <td class="value-col">{{ employment.profession }}</td>
-            </tr>
-            {% endif %}
-
-            {% if employment.job_title %}
-            <tr>
-              <td class="label-col">Designation</td>
-              <td class="value-col">{{ employment.job_title }}</td>
-            </tr>
-            {% endif %}
-
-            {% if employment.company %}
-            <tr>
-              <td class="label-col">Company</td>
-              <td class="value-col">{{ employment.company }}</td>
-            </tr>
-            {% endif %}
-
-            {% if employment.industry %}
-            <tr>
-              <td class="label-col">Industry</td>
-              <td class="value-col">{{ employment.industry }}</td>
-            </tr>
-            {% endif %}
-
-            {% if employment.work_location %}
-            <tr>
-              <td class="label-col">Work Location</td>
-              <td class="value-col">{{ employment.work_location }}</td>
-            </tr>
-            {% endif %}
-
-            {% if employment.income_min_lpa %}
-            <tr>
-              <td class="label-col">Income</td>
-              <td class="value-col">₹{{ employment.income_min_lpa }}{% if employment.income_max_lpa %} – {{ employment.income_max_lpa }}{% endif %} LPA</td>
-            </tr>
-            {% endif %}
-          {% endif %}
-        </table>
-      </div>
-    </div>
-    {% endif %}
-
-    <!-- ═══════════════════════════════════════════════════════════════════════
-         FAMILY DETAILS
-         ═══════════════════════════════════════════════════════════════════════ -->
-    {% if family %}
-    <div class="section">
-      <div class="section-header">
-        <div class="section-title">Family Background</div>
-      </div>
-      <div class="content-box">
-        <table class="info-table">
-          {% if family.father_name %}
-          <tr>
-            <td class="label-col">Father</td>
-            <td class="value-col">
-              {{ family.father_name }}
-              {% if family.father_occupation %}<br><span style="font-size: 9pt; color: #6a5142;">{{ family.father_occupation }}</span>{% endif %}
-            </td>
-          </tr>
-          {% endif %}
-
-          {% if family.mother_name %}
-          <tr>
-            <td class="label-col">Mother</td>
-            <td class="value-col">
-              {{ family.mother_name }}
-              {% if family.mother_occupation %}<br><span style="font-size: 9pt; color: #6a5142;">{{ family.mother_occupation }}</span>{% endif %}
-            </td>
-          </tr>
-          {% endif %}
-
-          {% if family.brothers_count is not none or family.sisters_count is not none %}
-          <tr>
-            <td class="label-col">Siblings</td>
-            <td class="value-col">
-              {% if family.brothers_count is not none %}{{ family.brothers_count }} Brother{% if family.brothers_count != 1 %}s{% endif %}{% if family.brothers_married %} ({{ family.brothers_married }} married){% endif %}{% endif %}
-              {% if family.brothers_count is not none and family.sisters_count is not none %}, {% endif %}
-              {% if family.sisters_count is not none %}{{ family.sisters_count }} Sister{% if family.sisters_count != 1 %}s{% endif %}{% if family.sisters_married %} ({{ family.sisters_married }} married){% endif %}{% endif %}
-            </td>
-          </tr>
-          {% endif %}
-
-          {% if family.family_type %}
-          <tr>
-            <td class="label-col">Family Type</td>
-            <td class="value-col">{{ family.family_type | replace('_', ' ') | title }}</td>
-          </tr>
-          {% endif %}
-
-          {% if family.family_values %}
-          <tr>
-            <td class="label-col">Family Values</td>
-            <td class="value-col">{{ family.family_values | title }}</td>
-          </tr>
-          {% endif %}
-
-          {% if family.family_location %}
-          <tr>
-            <td class="label-col">Family Location</td>
-            <td class="value-col">{{ family.family_location }}</td>
-          </tr>
-          {% endif %}
-        </table>
-
-        {% if family.additional_info %}
-        <div class="text-block" style="margin-top: 12px;">{{ family.additional_info }}</div>
-        {% endif %}
-      </div>
-    </div>
-    {% endif %}
-
-    <!-- ═══════════════════════════════════════════════════════════════════════
-         LIFESTYLE
-         ═══════════════════════════════════════════════════════════════════════ -->
-    {% if lifestyle %}
-    <div class="section">
-      <div class="section-header">
-        <div class="section-title">Lifestyle</div>
-      </div>
-      <div class="content-box">
-        <div class="two-column-grid">
-          {% if lifestyle.diet %}
-          <div class="grid-item">
-            <div class="grid-label">Diet</div>
-            <div class="grid-value">{{ lifestyle.diet | replace('_', ' ') | title }}</div>
-          </div>
-          {% endif %}
-
-          {% if lifestyle.smoking %}
-          <div class="grid-item">
-            <div class="grid-label">Smoking</div>
-            <div class="grid-value">{{ lifestyle.smoking | title }}</div>
-          </div>
-          {% endif %}
-
-          {% if lifestyle.drinking %}
-          <div class="grid-item">
-            <div class="grid-label">Drinking</div>
-            <div class="grid-value">{{ lifestyle.drinking | title }}</div>
-          </div>
-          {% endif %}
-
-          {% if lifestyle.fitness %}
-          <div class="grid-item">
-            <div class="grid-label">Fitness</div>
-            <div class="grid-value">{{ lifestyle.fitness }}</div>
-          </div>
-          {% endif %}
-
-          {% if lifestyle.travel %}
-          <div class="grid-item">
-            <div class="grid-label">Travel</div>
-            <div class="grid-value">{{ lifestyle.travel | replace('_', ' ') | title }}</div>
-          </div>
-          {% endif %}
-
-          {% if lifestyle.pets %}
-          <div class="grid-item">
-            <div class="grid-label">Pets</div>
-            <div class="grid-value">
-              {{ lifestyle.pets | title }}
-              {% if lifestyle.pet_types %}
-                ({% if lifestyle.pet_types is iterable and lifestyle.pet_types is not string %}{{ lifestyle.pet_types | join(', ') }}{% else %}{{ lifestyle.pet_types }}{% endif %})
-              {% endif %}
-            </div>
-          </div>
-          {% endif %}
-        </div>
-
-        {% if lifestyle.hobbies or lifestyle.interests %}
-        <div style="margin-top: 12px;">
-          <div class="grid-label" style="margin-bottom: 8px;">Hobbies &amp; Interests</div>
-          <div class="tag-container">
-            {% if lifestyle.hobbies %}
-              {% for h in lifestyle.hobbies %}
-                <span class="tag">{{ h }}</span>
-              {% endfor %}
-            {% endif %}
-            {% if lifestyle.interests %}
-              {% for i in lifestyle.interests %}
-                <span class="tag">{{ i }}</span>
-              {% endfor %}
-            {% endif %}
-          </div>
-        </div>
-        {% endif %}
-
-        {% if lifestyle.other_info %}
-        <div class="text-block" style="margin-top: 12px;">{{ lifestyle.other_info }}</div>
-        {% endif %}
-      </div>
-    </div>
-    {% endif %}
-
-    <!-- ═══════════════════════════════════════════════════════════════════════
-         PARTNER EXPECTATIONS
-         ═══════════════════════════════════════════════════════════════════════ -->
-    {% if partner_preferences %}
-    <div class="section">
-      <div class="section-header">
-        <div class="section-title">Partner Expectations</div>
-      </div>
-      <div class="content-box">
-        <table class="info-table">
-          {% if partner_preferences.min_age or partner_preferences.max_age %}
-          <tr>
-            <td class="label-col">Age Range</td>
-            <td class="value-col">{{ partner_preferences.min_age or '—' }} to {{ partner_preferences.max_age or '—' }} years</td>
-          </tr>
-          {% endif %}
-
-          {% if partner_preferences.preferred_castes %}
-          <tr>
-            <td class="label-col">Caste</td>
-            <td class="value-col">{{ partner_preferences.preferred_castes | join(', ') }}</td>
-          </tr>
-          {% endif %}
-
-          {% if partner_preferences.preferred_subcastes %}
-          <tr>
-            <td class="label-col">Sub-caste</td>
-            <td class="value-col">{{ partner_preferences.preferred_subcastes | join(', ') }}</td>
-          </tr>
-          {% endif %}
-
-          {% if partner_preferences.min_education %}
-          <tr>
-            <td class="label-col">Min. Education</td>
-            <td class="value-col">{{ partner_preferences.min_education | replace('_', ' ') | title }}</td>
-          </tr>
-          {% endif %}
-
-          {% if partner_preferences.preferred_professions %}
-          <tr>
-            <td class="label-col">Profession</td>
-            <td class="value-col">{{ partner_preferences.preferred_professions | join(', ') }}</td>
-          </tr>
-          {% endif %}
-
-          {% if partner_preferences.min_income_lpa %}
-          <tr>
-            <td class="label-col">Min. Income</td>
-            <td class="value-col">₹{{ partner_preferences.min_income_lpa }} LPA</td>
-          </tr>
-          {% endif %}
-
-          {% if partner_preferences.preferred_states %}
-          <tr>
-            <td class="label-col">Preferred Location</td>
-            <td class="value-col">{{ partner_preferences.preferred_states | join(', ') }}</td>
-          </tr>
-          {% endif %}
-
-          {% if partner_preferences.preferred_diet %}
-          <tr>
-            <td class="label-col">Diet Preference</td>
-            <td class="value-col">{{ partner_preferences.preferred_diet | join(', ') }}</td>
-          </tr>
-          {% endif %}
-
-          {% if partner_preferences.preferred_family_types %}
-          <tr>
-            <td class="label-col">Family Type</td>
-            <td class="value-col">{{ partner_preferences.preferred_family_types | join(', ') }}</td>
-          </tr>
-          {% endif %}
-
-          {% if partner_preferences.smoking_preference %}
-          <tr>
-            <td class="label-col">Smoking</td>
-            <td class="value-col">{{ partner_preferences.smoking_preference | title }}</td>
-          </tr>
-          {% endif %}
-
-          {% if partner_preferences.drinking_preference %}
-          <tr>
-            <td class="label-col">Drinking</td>
-            <td class="value-col">{{ partner_preferences.drinking_preference | title }}</td>
-          </tr>
-          {% endif %}
-        </table>
-      </div>
-    </div>
-    {% endif %}
-
-    <!-- ═══════════════════════════════════════════════════════════════════════
-         PHOTO GALLERY
-         ═══════════════════════════════════════════════════════════════════════ -->
-    {% if all_photo_urls and all_photo_urls | length > 1 %}
-    <div class="divider"></div>
-    <div class="section page-break-before">
-      <div class="section-header">
-        <div class="section-title">Photo Gallery</div>
-      </div>
-      <div class="photo-gallery">
-        {% for url in all_photo_urls %}
-          <img src="{{ url }}" alt="Photo {{ loop.index }}" class="gallery-photo">
-        {% endfor %}
-      </div>
-    </div>
-    {% endif %}
-
-    <div class="ornamental-divider"></div>
-
-    <!-- ═══════════════════════════════════════════════════════════════════════
-         FOOTER
-         ═══════════════════════════════════════════════════════════════════════ -->
-    <div class="footer">
-      <div class="footer-brand">{{ app_name or 'VIVA' }}</div>
-      <div class="footer-tagline">"{{ app_tagline or 'Find someone who feels like home.' }}"</div>
-      <div style="margin-top: 8px;">Generated with excellence by {{ app_name or 'Viva' }} Matrimony. Information is as stated by the user.</div>
-    </div>
-
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-brand">{{ app_name or 'VIVA' }}</div>
+    <div class="footer-note">Information as provided by the member. {{ app_name or 'Viva' }} • Profile ID {{ member_id }}</div>
   </div>
 
 </body>
