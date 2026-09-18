@@ -63,7 +63,7 @@ class _BiodataScreenState extends ConsumerState<BiodataScreen> {
     }
   }
 
-  Future<void> _download({bool share = false}) async {
+  Future<void> _download() async {
     setState(() { _downloading = true; _error = null; });
     try {
       final response = await ref.read(apiClientProvider).dio.get<Uint8List>(
@@ -75,32 +75,11 @@ class _BiodataScreenState extends ConsumerState<BiodataScreen> {
       final file = File('${dir.path}/viva_biodata.pdf');
       await file.writeAsBytes(response.data!);
       setState(() => _downloading = false);
-      if (share) {
-        // Use platform share sheet
-        await _sharePdf(file);
-      } else {
-        await OpenFilex.open(file.path);
-      }
+      await OpenFilex.open(file.path);
     } on DioException catch (e) {
       setState(() { _downloading = false; _error = ApiException.fromDioError(e).message; });
     } catch (e) {
       setState(() { _downloading = false; _error = "Could not open PDF. Please try again."; });
-    }
-  }
-
-  Future<void> _sharePdf(File file) async {
-    try {
-      // flutter share_plus — available via url_launcher fallback if not present
-      // We use the platform method via process invocation to avoid adding a
-      // new dependency. Open the file instead if sharing unavailable.
-      await OpenFilex.open(file.path);
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Could not share. File saved — open it manually.'),
-          behavior: SnackBarBehavior.floating,
-        ));
-      }
     }
   }
 
@@ -281,13 +260,6 @@ class _BiodataScreenState extends ConsumerState<BiodataScreen> {
                 isLoading: _downloading,
                 isOutlined: status['status'] != 'ready',
                 onPressed: () => _download(),
-              ),
-              const SizedBox(height: 12),
-              VivaButton(
-                label: l.share,
-                icon: Icons.share_outlined,
-                isOutlined: true,
-                onPressed: () => _download(share: true),
               ),
               const SizedBox(height: 32),
             ],

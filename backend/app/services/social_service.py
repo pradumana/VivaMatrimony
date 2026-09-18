@@ -2,7 +2,7 @@
 Social Service — Interests, Shortlist, Messaging, Block, Report.
 """
 import structlog
-from datetime import date
+from datetime import date, datetime, timedelta
 from typing import Optional
 from uuid import UUID
 
@@ -36,7 +36,6 @@ async def send_interest(db: AsyncSession, sender_id: UUID, receiver_id: UUID) ->
         raise SocialError("Cannot send interest to yourself.", code="self_interest")
 
     # Rate limit check: max 50 interests per day
-    from datetime import datetime, timedelta
     today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
     rate_limit_check = await db.execute(
         text("""
@@ -312,6 +311,11 @@ async def get_interests_sent(db: AsyncSession, user_id: UUID, limit: int = 20, o
             LEFT JOIN photos ph ON ph.user_id = i.receiver_id AND ph.is_primary = TRUE AND ph.deleted_at IS NULL
             LEFT JOIN current_locations cl ON cl.user_id = i.receiver_id
             WHERE i.sender_id = :uid
+              AND NOT EXISTS (
+                SELECT 1 FROM blocks b
+                WHERE (b.blocker_id = :uid AND b.blocked_id = i.receiver_id)
+                   OR (b.blocker_id = i.receiver_id AND b.blocked_id = :uid)
+              )
             ORDER BY i.sent_at DESC
             LIMIT :limit OFFSET :offset
         """),
@@ -334,6 +338,11 @@ async def get_interests_received(db: AsyncSession, user_id: UUID, limit: int = 2
             LEFT JOIN photos ph ON ph.user_id = i.sender_id AND ph.is_primary = TRUE AND ph.deleted_at IS NULL
             LEFT JOIN current_locations cl ON cl.user_id = i.sender_id
             WHERE i.receiver_id = :uid
+              AND NOT EXISTS (
+                SELECT 1 FROM blocks b
+                WHERE (b.blocker_id = :uid AND b.blocked_id = i.sender_id)
+                   OR (b.blocker_id = i.sender_id AND b.blocked_id = :uid)
+              )
             ORDER BY i.sent_at DESC
             LIMIT :limit OFFSET :offset
         """),

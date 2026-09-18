@@ -556,7 +556,7 @@ async def get_user_profile(
         text("""
             INSERT INTO profile_views (viewer_id, viewed_id)
             VALUES (:viewer, :viewed)
-            ON CONFLICT DO NOTHING
+            ON CONFLICT (viewer_id, viewed_id) DO UPDATE SET viewed_at = NOW()
         """),
         {"viewer": current_user.user_id, "viewed": user_id},
     )

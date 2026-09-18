@@ -17,17 +17,13 @@ from sqlalchemy import text
 
 from app.config import get_settings
 from app.database import get_supabase
-from app.utils import compute_age, safe_photo_filename as _safe_photo_filename
+from app.utils import compute_age, safe_photo_filename as _safe_photo_filename, get_public_url
 
 settings = get_settings()
 logger = structlog.get_logger()
 
 ALLOWED_PHOTO_MIMES = {"image/jpeg", "image/png", "image/webp"}
 ALLOWED_PHOTO_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
-
-
-def _compute_age(dob: date) -> int:
-    return compute_age(dob)
 
 
 def _cm_to_display(cm: Optional[int]) -> Optional[str]:
@@ -148,14 +144,7 @@ async def get_profile(
         return None
 
     # Photo data is now in the main row — no extra queries needed.
-    supabase = get_supabase()
-
-    def get_public_url(path: str, bucket: str) -> str:
-        try:
-            res = supabase.storage.from_(bucket).get_public_url(path)
-            return res
-        except Exception:
-            return ""
+    supabase = get_supabase()  # noqa: F841 — kept for uploads elsewhere in module
 
     primary_photo_url = None
     thumbnail_url = None
@@ -166,7 +155,7 @@ async def get_profile(
     photo_count = row.photo_count or 0
 
     dob = row.date_of_birth
-    age = _compute_age(dob)
+    age = compute_age(dob)
 
     profile_data = {
         "id": row.id,

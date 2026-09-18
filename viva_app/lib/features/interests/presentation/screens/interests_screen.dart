@@ -306,7 +306,23 @@ class _InterestCard extends ConsumerWidget {
       final client = ref.read(apiClientProvider);
       await client.post('/interests/$id/decline');
       ref.invalidate(_receivedInterestsProvider);
-    } catch (_) {}
+    } on DioException catch (e) {
+      if (ctx.mounted) {
+        ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+          content: Text(ApiException.fromDioError(e).message),
+          backgroundColor: AppTheme.error,
+          behavior: SnackBarBehavior.floating,
+        ));
+      }
+    } catch (_) {
+      if (ctx.mounted) {
+        ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(
+          content: Text('Could not decline. Please try again.'),
+          backgroundColor: AppTheme.error,
+          behavior: SnackBarBehavior.floating,
+        ));
+      }
+    }
   }
 }
 

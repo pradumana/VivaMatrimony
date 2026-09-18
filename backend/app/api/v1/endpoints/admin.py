@@ -9,6 +9,8 @@ import csv
 import io
 from datetime import datetime
 
+from app.utils import compute_age
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -225,15 +227,7 @@ async def search_users_for_subscription(
 
         users = []
         for r in rows:
-            age = None
-            if r.date_of_birth:
-                try:
-                    from datetime import date
-                    today = date.today()
-                    age = today.year - r.date_of_birth.year
-                except Exception:
-                    age = None
-            
+            age = compute_age(r.date_of_birth) if r.date_of_birth else None
             users.append({
                 "user_id": str(r.id),
                 "member_id": r.member_id or "",

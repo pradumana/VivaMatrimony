@@ -56,6 +56,7 @@ async def generate_biodata_pdf(
 
     # Fetch all approved photos for the photos page
     supabase = get_supabase()
+    # Fetch all approved photo paths
     photos_result = await db.execute(
         text("""
             SELECT storage_path FROM photos
@@ -64,21 +65,22 @@ async def generate_biodata_pdf(
         """),
         {"uid": user_id},
     )
-    all_photo_urls = []
-    for p in photos_result.fetchall():
+    photo_paths = [p.storage_path for p in photos_result.fetchall()]
+
+    # Fetch and optimize all photos in parallel instead of serially
+    import asyncio
+
+    async def _fetch_one(storage_path: str) -> Optional[str]:
         try:
-            url = supabase.storage.from_(settings.storage_bucket_profile_photos).get_public_url(p.storage_path)
-            # Optimize image before adding to PDF
-            optimized_url = await _optimize_image_for_pdf(url, supabase, p.storage_path)
-            all_photo_urls.append(optimized_url if optimized_url else url)
+            url = supabase.storage.from_(settings.storage_bucket_profile_photos).get_public_url(storage_path)
+            optimized = await _optimize_image_for_pdf(url, supabase, storage_path)
+            return optimized if optimized else url
         except Exception as exc:
-            logger.warning("photo_optimization_failed", path=p.storage_path, error=str(exc))
-            # Use original URL as fallback
-            try:
-                url = supabase.storage.from_(settings.storage_bucket_profile_photos).get_public_url(p.storage_path)
-                all_photo_urls.append(url)
-            except Exception:
-                pass
+            logger.warning("photo_fetch_failed", path=storage_path, error=str(exc))
+            return None
+
+    results = await asyncio.gather(*[_fetch_one(p) for p in photo_paths])
+    all_photo_urls = [url for url in results if url]
 
     # Build template context — NO sensitive data
     context = {

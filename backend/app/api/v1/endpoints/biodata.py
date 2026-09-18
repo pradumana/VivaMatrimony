@@ -17,6 +17,14 @@ from app.config import get_settings
 settings = get_settings()
 router = APIRouter(prefix="/biodata", tags=["Biodata"])
 
+# Must match the keys in biodata_service._template_files
+_VALID_TEMPLATES = frozenset({"traditional", "modern", "floral", "royal", "half_photo"})
+
+
+def _coerce_template(t: str) -> str:
+    """Return t if valid, else fall back to 'traditional'."""
+    return t if t in _VALID_TEMPLATES else "traditional"
+
 
 @router.get("")
 async def get_biodata_status(
@@ -25,8 +33,7 @@ async def get_biodata_status(
     db: AsyncSession = Depends(get_db),
 ):
     """Check biodata generation status for a specific template."""
-    if template not in ("traditional", "floral", "half_photo"):
-        template = "traditional"
+    template = _coerce_template(template)
     result = await db.execute(
         text("""
             SELECT id, status, is_stale, generated_at, error_message, storage_path
@@ -54,9 +61,8 @@ async def generate_biodata(
     current_user: AuthenticatedUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Generate or regenerate biodata PDF. Body: {template: traditional|floral|half_photo}"""
-    if template not in ("traditional", "floral", "half_photo"):
-        template = "traditional"
+    """Generate or regenerate biodata PDF. Body: {template: traditional|modern|floral|royal|half_photo}"""
+    template = _coerce_template(template)
     try:
         pdf_bytes = await generate_biodata_pdf(db, current_user.user_id, template=template)
         return {
@@ -66,7 +72,7 @@ async def generate_biodata(
         }
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
-    except Exception as exc:
+    except Exception:
         raise HTTPException(status_code=500, detail="We couldn't generate your biodata. Please try again.")
 
 
@@ -76,10 +82,8 @@ async def download_biodata(
     current_user: AuthenticatedUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Download biodata as PDF. ?template=traditional|floral|half_photo"""
-    if template not in ("traditional", "floral", "half_photo"):
-        template = "traditional"
-    # Check if fresh PDF exists
+    """Download biodata as PDF. ?template=traditional|modern|floral|royal|half_photo"""
+    template = _coerce_template(template)
     result = await db.execute(
         text("""
             SELECT storage_path, is_stale, status
