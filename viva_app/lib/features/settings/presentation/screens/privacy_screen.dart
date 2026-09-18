@@ -71,10 +71,7 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
         'show_income': _showIncome,
         'show_company': _showCompany,
       });
-      await client.put(
-        '/profile/native-place',
-        queryParameters: {'is_visible': _showNativePlace},
-      );
+      await client.put('/profile/native-place?is_visible=$_showNativePlace');
       setState(() { _loading = false; _saved = true; });
       Future.delayed(const Duration(seconds: 2), () { if (mounted) setState(() => _saved = false); });
     } on DioException catch (e) {
