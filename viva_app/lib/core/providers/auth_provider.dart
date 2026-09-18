@@ -72,7 +72,8 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
 
         if (event == AuthChangeEvent.signedOut ||
             session == null) {
-          await ref.read(secureStorageProvider).clearAppData();
+          // clearAppData already called in logout() — just ensure state is unauthenticated.
+          // Don't call clearAppData again (harmless but redundant).
           state = const AsyncValue.data(AuthState.unauthenticated());
           return;
         }
@@ -186,21 +187,26 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
   }
 
   Future<void> logout() async {
-    // Best-effort server audit log
+    // Set unauthenticated FIRST — router redirects to login immediately,
+    // no black screen waiting for Supabase signOut to complete.
+    state = const AsyncValue.data(AuthState.unauthenticated());
+
+    // Clear secure storage so a cold-start after logout starts clean.
+    await ref.read(secureStorageProvider).clearAppData();
+
+    // Clear cached data so a different user logging in gets fresh state.
+    await CacheService.invalidateAll();
+    ref.invalidate(myProfileProvider);
+
+    // Best-effort server audit log + Supabase session invalidation.
+    // Both are fire-and-forget — UI is already on the login screen.
     try {
       await ref.read(apiClientProvider).post('/auth/logout');
     } catch (_) {}
 
-    // Clear match/profile cache so a different user logging in gets fresh data
-    await CacheService.invalidateAll();
-
-    // Invalidate all keepAlive providers so a different user logging in
-    // doesn't see stale data from the previous session.
-    ref.invalidate(myProfileProvider);
-
-    // Supabase signOut clears the local session and fires onAuthStateChange
-    // which will set state to unauthenticated and call clearAppData via the listener.
-    await Supabase.instance.client.auth.signOut();
+    try {
+      await Supabase.instance.client.auth.signOut();
+    } catch (_) {}
   }
 }
 
