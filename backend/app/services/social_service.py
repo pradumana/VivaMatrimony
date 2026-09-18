@@ -479,6 +479,18 @@ async def block_user(db: AsyncSession, blocker_id: UUID, blocked_id: UUID) -> di
         """),
         {"blocker": blocker_id, "blocked": blocked_id},
     )
+
+    # Remove existing profile views in both directions so blocked users
+    # no longer appear in each other's "who viewed me" lists.
+    await db.execute(
+        text("""
+            DELETE FROM profile_views
+            WHERE (viewer_id = :a AND viewed_id = :b)
+               OR (viewer_id = :b AND viewed_id = :a)
+        """),
+        {"a": blocker_id, "b": blocked_id},
+    )
+
     await db.commit()
     await log_action(db, "user", blocker_id, "block_user", "user", blocked_id)
     return {"success": True, "blocked_user_id": str(blocked_id)}

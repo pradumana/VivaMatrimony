@@ -296,6 +296,19 @@ async def report_user_endpoint(
 # Notifications
 # ---------------------------------------------------------------------------
 
+@router.get("/notifications/unread-count")
+async def get_unread_notification_count(
+    current_user: AuthenticatedUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Fast unread count — avoids fetching full notification objects just to count."""
+    result = await db.execute(
+        text("SELECT COUNT(*) AS cnt FROM notifications WHERE user_id = :uid AND is_read = FALSE"),
+        {"uid": current_user.user_id},
+    )
+    return {"unread_count": result.fetchone().cnt}
+
+
 @router.get("/notifications")
 async def get_notifications(
     limit: int = Query(30, ge=1, le=100),

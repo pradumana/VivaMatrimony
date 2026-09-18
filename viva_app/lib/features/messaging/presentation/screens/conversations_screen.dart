@@ -119,7 +119,11 @@ class _ConnectionCardState extends ConsumerState<_ConnectionCard> {
       final r = await client.get(
           '/interests/${widget.connection.interestId}/whatsapp');
       final data = r.data as Map<String, dynamic>;
-      final waUrl = data['whatsapp_url'] as String;
+      final waUrl = data['whatsapp_url'] as String?;
+      if (waUrl == null) {
+        _showError('This member has not shared their WhatsApp number yet.');
+        return;
+      }
       final uri = Uri.parse(waUrl);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);

@@ -7,7 +7,8 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/constants/app_constants.dart';
 import '../../../../shared/widgets/viva_button.dart';
 
-final _verificationStatusProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+final _verificationSelectStatusProvider =
+    FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
   final client = ref.read(apiClientProvider);
   final response = await client.get('/verification/status');
   return response.data as Map<String, dynamic>;
@@ -24,7 +25,7 @@ class _State extends ConsumerState<VerificationSelectScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final statusAsync = ref.watch(_verificationStatusProvider);
+    final statusAsync = ref.watch(_verificationSelectStatusProvider);
 
     return statusAsync.when(
       loading: () => const Scaffold(

@@ -11,6 +11,7 @@ import '../../../../shared/widgets/viva_button.dart';
 
 final _verificationStatusProvider =
     FutureProvider<VerificationStatus>((ref) async {
+  ref.keepAlive();
   final client = ref.read(apiClientProvider);
   final response = await client.get('/verification/status');
   return VerificationStatus.fromJson(

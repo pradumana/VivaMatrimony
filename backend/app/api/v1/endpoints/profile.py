@@ -138,20 +138,43 @@ _UPSERT_ALLOWED_TABLES = frozenset({
     "employment", "family_details", "lifestyle",
 })
 
+# Per-table column allowlists prevent Pydantic model evolution from silently
+# injecting unexpected column names into raw SQL.
+_UPSERT_ALLOWED_COLUMNS: dict[str, frozenset] = {
+    "current_locations": frozenset({"country", "state", "district", "city"}),
+    "native_places":     frozenset({"country", "state", "district", "city", "is_visible"}),
+    "education":         frozenset({"highest_qualification", "degree", "field_of_study",
+                                    "college_university", "graduation_year", "additional_qualifications"}),
+    "employment":        frozenset({"profession", "job_title", "company", "industry",
+                                    "employment_type", "work_location", "income_min_lpa",
+                                    "income_max_lpa", "show_company", "show_income"}),
+    "family_details":    frozenset({"father_name", "father_occupation", "father_is_alive",
+                                    "mother_name", "mother_occupation", "mother_is_alive",
+                                    "brothers_count", "brothers_married", "sisters_count",
+                                    "sisters_married", "family_type", "family_values",
+                                    "family_location", "additional_info", "show_parents_info"}),
+    "lifestyle":         frozenset({"diet", "smoking", "drinking", "fitness", "hobbies",
+                                    "interests", "travel", "pets", "pet_types", "other_info"}),
+}
+
 
 async def _upsert_location(db: AsyncSession, user_id: UUID, data: dict, table: str):
     if table not in _UPSERT_ALLOWED_TABLES:
         raise ValueError(f"Invalid table: {table}")
+    allowed = _UPSERT_ALLOWED_COLUMNS[table]
+    safe_data = {k: v for k, v in data.items() if k in allowed}
+    if not safe_data:
+        return  # nothing to write
     existing = await db.execute(
         text(f"SELECT id FROM {table} WHERE user_id = :uid"), {"uid": user_id}
     )
     if existing.fetchone():
-        sets = ", ".join(f"{k} = :{k}" for k in data if k != "user_id")
-        await db.execute(text(f"UPDATE {table} SET {sets}, updated_at = NOW() WHERE user_id = :user_id"), {"user_id": user_id, **data})
+        sets = ", ".join(f"{k} = :{k}" for k in safe_data)
+        await db.execute(text(f"UPDATE {table} SET {sets}, updated_at = NOW() WHERE user_id = :user_id"), {"user_id": user_id, **safe_data})
     else:
-        cols = ", ".join(["user_id"] + list(data.keys()))
-        vals = ", ".join([":user_id"] + [f":{k}" for k in data])
-        await db.execute(text(f"INSERT INTO {table} ({cols}) VALUES ({vals})"), {"user_id": user_id, **data})
+        cols = ", ".join(["user_id"] + list(safe_data.keys()))
+        vals = ", ".join([":user_id"] + [f":{k}" for k in safe_data])
+        await db.execute(text(f"INSERT INTO {table} ({cols}) VALUES ({vals})"), {"user_id": user_id, **safe_data})
     await db.commit()
 
 
@@ -452,6 +475,15 @@ async def complete_onboarding(
     Pass ?step=<name> to checkpoint progress without marking fully complete.
     Omit step (or call without query param) to mark onboarding fully done.
     """
+    _VALID_STEPS = frozenset({
+        "basic", "bio", "education", "employment", "family",
+        "lifestyle", "native_place", "preferences", "photos", "verification",
+    })
+    if step and step not in _VALID_STEPS:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Invalid step '{step}'. Valid: {', '.join(sorted(_VALID_STEPS))}",
+        )
     if step:
         await db.execute(
             text("UPDATE users SET onboarding_step = :step WHERE id = :user_id"),
@@ -477,64 +509,56 @@ async def get_profile_viewers(
     db: AsyncSession = Depends(get_db),
 ):
     """Who recently viewed my profile."""
-    try:
-        result = await db.execute(
-            text("""
-                SELECT pv.viewer_id, pv.viewed_at,
-                       p.full_name, p.date_of_birth,
-                       ph.storage_path AS photo_path,
-                       u.verification_status,
-                       cl.state, cl.city
-                FROM profile_views pv
-                JOIN users u  ON u.id = pv.viewer_id AND u.deleted_at IS NULL
-                JOIN profiles p ON p.user_id = pv.viewer_id
-                LEFT JOIN photos ph ON ph.user_id = pv.viewer_id
-                                   AND ph.is_primary = TRUE AND ph.deleted_at IS NULL
-                LEFT JOIN current_locations cl ON cl.user_id = pv.viewer_id
-                WHERE pv.viewed_id = :uid
-                  AND NOT EXISTS (
-                    SELECT 1 FROM blocks b
-                    WHERE (b.blocker_id = :uid AND b.blocked_id = pv.viewer_id)
-                       OR (b.blocker_id = pv.viewer_id AND b.blocked_id = :uid)
-                  )
-                ORDER BY pv.viewed_at DESC
-                LIMIT :limit OFFSET :offset
-            """),
-            {"uid": current_user.user_id, "limit": limit, "offset": offset},
-        )
-        rows = result.fetchall()
-        from app.utils import compute_age
-        from app.config import get_settings
-        cfg = get_settings()
-        supabase = get_supabase()
-        viewers = []
-        for row in rows:
-            age = compute_age(row.date_of_birth) if row.date_of_birth else None
-            photo_url = None
-            if row.photo_path:
-                try:
-                    photo_url = supabase.storage.from_(cfg.storage_bucket_profile_photos).get_public_url(row.photo_path)
-                except Exception as e:
-                    print(f"Error getting photo URL: {e}")
-                    pass
-            viewers.append({
-                "user_id": str(row.viewer_id),
-                "full_name": row.full_name or "",
-                "age": age,
-                "location": f"{row.city}, {row.state}" if row.city and row.state else (row.state or ""),
-                "is_verified": row.verification_status == "verified",
-                "primary_photo_url": photo_url,
-                "viewed_at": row.viewed_at.isoformat() if row.viewed_at else None,
-            })
-        return {"viewers": viewers, "count": len(viewers)}
-    except Exception as e:
-        print(f"Error fetching profile viewers: {e}")
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to fetch profile viewers: {str(e)}"
-        )
+    import structlog as _structlog
+    _log = _structlog.get_logger()
+    result = await db.execute(
+        text("""
+            SELECT pv.viewer_id, pv.viewed_at,
+                   p.full_name, p.date_of_birth,
+                   ph.storage_path AS photo_path,
+                   u.verification_status,
+                   cl.state, cl.city
+            FROM profile_views pv
+            JOIN users u  ON u.id = pv.viewer_id AND u.deleted_at IS NULL
+            JOIN profiles p ON p.user_id = pv.viewer_id
+            LEFT JOIN photos ph ON ph.user_id = pv.viewer_id
+                               AND ph.is_primary = TRUE AND ph.deleted_at IS NULL
+            LEFT JOIN current_locations cl ON cl.user_id = pv.viewer_id
+            WHERE pv.viewed_id = :uid
+              AND NOT EXISTS (
+                SELECT 1 FROM blocks b
+                WHERE (b.blocker_id = :uid AND b.blocked_id = pv.viewer_id)
+                   OR (b.blocker_id = pv.viewer_id AND b.blocked_id = :uid)
+              )
+            ORDER BY pv.viewed_at DESC
+            LIMIT :limit OFFSET :offset
+        """),
+        {"uid": current_user.user_id, "limit": limit, "offset": offset},
+    )
+    rows = result.fetchall()
+    from app.utils import compute_age
+    from app.config import get_settings
+    cfg = get_settings()
+    supabase = get_supabase()
+    viewers = []
+    for row in rows:
+        age = compute_age(row.date_of_birth) if row.date_of_birth else None
+        photo_url = None
+        if row.photo_path:
+            try:
+                photo_url = supabase.storage.from_(cfg.storage_bucket_profile_photos).get_public_url(row.photo_path)
+            except Exception as e:
+                _log.warning("viewer_photo_url_failed", error=str(e))
+        viewers.append({
+            "user_id": str(row.viewer_id),
+            "full_name": row.full_name or "",
+            "age": age,
+            "location": f"{row.city}, {row.state}" if row.city and row.state else (row.state or ""),
+            "is_verified": row.verification_status == "verified",
+            "primary_photo_url": photo_url,
+            "viewed_at": row.viewed_at.isoformat() if row.viewed_at else None,
+        })
+    return {"viewers": viewers, "count": len(viewers)}
 
 
 # ---------------------------------------------------------------------------

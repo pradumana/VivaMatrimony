@@ -604,9 +604,11 @@ async def list_flagged_photos(
     if status_filter == "flagged":
         where = "ph.is_flagged = TRUE AND ph.deleted_at IS NULL"
     elif status_filter == "approved":
-        where = "ph.is_approved = TRUE AND ph.is_flagged = FALSE AND ph.deleted_at IS NULL"
-    else:  # pending = uploaded but never manually reviewed
-        where = "ph.is_approved = TRUE AND ph.is_flagged = FALSE AND ph.deleted_at IS NULL"
+        # Manually reviewed and approved
+        where = "ph.is_approved = TRUE AND ph.is_flagged = FALSE AND ph.reviewed_at IS NOT NULL AND ph.deleted_at IS NULL"
+    else:
+        # pending = auto-approved on upload but never manually reviewed
+        where = "ph.is_approved = TRUE AND ph.is_flagged = FALSE AND ph.reviewed_at IS NULL AND ph.deleted_at IS NULL"
 
     result = await db.execute(
         text(f"""
@@ -664,8 +666,8 @@ async def approve_photo(
     if not result.fetchone():
         raise HTTPException(status_code=404, detail="Photo not found")
     await db.execute(
-        text("UPDATE photos SET is_approved = TRUE, is_flagged = FALSE, flag_reason = NULL WHERE id = :pid"),
-        {"pid": photo_id},
+        text("UPDATE photos SET is_approved = TRUE, is_flagged = FALSE, flag_reason = NULL, reviewed_at = NOW(), reviewed_by = :admin_id WHERE id = :pid"),
+        {"pid": photo_id, "admin_id": admin.admin_id},
     )
     await db.commit()
     await log_action(db, "admin", admin.admin_id, "approve_photo", "photo", photo_id)
@@ -1208,6 +1210,18 @@ async def update_settings_endpoint(
     if not body:
         raise HTTPException(status_code=422, detail="No settings provided")
 
+    # Allowlist: only keys that already exist in app_settings can be updated.
+    # This prevents arbitrary key injection into the settings table.
+    existing_keys_result = await db.execute(text("SELECT key FROM app_settings"))
+    valid_keys = {row.key for row in existing_keys_result.fetchall()}
+    invalid = set(body.keys()) - valid_keys
+    if invalid:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Unknown setting key(s): {', '.join(sorted(invalid))}. "
+                   f"Valid keys: {', '.join(sorted(valid_keys))}",
+        )
+
     for key, value in body.items():
         await db.execute(
             text("""
@@ -1323,13 +1337,16 @@ async def create_subscription(
             },
         )
         row = result.fetchone()
-        await db.commit()
+
+        # Log before commit so audit record is in the same transaction.
+        # If log_action fails, the whole subscription insert rolls back cleanly.
         await log_action(
             db, "admin", admin.admin_id, "record_subscription",
             "member_subscription", row.id,
             {"user_id": str(user_id), "member_id": body.member_id, "amount": body.amount},
         )
-        
+        await db.commit()
+
         return {
             "id": row.id,
             "user_id": str(user_id),

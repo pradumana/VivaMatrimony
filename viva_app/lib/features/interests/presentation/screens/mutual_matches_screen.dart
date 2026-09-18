@@ -10,7 +10,8 @@ import '../../../../shared/widgets/error_view.dart';
 import '../../../../shared/widgets/verified_badge.dart';
 
 final _mutualProvider =
-    FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  ref.keepAlive();
   final r = await ref.read(apiClientProvider).get('/interests/mutual');
   return (r.data['mutual'] as List).cast<Map<String, dynamic>>();
 });

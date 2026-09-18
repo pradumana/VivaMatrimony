@@ -79,8 +79,25 @@ async def generate_biodata_pdf(
             logger.warning("photo_fetch_failed", path=storage_path, error=str(exc))
             return None
 
-    results = await asyncio.gather(*[_fetch_one(p) for p in photo_paths])
+    results = await asyncio.gather(*[_fetch_one_tracked(p) for p in photo_paths])
     all_photo_urls = [url for url in results if url]
+
+    # Track optimized paths so we can clean them up after PDF generation
+    _optimized_paths: list[str] = []
+
+    async def _fetch_one_tracked(storage_path: str) -> Optional[str]:
+        try:
+            url = supabase.storage.from_(settings.storage_bucket_profile_photos).get_public_url(storage_path)
+            optimized = await _optimize_image_for_pdf(url, supabase, storage_path)
+            if optimized:
+                # Record the optimized path for cleanup
+                base = storage_path.rsplit('.', 1)[0]
+                _optimized_paths.append(f"{base}_optimized.jpg")
+                return optimized
+            return url
+        except Exception as exc:
+            logger.warning("photo_fetch_failed", path=storage_path, error=str(exc))
+            return None
 
     # Build template context — NO sensitive data
     context = {
@@ -130,9 +147,13 @@ async def generate_biodata_pdf(
     if template == "royal":
         context.update(_enrich_context_for_premium(context))
 
-    # Try WeasyPrint; fallback message on failure
+    # WeasyPrint is CPU-bound — run in thread executor to avoid blocking the event loop.
     try:
-        pdf_bytes = _render_pdf(context, template=template)
+        import asyncio, functools
+        loop = asyncio.get_event_loop()
+        pdf_bytes = await loop.run_in_executor(
+            None, functools.partial(_render_pdf, context, template=template)
+        )
     except Exception as exc:
         logger.error("biodata_pdf_generation_failed", error=str(exc), user_id=str(user_id))
         raise ValueError("We couldn't generate your biodata. Please try again.")
@@ -176,22 +197,29 @@ async def generate_biodata_pdf(
     )
     await db.commit()
 
+    # Clean up temporary optimized images — they were only needed for PDF rendering
+    if _optimized_paths:
+        try:
+            supabase.storage.from_(settings.storage_bucket_profile_photos).remove(_optimized_paths)
+        except Exception as exc:
+            logger.warning("optimized_image_cleanup_failed", error=str(exc), count=len(_optimized_paths))
+
     return pdf_bytes
 
 
 def _render_pdf(context: dict, template: str = "traditional") -> bytes:
-    """Render HTML template and convert to PDF via WeasyPrint."""
+    """Render HTML template and convert to PDF via WeasyPrint.
+    NOTE: WeasyPrint is CPU-bound. Callers must use run_in_executor.
+    """
     import os
     template_dir = os.path.join(os.path.dirname(__file__), "..", "utils", "templates")
 
-    # Map template names to V2 templates (new premium designs)
     _template_files = {
         "traditional": "biodata_traditional_v2.html",
         "modern": "biodata_modern_v2.html",
         "floral": "biodata_floral_v2.html",
         "royal": "biodata_royal_v2.html",
-        # Legacy fallbacks for old template names
-        "half_photo": "biodata_modern_v2.html",  # Map old "half_photo" to new "modern"
+        "half_photo": "biodata_modern_v2.html",
     }
     template_file = _template_files.get(template, "biodata_traditional_v2.html")
 
@@ -203,18 +231,8 @@ def _render_pdf(context: dict, template: str = "traditional") -> bytes:
     html_content = tmpl.render(**context)
 
     from weasyprint import HTML, CSS
-    # Do NOT use @import url() for Google Fonts — Render has no outbound HTTP
-    # during rendering, so a network font fetch blocks and then fails, causing
-    # the entire PDF generation to crash. The templates already declare
-    # font-family fallbacks (Arial, sans-serif); this CSS just reinforces them.
-    font_css = CSS(string="""
-        body {
-            font-family: 'Noto Sans', 'DejaVu Sans', Arial, sans-serif;
-        }
-    """)
-
-    pdf_bytes = HTML(string=html_content).write_pdf(stylesheets=[font_css])
-    return pdf_bytes
+    font_css = CSS(string="body { font-family: 'Noto Sans', 'DejaVu Sans', Arial, sans-serif; }")
+    return HTML(string=html_content).write_pdf(stylesheets=[font_css])
 
 
 def _format_location(loc: Optional[dict]) -> Optional[str]:

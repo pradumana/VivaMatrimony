@@ -158,6 +158,7 @@ async def search_profiles(
     conditions = [
         "u.id != :uid",
         "u.account_status = 'active'",
+        "u.onboarding_completed = TRUE",
         "u.deleted_at IS NULL",
         "p.profile_visibility != 'hidden'",
         """NOT EXISTS (
@@ -344,7 +345,9 @@ async def search_profiles(
 
 
 @router.get("/matches")
+@limiter.limit("30/minute")
 async def get_matches(
+    request: Request,
     limit: int = Query(20, ge=1, le=50),
     offset: int = Query(0, ge=0),
     current_user: AuthenticatedUser = Depends(get_current_user),
@@ -356,7 +359,9 @@ async def get_matches(
 
 
 @router.get("/matches/{user_id}")
+@limiter.limit("30/minute")
 async def get_compatibility(
+    request: Request,
     user_id: UUID,
     current_user: AuthenticatedUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
