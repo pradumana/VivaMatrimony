@@ -552,12 +552,10 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                       );
                       if (confirm == true) {
                         await ref.read(authProvider.notifier).logout();
-                        // Defer navigation to next frame to avoid Navigator lock
-                        if (context.mounted) {
-                          Future.microtask(() {
-                            if (context.mounted) context.go(AppRoutes.login);
-                          });
-                        }
+                        // Router's redirect handles navigation to /login
+                        // automatically when authProvider becomes unauthenticated.
+                        // Do NOT call context.go here — the shell route context
+                        // is already gone and double-navigation causes a black screen.
                       }
                     },
                   ),
