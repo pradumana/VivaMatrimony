@@ -13,7 +13,7 @@ import '../network/api_client.dart';
 /// never rendered. Explicitly invalidate via ref.invalidate(myProfileProvider)
 /// after profile edits (already done in _ProfileBodyState._goAndRefresh).
 final myProfileProvider =
-    FutureProvider<Map<String, dynamic>>((ref) async {
+    FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
   final r = await ref.read(apiClientProvider).get('/profile');
   return r.data as Map<String, dynamic>;
 });

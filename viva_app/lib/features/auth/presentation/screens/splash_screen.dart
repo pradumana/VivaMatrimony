@@ -35,6 +35,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         parent: _controller,
         curve: const Interval(0.5, 1.0, curve: Curves.easeIn));
     _controller.forward();
+
+    // Safety net: if auth state hasn't resolved in 8s, assume unauthenticated.
+    // Prevents permanent black/splash screen if Supabase SDK hangs.
+    Future.delayed(const Duration(seconds: 8), () {
+      if (!mounted) return;
+      final auth = ref.read(authProvider);
+      if (auth is AsyncLoading || auth.valueOrNull?.status == AuthStatus.loading) {
+        ref.read(authProvider.notifier).forceUnauthenticated();
+      }
+    });
   }
 
   @override

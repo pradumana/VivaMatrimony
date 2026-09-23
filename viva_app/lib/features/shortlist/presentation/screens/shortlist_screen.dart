@@ -43,8 +43,7 @@ class _ShortlistItem {
 // ponytail: Remove autoDispose and add keepAlive() to persist shortlist across navigation.
 // Shortlist changes infrequently, so keeping it cached reduces API calls.
 final _shortlistProvider =
-    FutureProvider<List<_ShortlistItem>>((ref) async {
-  ref.keepAlive();
+    FutureProvider.autoDispose<List<_ShortlistItem>>((ref) async {
   
   final client = ref.read(apiClientProvider);
   final r = await client.get('/shortlist');

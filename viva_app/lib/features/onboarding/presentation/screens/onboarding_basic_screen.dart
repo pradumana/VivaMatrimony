@@ -167,12 +167,8 @@ class _OnboardingBasicScreenState
       showBack: true,
       onBack: () async {
         await ref.read(authProvider.notifier).logout();
-        // Defer navigation to next frame to avoid Navigator lock
-        if (context.mounted) {
-          Future.microtask(() {
-            if (context.mounted) context.go(AppRoutes.login);
-          });
-        }
+        // Auth state drives the router. Calling context.go here races the
+        // redirect and can leave the StatefulShell without a visible route.
       },
       showSkip: false,
       child: Form(
@@ -477,4 +473,3 @@ class _GenderChip extends StatelessWidget {
     );
   }
 }
-

@@ -17,8 +17,7 @@ import '../../../../shared/widgets/viva_button.dart';
 // Profile details don't change frequently, so keeping them cached reduces
 // unnecessary API calls when user navigates back to a profile they've already viewed.
 final _profileDetailProvider =
-    FutureProvider.family<Map<String, dynamic>, String>((ref, userId) async {
-  ref.keepAlive();
+    FutureProvider.autoDispose.family<Map<String, dynamic>, String>((ref, userId) async {
   
   final client = ref.read(apiClientProvider);
   final response = await client.get('/profile/$userId');

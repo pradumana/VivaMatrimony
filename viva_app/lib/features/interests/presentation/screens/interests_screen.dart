@@ -14,8 +14,7 @@ import '../../../../shared/widgets/error_view.dart';
 // ponytail: Remove autoDispose and add keepAlive() to persist sent interests across navigation.
 // Reduces re-fetching when user switches tabs or navigates away and back.
 final _sentInterestsProvider =
-    FutureProvider<List<InterestModel>>((ref) async {
-  ref.keepAlive();
+    FutureProvider.autoDispose<List<InterestModel>>((ref) async {
   
   final client = ref.read(apiClientProvider);
   final r = await client.get('/interests/sent');
@@ -27,8 +26,7 @@ final _sentInterestsProvider =
 // ponytail: Remove autoDispose and add keepAlive() to persist received interests.
 // Manual cache invalidation happens after accept/decline actions.
 final _receivedInterestsProvider =
-    FutureProvider<List<InterestModel>>((ref) async {
-  ref.keepAlive();
+    FutureProvider.autoDispose<List<InterestModel>>((ref) async {
   
   final client = ref.read(apiClientProvider);
   final r = await client.get('/interests/received');

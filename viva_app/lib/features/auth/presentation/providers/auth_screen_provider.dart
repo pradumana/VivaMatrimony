@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer' as dev;
 import 'package:dio/dio.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -25,8 +26,14 @@ class AuthScreenState {
 }
 
 class AuthScreenNotifier extends Notifier<AuthScreenState> {
+  int _requestGeneration = 0;
+
   @override
   AuthScreenState build() => const AuthScreenState();
+
+  /// Reset loading state — called when the auth screen is disposed so a
+  /// stale isLoading=true doesn't disable the button on next visit.
+  void reset() => state = const AuthScreenState();
 
   // ── Registration ───────────────────────────────────────────────────────────
 
@@ -37,6 +44,20 @@ class AuthScreenNotifier extends Notifier<AuthScreenState> {
     required void Function() onSuccess,
   }) async {
     state = state.copyWith(isLoading: true, clearError: true);
+    final requestGeneration = ++_requestGeneration;
+
+    // Safety timeout: if the whole flow takes > 30s, reset loading state.
+    // Render free-tier cold starts can take 30-50s; this prevents the button
+    // being permanently frozen if the request silently hangs.
+    final timeout = Timer(const Duration(seconds: 65), () {
+      if (_requestGeneration == requestGeneration && state.isLoading) {
+        _requestGeneration++;
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Request timed out. The server may be starting up — please try again.',
+        );
+      }
+    });
 
     try {
       dev.log('🔵 Registration: Starting for $email', name: 'Auth');
@@ -51,6 +72,8 @@ class AuthScreenNotifier extends Notifier<AuthScreenState> {
 
       if (response.session == null) {
         dev.log('📧 Email confirmation required', name: 'Auth');
+        timeout.cancel();
+        if (_requestGeneration != requestGeneration) return;
         state = state.copyWith(isLoading: false);
         onEmailConfirmationRequired();
         return;
@@ -59,18 +82,26 @@ class AuthScreenNotifier extends Notifier<AuthScreenState> {
       dev.log('🔵 Calling backend POST /auth/register', name: 'Auth');
       await _postRegister();
       dev.log('✅ Registration complete', name: 'Auth');
+      timeout.cancel();
+      if (_requestGeneration != requestGeneration) return;
       state = state.copyWith(isLoading: false);
       onSuccess();
     } on AuthException catch (e, stack) {
+      timeout.cancel();
+      if (_requestGeneration != requestGeneration) return;
       dev.log('❌ AuthException: ${e.message}', name: 'Auth', error: e, stackTrace: stack);
       FirebaseCrashlytics.instance.recordError(e, stack, reason: 'Registration AuthException');
       state = state.copyWith(isLoading: false, error: _authError(e.message));
     } on DioException catch (e, stack) {
+      timeout.cancel();
+      if (_requestGeneration != requestGeneration) return;
       final apiError = ApiException.fromDioError(e);
       dev.log('❌ DioException: ${apiError.message} (${apiError.statusCode})', name: 'Auth', error: e, stackTrace: stack);
       FirebaseCrashlytics.instance.recordError(e, stack, reason: 'Registration DioException');
       state = state.copyWith(isLoading: false, error: apiError.message);
     } catch (e, stack) {
+      timeout.cancel();
+      if (_requestGeneration != requestGeneration) return;
       dev.log('❌ Unexpected registration error', name: 'Auth', error: e, stackTrace: stack);
       FirebaseCrashlytics.instance.recordError(e, stack, reason: 'Registration unexpected error', fatal: true);
       state = state.copyWith(isLoading: false, error: 'Error: ${e.toString()}');
@@ -85,6 +116,17 @@ class AuthScreenNotifier extends Notifier<AuthScreenState> {
     required void Function() onSuccess,
   }) async {
     state = state.copyWith(isLoading: true, clearError: true);
+    final requestGeneration = ++_requestGeneration;
+
+    final timeout = Timer(const Duration(seconds: 65), () {
+      if (_requestGeneration == requestGeneration && state.isLoading) {
+        _requestGeneration++;
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Request timed out. The server may be starting up — please try again.',
+        );
+      }
+    });
 
     try {
       dev.log('🔵 Login: Starting for $email', name: 'Auth');
@@ -100,18 +142,26 @@ class AuthScreenNotifier extends Notifier<AuthScreenState> {
       // Create/update users row idempotently
       await _postRegister();
       dev.log('✅ Login complete', name: 'Auth');
+      timeout.cancel();
+      if (_requestGeneration != requestGeneration) return;
       state = state.copyWith(isLoading: false);
       onSuccess();
     } on AuthException catch (e, stack) {
+      timeout.cancel();
+      if (_requestGeneration != requestGeneration) return;
       dev.log('❌ Login AuthException: ${e.message}', name: 'Auth', error: e);
       FirebaseCrashlytics.instance.recordError(e, stack, reason: 'Login AuthException');
       state = state.copyWith(isLoading: false, error: _authError(e.message));
     } on DioException catch (e, stack) {
+      timeout.cancel();
+      if (_requestGeneration != requestGeneration) return;
       final apiError = ApiException.fromDioError(e);
       dev.log('❌ Login DioException: ${apiError.message}', name: 'Auth', error: e);
       FirebaseCrashlytics.instance.recordError(e, stack, reason: 'Login DioException');
       state = state.copyWith(isLoading: false, error: apiError.message);
     } catch (e, stack) {
+      timeout.cancel();
+      if (_requestGeneration != requestGeneration) return;
       dev.log('❌ Unexpected login error', name: 'Auth', error: e, stackTrace: stack);
       FirebaseCrashlytics.instance.recordError(e, stack, reason: 'Login unexpected error', fatal: true);
       state = state.copyWith(isLoading: false, error: 'Error: ${e.toString()}');

@@ -7,8 +7,7 @@ import '../network/api_client.dart';
 /// instead of fetching 50 full notification objects just to count them.
 /// keepAlive() so it persists across tab switches; invalidated after
 /// mark-all-read or individual read actions.
-final unreadNotificationCountProvider = FutureProvider<int>((ref) async {
-  ref.keepAlive();
+final unreadNotificationCountProvider = FutureProvider.autoDispose<int>((ref) async {
   final r = await ref.read(apiClientProvider).get('/notifications/unread-count');
   return (r.data['unread_count'] as num).toInt();
 });

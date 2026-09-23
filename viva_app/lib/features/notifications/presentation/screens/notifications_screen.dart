@@ -11,8 +11,7 @@ import '../../../../shared/models/user_model.dart';
 import '../../../../shared/widgets/error_view.dart';
 
 final _notificationsProvider =
-    FutureProvider<List<NotificationModel>>((ref) async {
-  ref.keepAlive();
+    FutureProvider.autoDispose<List<NotificationModel>>((ref) async {
   final client = ref.read(apiClientProvider);
   final r = await client
       .get('/notifications', queryParameters: {'limit': 50});

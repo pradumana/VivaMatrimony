@@ -19,9 +19,7 @@ import '../../../../shared/widgets/viva_logo.dart';
 // This prevents re-fetching when navigating back to home screen.
 // Cache invalidation is handled manually via pull-to-refresh or time-based expiry.
 final _matchesProvider =
-    FutureProvider<List<ProfileSummary>>((ref) async {
-  // Keep provider alive even when no listeners
-  ref.keepAlive();
+    FutureProvider.autoDispose<List<ProfileSummary>>((ref) async {
   
   const cacheKey = 'matches_home';
   final cached = await CacheService.get(cacheKey);
