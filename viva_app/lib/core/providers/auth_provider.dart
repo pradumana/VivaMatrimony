@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../network/api_client.dart';
-import '../providers/profile_provider.dart';
 import '../storage/cache_service.dart';
 import '../storage/secure_storage.dart';
 
@@ -63,24 +62,20 @@ class AuthState {
 }
 
 class AuthNotifier extends AsyncNotifier<AuthState> {
-  // Each asynchronous auth operation captures this value. A later auth event
-  // invalidates earlier work before it is allowed to write routing state.
+  // Each asynchronous auth operation captures this generation counter.
+  // A later auth event (e.g. logout) increments this, causing stale
+  // async callbacks to bail out before writing routing state.
   int _authGeneration = 0;
 
   @override
   Future<AuthState> build() async {
-    // Listen to Supabase auth state changes and refresh our state.
-    // The stream fires immediately with the current session on startup.
     final sub = Supabase.instance.client.auth.onAuthStateChange.listen(
       (data) async {
         final event = data.event;
         final session = data.session;
         final generation = ++_authGeneration;
 
-        if (event == AuthChangeEvent.signedOut ||
-            session == null) {
-          // clearAppData already called in logout() — just ensure state is unauthenticated.
-          // Don't call clearAppData again (harmless but redundant).
+        if (event == AuthChangeEvent.signedOut || session == null) {
           state = const AsyncValue.data(AuthState.unauthenticated());
           return;
         }
@@ -88,13 +83,8 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
         if (event == AuthChangeEvent.signedIn ||
             event == AuthChangeEvent.tokenRefreshed ||
             event == AuthChangeEvent.initialSession) {
-          // signedIn fires after email confirmation (deep-link callback) as
-          // well as direct login. Ensure the users row exists BEFORE we set
-          // auth state — the router will redirect to onboarding screens which
-          // immediately call /profile, so the row must exist first.
           if (event == AuthChangeEvent.signedIn) {
             await _ensureUserRow(session, generation);
-            // _ensureUserRow already calls onLoginSuccess which sets state.
             return;
           }
           final newState = await _stateFromSession(session);
@@ -104,10 +94,8 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
         }
       },
     );
-    // Cancel subscription when this provider is disposed
     ref.onDispose(sub.cancel);
 
-    // Derive initial state from whatever session Supabase SDK has on disk
     final session = Supabase.instance.client.auth.currentSession;
     if (session == null) return const AuthState.unauthenticated();
     final generation = ++_authGeneration;
@@ -129,15 +117,12 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     state = const AsyncValue.data(AuthState.unauthenticated());
   }
 
-  /// Escape hatch for the splash timeout. It also invalidates any pending
-  /// startup work so an old session cannot restore the app afterward.
+  /// Escape hatch for the splash 8s timeout.
   void forceUnauthenticated() {
     _setUnauthenticated();
     unawaited(Supabase.instance.client.auth.signOut().catchError((_) {}));
   }
 
-  /// Ensures the users row exists in the backend DB, then sets auth state.
-  /// Called on signedIn — blocks navigation until the row is confirmed.
   Future<void> _ensureUserRow(Session session, int generation) async {
     try {
       final response = await ref.read(apiClientProvider).post('/auth/register');
@@ -151,9 +136,6 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
         await storage.setOnboardingCompleted(onboardingDone);
       }
     } on DioException catch (e) {
-      // If register itself 401s the token is invalid — sign out.
-      // For any other network error, proceed with local state (row may
-      // already exist for returning users).
       final status = e.response?.statusCode;
       if (status == 401) {
         await Supabase.instance.client.auth.signOut();
@@ -162,25 +144,17 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
         }
         return;
       }
-      // Non-401 error (500, network timeout, etc.) — proceed anyway;
-      // the row likely already exists for returning users.
-    } catch (_) {
-      // Non-fatal unexpected error — proceed with local state.
-    }
-    // Always set state after register attempt so navigation can proceed.
+    } catch (_) {}
     final newState = await _stateFromSession(session);
     if (_isCurrentSession(generation, session)) {
       state = AsyncValue.data(newState);
     }
   }
 
-  /// Build AuthState from a live Supabase session.
-  /// Reads onboarding flag from local storage (fast, no network).
   Future<AuthState> _stateFromSession(Session session) async {
     final storage = ref.read(secureStorageProvider);
     final onboardingDone = await storage.isOnboardingCompleted();
     final memberId = await storage.getMemberId();
-
     return AuthState(
       status: onboardingDone
           ? AuthStatus.authenticated
@@ -192,10 +166,6 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Called by AuthScreenNotifier after a successful register/login API call
-  // so we can store the memberId and mark onboarding state.
-  // ---------------------------------------------------------------------------
   Future<void> onLoginSuccess({
     required bool onboardingCompleted,
     String? memberId,
@@ -203,11 +173,9 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     final session = Supabase.instance.client.auth.currentSession;
     if (session == null) return;
     final generation = ++_authGeneration;
-
     final storage = ref.read(secureStorageProvider);
     if (memberId != null) await storage.saveMemberId(memberId);
     await storage.setOnboardingCompleted(onboardingCompleted);
-
     final newState = await _stateFromSession(session);
     if (_isCurrentSession(generation, session)) {
       state = AsyncValue.data(newState);
@@ -217,7 +185,6 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
   Future<void> onOnboardingCompleted() async {
     final storage = ref.read(secureStorageProvider);
     await storage.setOnboardingCompleted(true);
-
     final current = state.valueOrNull;
     if (current != null) {
       state = AsyncValue.data(current.copyWith(
@@ -228,49 +195,35 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
   }
 
   Future<void> logout() async {
-    // Route away before any storage or network work. This invalidates every
-    // in-flight signed-in operation so it cannot restore the shell later.
-    final accessToken = Supabase.instance.client.auth.currentSession?.accessToken;
+    // 1. Immediately set unauthenticated — router navigates to /login instantly.
+    //    Capture the token before the session is cleared.
+    final accessToken =
+        Supabase.instance.client.auth.currentSession?.accessToken;
     _setUnauthenticated();
-    if (accessToken != null) {
-      unawaited(_recordLogout(accessToken));
-    }
 
-    // 1. Sign out from Supabase FIRST — this invalidates the server session
-    //    AND clears Supabase's own SharedPreferences cache so app reopen
-    //    doesn't restore the session.
-    try {
-      await Supabase.instance.client.auth.signOut();
-    } catch (_) {}
-
-    // 2. Wipe ALL SharedPreferences (covers Supabase's flutter_dotenv cache,
-    //    any leftover session fragments, and our own CacheService keys).
-    try {
-      await CacheService.invalidateAll();
-    } catch (_) {}
-
-    // 3. Clear our secure storage (memberId, onboarding flag).
-    try {
-      await ref.read(secureStorageProvider).clearAppData();
-    } catch (_) {}
-
-    // 4. Clear in-memory Riverpod provider state.
-    ref.invalidate(myProfileProvider);
-    await CacheService.invalidateAll();
-
-    // 5. Set unauthenticated — router redirects to /login on next frame.
-    state = const AsyncValue.data(AuthState.unauthenticated());
-
-    // 6. Best-effort server audit log (fire and forget — user is already out).
+    // 2. All cleanup is fire-and-forget so it NEVER awaits here.
+    //    Awaiting signOut() would block this method and, more importantly,
+    //    signOut() fires the onAuthStateChange stream which would call
+    //    _setUnauthenticated() again — harmless but noisy.
+    //    ref.invalidate() is intentionally NOT called: myProfileProvider is
+    //    autoDispose and cleans itself up. Calling invalidate() here can
+    //    trigger a notifier rebuild that briefly puts authProvider into
+    //    AsyncLoading, causing the router to redirect to /splash (black screen).
+    unawaited(_cleanupAfterLogout(accessToken));
   }
 
-  Future<void> _recordLogout(String accessToken) async {
-    try {
-      await ref.read(apiClientProvider).post(
-        '/auth/logout',
-        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
-      );
-    } catch (_) {}
+  Future<void> _cleanupAfterLogout(String? accessToken) async {
+    try { await Supabase.instance.client.auth.signOut(); } catch (_) {}
+    try { await CacheService.invalidateAll(); } catch (_) {}
+    try { await ref.read(secureStorageProvider).clearAppData(); } catch (_) {}
+    if (accessToken != null) {
+      try {
+        await ref.read(apiClientProvider).post(
+          '/auth/logout',
+          options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+        );
+      } catch (_) {}
+    }
   }
 }
 
