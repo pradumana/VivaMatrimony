@@ -104,11 +104,28 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
     },
     routes: [
-      GoRoute(path: AppRoutes.splash, builder: (_, __) => const SplashScreen()),
-      GoRoute(path: AppRoutes.login, builder: (_, __) => const LoginScreen()),
-      GoRoute(path: AppRoutes.register, builder: (_, __) => const RegisterScreen()),
-      GoRoute(path: AppRoutes.forgotPassword, builder: (_, __) => const ForgotPasswordScreen()),
-      GoRoute(path: AppRoutes.welcome, builder: (_, __) => const WelcomeScreen()),
+      // Auth routes use instant replacement — no animation means no black
+      // canvas showing through during the transition from the shell.
+      GoRoute(
+        path: AppRoutes.splash,
+        pageBuilder: (_, s) => _instantPage(s, const SplashScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.login,
+        pageBuilder: (_, s) => _instantPage(s, const LoginScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.register,
+        pageBuilder: (_, s) => _instantPage(s, const RegisterScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.forgotPassword,
+        pageBuilder: (_, s) => _instantPage(s, const ForgotPasswordScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.welcome,
+        pageBuilder: (_, s) => _instantPage(s, const WelcomeScreen()),
+      ),
 
       // Onboarding
       GoRoute(path: AppRoutes.onboardingBasic, builder: (_, s) => OnboardingBasicScreen(isEditing: s.extra == true)),
@@ -195,4 +212,16 @@ final routerProvider = Provider<GoRouter>((ref) {
 
 class _AuthChangeNotifier extends ChangeNotifier {
   void notify() => notifyListeners();
+}
+
+/// Zero-duration page transition — used for auth/splash routes so there
+/// is no black-canvas window when the router replaces the shell with login.
+CustomTransitionPage<void> _instantPage(GoRouterState state, Widget child) {
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    child: child,
+    transitionDuration: Duration.zero,
+    reverseTransitionDuration: Duration.zero,
+    transitionsBuilder: (_, __, ___, child) => child,
+  );
 }
