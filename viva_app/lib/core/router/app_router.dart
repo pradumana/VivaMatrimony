@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -56,15 +57,25 @@ final routerProvider = Provider<GoRouter>((ref) {
 
   return GoRouter(
     initialLocation: AppRoutes.splash,
-    debugLogDiagnostics: false,
+    debugLogDiagnostics: true,
     refreshListenable: notifier,
     redirect: (context, state) {
       final authAsync = ref.read(authProvider);
       final auth = authAsync.valueOrNull;
 
       if (authAsync is AsyncError) return AppRoutes.login;
-      // Still loading — always show splash, never stay on a stale route
-      if (authAsync is AsyncLoading || auth == null) return AppRoutes.splash;
+
+      // AsyncLoading: auth state is not yet resolved.
+      // On first app start, go to splash. But if we're already past splash
+      // (e.g. a background token refresh briefly emits AsyncLoading), stay
+      // put — returning null prevents a flash to splash/black screen.
+      if (authAsync is AsyncLoading || auth == null) {
+        final loc = state.matchedLocation;
+        debugPrint('[Router] AsyncLoading at loc=$loc');
+        if (loc == AppRoutes.splash) return null; // already on splash, stay
+        // Already on a real screen — don't interrupt with splash.
+        return null;
+      }
 
       final loc = state.matchedLocation;
       final isSplash = loc == AppRoutes.splash;
@@ -75,6 +86,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isOnOnboardingRoute =
           loc.startsWith('/onboarding') || loc.startsWith('/verification');
 
+      debugPrint('[Router] redirect loc=$loc status=${auth.status}');
       switch (auth.status) {
         case AuthStatus.loading:
           return isSplash ? null : AppRoutes.splash;
