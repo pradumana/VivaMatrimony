@@ -196,49 +196,76 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     }
   }
 
-  /// Logout: synchronously set unauthenticated so the router redirects to
-  /// /login immediately, then clean up in the background.
+  // Guard against concurrent logout calls (e.g. double-tap confirm button).
+  // true while a logout is in flight; checked at the top of logout().
+  bool _isLoggingOut = false;
+
+  /// Logout: synchronously flip to unauthenticated so the router redirects
+  /// to /login immediately, then clean up in the background.
   ///
   /// Edge cases handled:
+  /// - _isLoggingOut guard: a second call while cleanup is running is a no-op.
   /// - No await after _setUnauthenticated() — cleanup never blocks navigation.
+  /// - Cleanup order: cache → secure storage → Supabase signOut → backend.
+  ///   Local data is wiped before the Supabase call so a crash mid-cleanup
+  ///   never leaves stale profile data for the next user on this device.
   /// - signOut() fires onAuthStateChange(signedOut) which sets unauthenticated
   ///   again — idempotent, harmless.
-  /// - ref.invalidate() is NOT called — that would invoke build() again,
-  ///   emitting AsyncLoading, which makes the router redirect to /splash
-  ///   (the black screen). autoDispose on all data providers handles cleanup.
-  /// - If the Riverpod ref is disposed before cleanup finishes (e.g. hot
-  ///   restart), every ref.read inside _cleanupAfterLogout is wrapped in
-  ///   try/catch so it fails silently.
+  /// - ref.invalidate() is NOT called — that emits AsyncLoading, causing the
+  ///   router to flash to /splash (black screen). autoDispose on data providers
+  ///   handles cache invalidation.
+  /// - If the Riverpod ref is disposed before cleanup finishes (hot-restart),
+  ///   every ref.read inside _cleanupAfterLogout is individually try/catched.
   Future<void> logout() async {
+    if (_isLoggingOut) {
+      debugPrint('[Auth] logout() ignored — already in progress');
+      return;
+    }
+    _isLoggingOut = true;
+
+    // Capture the token NOW, before the session is gone.
     final accessToken =
         Supabase.instance.client.auth.currentSession?.accessToken;
-    debugPrint('[Auth] logout() called, gen before=${_authGeneration}');
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+
+    debugPrint('[Auth] logout() start gen=${_authGeneration}');
     _setUnauthenticated();
-    debugPrint('[Auth] logout() unauthenticated set, gen after=${_authGeneration}');
-    unawaited(_cleanupAfterLogout(accessToken));
+    debugPrint('[Auth] logout() unauthenticated set gen=${_authGeneration}');
+
+    unawaited(_cleanupAfterLogout(accessToken, userId));
   }
 
-  Future<void> _cleanupAfterLogout(String? accessToken) async {
+  Future<void> _cleanupAfterLogout(String? accessToken, String? userId) async {
     debugPrint('[Auth] _cleanupAfterLogout start');
-    // Sign out Supabase — this clears the SDK's persisted session so a cold
-    // start after logout shows the login screen, not the home screen.
+
+    // 1. Wipe cache first — if anything below crashes, stale data is already
+    //    gone. A new login re-populates these cleanly.
     try {
-      await Supabase.instance.client.auth.signOut();
-      debugPrint('[Auth] Supabase.signOut() done');
+      await CacheService.invalidateAll();
+      debugPrint('[Auth] cache invalidated');
     } catch (e) {
-      debugPrint('[Auth] Supabase.signOut() failed: $e');
+      debugPrint('[Auth] cache invalidation failed: $e');
     }
-    // Wipe CacheService keys from SharedPreferences.
-    try { await CacheService.invalidateAll(); } catch (_) {}
-    // Wipe secure storage (memberId, onboarding flag).
+
+    // 2. Wipe secure storage (memberId, onboarding flag).
     try {
       await ref.read(secureStorageProvider).clearAppData();
       debugPrint('[Auth] clearAppData done');
     } catch (e) {
       debugPrint('[Auth] clearAppData failed: $e');
     }
-    // Best-effort backend audit log — use the captured token because the
-    // Supabase session is already gone by this point.
+
+    // 3. Revoke the Supabase session — clears the SDK's own persisted tokens
+    //    so a cold-start after logout lands on /login, not /home.
+    try {
+      await Supabase.instance.client.auth.signOut();
+      debugPrint('[Auth] Supabase.signOut() done');
+    } catch (e) {
+      debugPrint('[Auth] Supabase.signOut() failed: $e');
+    }
+
+    // 4. Best-effort backend call: audit log + NULL the fcm_token column.
+    //    Uses the captured token because the Supabase session is gone by now.
     if (accessToken != null) {
       try {
         await ref.read(apiClientProvider).post(
@@ -247,9 +274,11 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
         );
         debugPrint('[Auth] backend /auth/logout done');
       } catch (e) {
-        debugPrint('[Auth] backend /auth/logout failed: $e');
+        debugPrint('[Auth] backend /auth/logout failed (best-effort): $e');
       }
     }
+
+    _isLoggingOut = false;
     debugPrint('[Auth] _cleanupAfterLogout done');
   }
 }

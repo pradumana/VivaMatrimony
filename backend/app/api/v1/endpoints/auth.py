@@ -10,6 +10,7 @@ Session management is fully handled by Supabase Auth SDK on the client.
 """
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from typing import Optional
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -72,11 +73,20 @@ async def logout(
     request: Request = None,
 ):
     """
-    Audit-log the logout. The actual session revocation is done by
-    Supabase Auth on the client (supabase.auth.signOut()).
-    This endpoint is best-effort — the client should call it but a failure
-    here must never block the local signOut.
+    On logout:
+      1. NULL the fcm_token so the device no longer receives push
+         notifications for this account (prevents cross-user notification leak
+         when a second user signs into the same device).
+      2. Audit-log the event.
+
+    Actual session revocation is done client-side by supabase.auth.signOut().
+    This endpoint is best-effort — a failure here must never block local signOut.
     """
+    # Clear device push token — safe to ignore if row doesn't exist yet
+    await db.execute(
+        text("UPDATE users SET fcm_token = NULL WHERE id = :uid"),
+        {"uid": str(current_user.user_id)},
+    )
     await log_action(
         db, "user", current_user.user_id, "logout",
         details={"ip": _get_ip(request) if request else None},

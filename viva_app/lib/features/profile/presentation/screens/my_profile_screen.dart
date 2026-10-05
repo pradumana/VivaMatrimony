@@ -552,10 +552,10 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                       );
                       if (confirm == true) {
                         await ref.read(authProvider.notifier).logout();
-                        // Router's redirect handles navigation to /login
-                        // automatically when authProvider becomes unauthenticated.
-                        // Do NOT call context.go here — the shell route context
-                        // is already gone and double-navigation causes a black screen.
+                        // Explicit navigation is required: StatefulShellRoute
+                        // keeps its own stack and the redirect alone leaves a
+                        // black canvas during the transition.
+                        if (context.mounted) context.go(AppRoutes.login);
                       }
                     },
                   ),
