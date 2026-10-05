@@ -206,28 +206,30 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
   // invalidate() here the guard resets on the new notifier instance.
   bool _isLoggingOut = false;
 
-  /// Logout: synchronously flip to unauthenticated so the router redirects
-  /// to /login immediately, then clean up in the background.
+  /// Set to true while logout() is handling navigation imperatively via
+  /// rootNavigatorKey. The router redirect checks this flag and skips its
+  /// own navigation so the two paths don't race each other.
+  bool isHandlingLogoutNav = false;
+
+  /// Logout — matches the flow:
   ///
-  /// Edge cases handled:
-  /// - _isLoggingOut guard: a second call while cleanup is running is a no-op.
-  /// - No await after _setUnauthenticated() — cleanup never blocks navigation.
-  /// - Cleanup order: cache → secure storage → Supabase signOut → backend.
-  ///   Local data is wiped before the Supabase call so a crash mid-cleanup
-  ///   never leaves stale profile data for the next user on this device.
-  /// - signOut() fires onAuthStateChange(signedOut) which sets unauthenticated
-  ///   again — idempotent, harmless.
-  /// - ref.invalidate() is NOT called — that emits AsyncLoading, causing the
-  ///   router to flash to /splash (black screen). autoDispose on data providers
-  ///   handles cache invalidation.
-  /// - If the Riverpod ref is disposed before cleanup finishes (hot-restart),
-  ///   every ref.read inside _cleanupAfterLogout is individually try/catched.
+  ///   logout()
+  ///     ├─ _setUnauthenticated()   ← auth state = logged out
+  ///     └─ rootNavigatorKey.go()  ← shell removed, /login shown
+  ///                                    │
+  ///                                    ▼
+  ///                             background cleanup
+  ///
+  /// _setUnauthenticated and ctx.go both fire from logout() without
+  /// waiting on each other. The router redirect is suppressed via
+  /// isHandlingLogoutNav so only ctx.go drives the navigation.
   Future<void> logout() async {
     if (_isLoggingOut) {
       debugPrint('[Auth] logout() ignored — already in progress');
       return;
     }
     _isLoggingOut = true;
+    isHandlingLogoutNav = true;
 
     // Capture the token NOW, before the session is gone.
     final accessToken =
@@ -235,20 +237,17 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
 
     debugPrint('[Auth] logout() start gen=$_authGeneration');
 
-    // 1. Flip state — router redirect will see unauthenticated.
-    _setUnauthenticated();
-
-    // 2. Imperatively navigate to /login via the root navigator key.
-    //    This replaces the entire StatefulShellRoute stack before cleanup
-    //    runs, so there is no frame where the shell is tearing down without
-    //    a route to show. The router redirect acts as a safety net on top.
-    final ctx = rootNavigatorKey.currentContext;
+    // Both fire together — state flip and navigation are not sequentially
+    // dependent on each other.
+    _setUnauthenticated();                          // branch A: auth state
+    final ctx = rootNavigatorKey.currentContext;    // branch B: navigation
     if (ctx != null && ctx.mounted) {
       ctx.go(AppRoutes.login);
       debugPrint('[Auth] logout() navigated to /login');
     }
+    isHandlingLogoutNav = false;
 
-    // 3. Background cleanup — fire and forget, navigation is already done.
+    // Background cleanup — shell is already replaced with /login.
     unawaited(_cleanupAfterLogout(accessToken));
   }
 

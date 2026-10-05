@@ -96,6 +96,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         case AuthStatus.loading:
           return isSplash ? null : AppRoutes.splash;
         case AuthStatus.unauthenticated:
+          // If AuthNotifier.logout() is handling navigation imperatively via
+          // rootNavigatorKey, suppress the redirect — two concurrent go()
+          // calls race each other and can leave the navigator in a bad state.
+          final notifier = ref.read(authProvider.notifier);
+          if (notifier.isHandlingLogoutNav) return null;
           if (isOnAuthRoute) return null;
           return AppRoutes.login;
         case AuthStatus.onboardingRequired:
