@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -42,6 +41,11 @@ import '../../features/notifications/presentation/screens/notifications_screen.d
 import '../providers/auth_provider.dart';
 import '../../shared/constants/app_constants.dart';
 
+/// Root navigator key — used by AuthNotifier to navigate imperatively to
+/// /login on logout without importing routerProvider (which would be circular).
+/// Pass this to GoRouter so it owns the root Navigator.
+final rootNavigatorKey = GlobalKey<NavigatorState>();
+
 final routerProvider = Provider<GoRouter>((ref) {
   final notifier = _AuthChangeNotifier();
 
@@ -56,6 +60,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   });
 
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: AppRoutes.splash,
     debugLogDiagnostics: true,
     refreshListenable: notifier,
@@ -145,10 +150,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.verificationCertificate, builder: (_, __) => const VerificationCertificateScreen()),
       GoRoute(path: AppRoutes.verificationStatus, builder: (_, __) => const VerificationStatusScreen()),
 
-      // Main app shell
+      // Main app shell — pageBuilder with zero-duration transition so the
+      // shell exits instantly when the redirect replaces it with /login.
+      // Using builder (MaterialPage default) causes a one-frame black canvas
+      // during the shell→login swap on logout.
       StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) =>
-            MainShellScreen(navigationShell: navigationShell),
+        pageBuilder: (context, state, navigationShell) => _instantPage(
+          state,
+          MainShellScreen(navigationShell: navigationShell),
+        ),
         branches: [
           StatefulShellBranch(routes: [
             GoRoute(path: AppRoutes.home, builder: (_, __) => const HomeScreen()),

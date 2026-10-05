@@ -356,9 +356,7 @@ class _DeleteAccountDialogState
     final nav = Navigator.of(context);
     nav.pop(); // Close confirmation dialog
     await ref.read(authProvider.notifier).logout();
-    // Explicit navigation clears the StatefulShellRoute stack — redirect alone
-    // leaves a black canvas during the shell→login transition.
-    if (context.mounted) context.go(AppRoutes.login);
+    // Navigation is driven by AuthNotifier.logout() via rootNavigatorKey.
   }
 }
 

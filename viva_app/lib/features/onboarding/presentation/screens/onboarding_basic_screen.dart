@@ -167,8 +167,7 @@ class _OnboardingBasicScreenState
       showBack: true,
       onBack: () async {
         await ref.read(authProvider.notifier).logout();
-        // Explicit navigation clears the StatefulShellRoute stack.
-        if (context.mounted) context.go(AppRoutes.login);
+        // Navigation is driven by AuthNotifier.logout() via rootNavigatorKey.
       },
       showSkip: false,
       child: Form(

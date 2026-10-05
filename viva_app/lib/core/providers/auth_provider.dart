@@ -3,11 +3,14 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../network/api_client.dart';
+import '../router/app_router.dart' show rootNavigatorKey;
 import '../storage/cache_service.dart';
 import '../storage/secure_storage.dart';
+import '../../shared/constants/app_constants.dart';
 
 /// Auth states that drive all routing decisions.
 enum AuthStatus {
@@ -230,10 +233,22 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     final accessToken =
         Supabase.instance.client.auth.currentSession?.accessToken;
 
-    debugPrint('[Auth] logout() start gen=${_authGeneration}');
-    _setUnauthenticated();
-    debugPrint('[Auth] logout() unauthenticated set gen=${_authGeneration}');
+    debugPrint('[Auth] logout() start gen=$_authGeneration');
 
+    // 1. Flip state — router redirect will see unauthenticated.
+    _setUnauthenticated();
+
+    // 2. Imperatively navigate to /login via the root navigator key.
+    //    This replaces the entire StatefulShellRoute stack before cleanup
+    //    runs, so there is no frame where the shell is tearing down without
+    //    a route to show. The router redirect acts as a safety net on top.
+    final ctx = rootNavigatorKey.currentContext;
+    if (ctx != null && ctx.mounted) {
+      ctx.go(AppRoutes.login);
+      debugPrint('[Auth] logout() navigated to /login');
+    }
+
+    // 3. Background cleanup — fire and forget, navigation is already done.
     unawaited(_cleanupAfterLogout(accessToken));
   }
 

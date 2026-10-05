@@ -552,10 +552,8 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                       );
                       if (confirm == true) {
                         await ref.read(authProvider.notifier).logout();
-                        // Explicit navigation is required: StatefulShellRoute
-                        // keeps its own stack and the redirect alone leaves a
-                        // black canvas during the transition.
-                        if (context.mounted) context.go(AppRoutes.login);
+                        // Navigation is driven by AuthNotifier.logout() via
+                        // rootNavigatorKey — no context.go needed here.
                       }
                     },
                   ),
