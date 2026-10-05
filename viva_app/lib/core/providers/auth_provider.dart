@@ -198,6 +198,9 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
 
   // Guard against concurrent logout calls (e.g. double-tap confirm button).
   // true while a logout is in flight; checked at the top of logout().
+  // NOTE: this is instance state — it works only because authProvider is never
+  // ref.invalidate()'d mid-logout. Keep that invariant; if you ever call
+  // invalidate() here the guard resets on the new notifier instance.
   bool _isLoggingOut = false;
 
   /// Logout: synchronously flip to unauthenticated so the router redirects
@@ -226,16 +229,15 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     // Capture the token NOW, before the session is gone.
     final accessToken =
         Supabase.instance.client.auth.currentSession?.accessToken;
-    final userId = Supabase.instance.client.auth.currentUser?.id;
 
     debugPrint('[Auth] logout() start gen=${_authGeneration}');
     _setUnauthenticated();
     debugPrint('[Auth] logout() unauthenticated set gen=${_authGeneration}');
 
-    unawaited(_cleanupAfterLogout(accessToken, userId));
+    unawaited(_cleanupAfterLogout(accessToken));
   }
 
-  Future<void> _cleanupAfterLogout(String? accessToken, String? userId) async {
+  Future<void> _cleanupAfterLogout(String? accessToken) async {
     debugPrint('[Auth] _cleanupAfterLogout start');
 
     // 1. Wipe cache first — if anything below crashes, stale data is already
