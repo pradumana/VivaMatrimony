@@ -104,7 +104,17 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     ref.onDispose(sub.cancel);
 
     final session = Supabase.instance.client.auth.currentSession;
-    if (session == null) return const AuthState.unauthenticated();
+    if (session == null) {
+      // No Supabase session — could be a fresh install or after logout.
+      // Wipe secure storage unconditionally: flutter_secure_storage keys
+      // survive app uninstall on Android (Keystore is tied to signing cert,
+      // not the install). A stale onboarding_completed=true from a previous
+      // install would route a brand-new user directly to /home.
+      try {
+        await ref.read(secureStorageProvider).clearAppData();
+      } catch (_) {}
+      return const AuthState.unauthenticated();
+    }
     final generation = ++_authGeneration;
     final initialState = await _stateFromSession(session);
     return _isCurrentGeneration(generation)
@@ -231,16 +241,17 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     _isLoggingOut = true;
     isHandlingLogoutNav = true;
 
-    // Capture the token NOW, before the session is gone.
+    // Capture everything we need BEFORE navigation fires and providers dispose.
     final accessToken =
         Supabase.instance.client.auth.currentSession?.accessToken;
+    final storage = ref.read(secureStorageProvider);
+    final api = ref.read(apiClientProvider);
 
     debugPrint('[Auth] logout() start gen=$_authGeneration');
 
-    // Both fire together — state flip and navigation are not sequentially
-    // dependent on each other.
-    _setUnauthenticated();                          // branch A: auth state
-    final ctx = rootNavigatorKey.currentContext;    // branch B: navigation
+    // Both fire together — state flip and navigation are independent branches.
+    _setUnauthenticated();
+    final ctx = rootNavigatorKey.currentContext;
     if (ctx != null && ctx.mounted) {
       ctx.go(AppRoutes.login);
       debugPrint('[Auth] logout() navigated to /login');
@@ -248,14 +259,18 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     isHandlingLogoutNav = false;
 
     // Background cleanup — shell is already replaced with /login.
-    unawaited(_cleanupAfterLogout(accessToken));
+    // All dependencies captured above so provider disposal can't block us.
+    unawaited(_cleanupAfterLogout(accessToken, storage, api));
   }
 
-  Future<void> _cleanupAfterLogout(String? accessToken) async {
+  Future<void> _cleanupAfterLogout(
+    String? accessToken,
+    SecureStorage storage,
+    dynamic api,
+  ) async {
     debugPrint('[Auth] _cleanupAfterLogout start');
 
-    // 1. Wipe cache first — if anything below crashes, stale data is already
-    //    gone. A new login re-populates these cleanly.
+    // 1. Cache first — stale data gone even if later steps fail.
     try {
       await CacheService.invalidateAll();
       debugPrint('[Auth] cache invalidated');
@@ -263,16 +278,15 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
       debugPrint('[Auth] cache invalidation failed: $e');
     }
 
-    // 2. Wipe secure storage (memberId, onboarding flag).
+    // 2. Secure storage (memberId, onboarding flag).
     try {
-      await ref.read(secureStorageProvider).clearAppData();
+      await storage.clearAppData();
       debugPrint('[Auth] clearAppData done');
     } catch (e) {
       debugPrint('[Auth] clearAppData failed: $e');
     }
 
-    // 3. Revoke the Supabase session — clears the SDK's own persisted tokens
-    //    so a cold-start after logout lands on /login, not /home.
+    // 3. Revoke Supabase session — cold-start after logout lands on /login.
     try {
       await Supabase.instance.client.auth.signOut();
       debugPrint('[Auth] Supabase.signOut() done');
@@ -280,11 +294,10 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
       debugPrint('[Auth] Supabase.signOut() failed: $e');
     }
 
-    // 4. Best-effort backend call: audit log + NULL the fcm_token column.
-    //    Uses the captured token because the Supabase session is gone by now.
+    // 4. Best-effort backend: audit log + NULL fcm_token.
     if (accessToken != null) {
       try {
-        await ref.read(apiClientProvider).post(
+        await api.post(
           '/auth/logout',
           options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
         );
