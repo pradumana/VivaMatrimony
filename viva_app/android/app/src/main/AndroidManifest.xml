@@ -22,6 +22,12 @@
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">
+            <!-- Disable Impeller (Vulkan) on MIUI — gralloc fails to allocate
+                 HDR pixel formats (0x38, 0x3b) causing GraphicBufferAllocator
+                 errors and a black canvas on every route transition. -->
+            <meta-data
+                android:name="io.flutter.embedding.android.EnableImpeller"
+                android:value="false" />
             <meta-data
                 android:name="io.flutter.embedding.android.NormalTheme"
                 android:resource="@style/NormalTheme" />
