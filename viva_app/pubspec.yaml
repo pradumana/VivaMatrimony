@@ -68,12 +68,6 @@ flutter:
   uses-material-design: true
   generate: true
 
-  # Disable Impeller on Android — the Qualcomm gralloc on MIUI devices fails
-  # to allocate HDR pixel formats (0x38, 0x3b) that Impeller/Vulkan probes on
-  # every onResume, producing a black canvas. Skia (OpenGL) is unaffected.
-  # Re-enable once Flutter fixes Impeller's format-probe fallback on Android.
-  impellerEnabled: false
-
   assets:
     - assets/images/
     - assets/icons/
