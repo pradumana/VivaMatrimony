@@ -551,9 +551,13 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                         ),
                       );
                       if (confirm == true) {
-                        await ref.read(authProvider.notifier).logout();
-                        // Navigation is driven by AuthNotifier.logout() via
-                        // rootNavigatorKey — no context.go needed here.
+                        // Do NOT await — logout() drives its own navigation
+                        // via rootNavigatorKey. Awaiting here holds the dialog
+                        // widget's context open while GoRouter is trying to
+                        // replace the entire stack, leaving an orphaned
+                        // PopupRoute that causes a black/frozen frame.
+                        // ignore: unawaited_futures
+                        ref.read(authProvider.notifier).logout();
                       }
                     },
                   ),

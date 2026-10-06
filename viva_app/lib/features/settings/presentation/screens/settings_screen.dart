@@ -354,9 +354,10 @@ class _DeleteAccountDialogState
     }
     if (!mounted) return;
     final nav = Navigator.of(context);
-    nav.pop(); // Close confirmation dialog
-    await ref.read(authProvider.notifier).logout();
-    // Navigation is driven by AuthNotifier.logout() via rootNavigatorKey.
+    nav.pop(); // Close confirmation dialog — must happen before logout() fires
+    // Do NOT await — same reason as profile screen logout button.
+    // ignore: unawaited_futures
+    ref.read(authProvider.notifier).logout();
   }
 }
 

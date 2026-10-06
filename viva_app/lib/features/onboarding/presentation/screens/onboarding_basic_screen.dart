@@ -165,9 +165,10 @@ class _OnboardingBasicScreenState
       error: state.error,
       onNext: _next,
       showBack: true,
-      onBack: () async {
-        await ref.read(authProvider.notifier).logout();
-        // Navigation is driven by AuthNotifier.logout() via rootNavigatorKey.
+      onBack: () {
+        // Do NOT await — logout() drives its own navigation.
+        // ignore: unawaited_futures
+        ref.read(authProvider.notifier).logout();
       },
       showSkip: false,
       child: Form(
