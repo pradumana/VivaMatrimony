@@ -218,6 +218,9 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
   // Guard against concurrent logout calls (e.g. double-tap confirm button).
   bool _isLoggingOut = false;
 
+  // Not needed anymore — kept so router code that references it compiles.
+  bool isHandlingLogoutNav = false;
+
   Future<void> logout() async {
     if (_isLoggingOut) {
       debugPrint('[Auth] logout() ignored — already in progress');
@@ -225,81 +228,71 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     }
     _isLoggingOut = true;
 
-    // Capture before session is gone.
     final accessToken =
         Supabase.instance.client.auth.currentSession?.accessToken;
     final storage = ref.read(secureStorageProvider);
     final api = ref.read(apiClientProvider);
 
-    debugPrint('[Auth] logout() start gen=$_authGeneration');
+    debugPrint('[Auth] LOGOUT START');
 
-    // Set state unauthenticated — router redirect fires on next frame.
-    _setUnauthenticated();
-    debugPrint('[Auth] logout() state set unauthenticated');
-
-    // Explicitly refresh GoRouter so it re-evaluates its redirect immediately.
-    // The ref.listen in routerProvider fires asynchronously and can miss the
-    // state change if the shell widget tree is mid-disposal. refresh() forces
-    // a synchronous redirect re-evaluation without pushing a new route.
-    final ctx = rootNavigatorKey.currentContext;
-    if (ctx != null && ctx.mounted) {
-      GoRouter.of(ctx).refresh();
-      debugPrint('[Auth] logout() GoRouter refreshed');
-    }
-
-    // Background cleanup — providers captured above, safe after navigation.
-    unawaited(_cleanupAfterLogout(accessToken, storage, api));
-  }
-
-  // Not needed anymore — kept as false so router redirect code compiles.
-  bool isHandlingLogoutNav = false;
-
-  Future<void> _cleanupAfterLogout(
-    String? accessToken,
-    SecureStorage storage,
-    dynamic api,
-  ) async {
-    debugPrint('[Auth] _cleanupAfterLogout start');
-
-    // 1. Cache first — stale data gone even if later steps fail.
     try {
-      await CacheService.invalidateAll();
-      debugPrint('[Auth] cache invalidated');
-    } catch (e) {
-      debugPrint('[Auth] cache invalidation failed: $e');
-    }
-
-    // 2. Secure storage (memberId, onboarding flag).
-    try {
-      await storage.clearAppData();
-      debugPrint('[Auth] clearAppData done');
-    } catch (e) {
-      debugPrint('[Auth] clearAppData failed: $e');
-    }
-
-    // 3. Revoke Supabase session — cold-start after logout lands on /login.
-    try {
-      await Supabase.instance.client.auth.signOut();
-      debugPrint('[Auth] Supabase.signOut() done');
-    } catch (e) {
-      debugPrint('[Auth] Supabase.signOut() failed: $e');
-    }
-
-    // 4. Best-effort backend: audit log + NULL fcm_token.
-    if (accessToken != null) {
-      try {
-        await api.post(
-          '/auth/logout',
-          options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
-        );
-        debugPrint('[Auth] backend /auth/logout done');
-      } catch (e) {
-        debugPrint('[Auth] backend /auth/logout failed (best-effort): $e');
+      // 1. Backend audit FIRST — token still valid at this point.
+      //    NULLs fcm_token and writes the audit row.
+      if (accessToken != null) {
+        try {
+          debugPrint('[Auth] calling backend /auth/logout');
+          await api.post(
+            '/auth/logout',
+            options:
+                Options(headers: {'Authorization': 'Bearer $accessToken'}),
+          );
+          debugPrint('[Auth] backend /auth/logout SUCCESS');
+        } catch (e) {
+          debugPrint('[Auth] backend /auth/logout FAILED: $e');
+        }
+      } else {
+        debugPrint('[Auth] no access token — skipping backend call');
       }
-    }
 
-    _isLoggingOut = false;
-    debugPrint('[Auth] _cleanupAfterLogout done');
+      // 2. Wipe cache.
+      try {
+        await CacheService.invalidateAll();
+        debugPrint('[Auth] cache invalidated');
+      } catch (e) {
+        debugPrint('[Auth] cache clear failed: $e');
+      }
+
+      // 3. Clear local user data (memberId, onboarding flag).
+      try {
+        await storage.clearAppData();
+        debugPrint('[Auth] clearAppData done');
+      } catch (e) {
+        debugPrint('[Auth] clearAppData failed: $e');
+      }
+
+      // 4. Revoke the Supabase session.
+      try {
+        await Supabase.instance.client.auth.signOut();
+        debugPrint('[Auth] Supabase.signOut() done');
+      } catch (e) {
+        debugPrint('[Auth] Supabase.signOut() failed: $e');
+      }
+
+      // 5. Flip auth state — triggers router redirect.
+      _setUnauthenticated();
+      debugPrint('[Auth] LOGOUT COMPLETE');
+
+      // 6. Force GoRouter to re-evaluate its redirect immediately.
+      //    ref.listen fires asynchronously and can miss the state change
+      //    when the shell widget tree is mid-disposal.
+      final ctx = rootNavigatorKey.currentContext;
+      if (ctx != null && ctx.mounted) {
+        GoRouter.of(ctx).refresh();
+        debugPrint('[Auth] GoRouter refreshed');
+      }
+    } finally {
+      _isLoggingOut = false;
+    }
   }
 }
 
