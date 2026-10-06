@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../network/api_client.dart';
+import '../router/app_router.dart' show rootNavigatorKey;
 import '../storage/cache_service.dart';
 import '../storage/secure_storage.dart';
 
@@ -234,6 +236,16 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     // Set state unauthenticated — router redirect fires on next frame.
     _setUnauthenticated();
     debugPrint('[Auth] logout() state set unauthenticated');
+
+    // Explicitly refresh GoRouter so it re-evaluates its redirect immediately.
+    // The ref.listen in routerProvider fires asynchronously and can miss the
+    // state change if the shell widget tree is mid-disposal. refresh() forces
+    // a synchronous redirect re-evaluation without pushing a new route.
+    final ctx = rootNavigatorKey.currentContext;
+    if (ctx != null && ctx.mounted) {
+      GoRouter.of(ctx).refresh();
+      debugPrint('[Auth] logout() GoRouter refreshed');
+    }
 
     // Background cleanup — providers captured above, safe after navigation.
     unawaited(_cleanupAfterLogout(accessToken, storage, api));
