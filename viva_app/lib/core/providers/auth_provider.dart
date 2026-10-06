@@ -3,14 +3,11 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../network/api_client.dart';
-import '../router/app_router.dart' show rootNavigatorKey;
 import '../storage/cache_service.dart';
 import '../storage/secure_storage.dart';
-import '../../shared/constants/app_constants.dart';
 
 /// Auth states that drive all routing decisions.
 enum AuthStatus {
@@ -217,38 +214,16 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
   }
 
   // Guard against concurrent logout calls (e.g. double-tap confirm button).
-  // true while a logout is in flight; checked at the top of logout().
-  // NOTE: this is instance state — it works only because authProvider is never
-  // ref.invalidate()'d mid-logout. Keep that invariant; if you ever call
-  // invalidate() here the guard resets on the new notifier instance.
   bool _isLoggingOut = false;
 
-  /// Set to true while logout() is handling navigation imperatively via
-  /// rootNavigatorKey. The router redirect checks this flag and skips its
-  /// own navigation so the two paths don't race each other.
-  bool isHandlingLogoutNav = false;
-
-  /// Logout — matches the flow:
-  ///
-  ///   logout()
-  ///     ├─ _setUnauthenticated()   ← auth state = logged out
-  ///     └─ rootNavigatorKey.go()  ← shell removed, /login shown
-  ///                                    │
-  ///                                    ▼
-  ///                             background cleanup
-  ///
-  /// _setUnauthenticated and ctx.go both fire from logout() without
-  /// waiting on each other. The router redirect is suppressed via
-  /// isHandlingLogoutNav so only ctx.go drives the navigation.
   Future<void> logout() async {
     if (_isLoggingOut) {
       debugPrint('[Auth] logout() ignored — already in progress');
       return;
     }
     _isLoggingOut = true;
-    isHandlingLogoutNav = true;
 
-    // Capture everything we need BEFORE navigation fires and providers dispose.
+    // Capture before session is gone.
     final accessToken =
         Supabase.instance.client.auth.currentSession?.accessToken;
     final storage = ref.read(secureStorageProvider);
@@ -256,19 +231,16 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
 
     debugPrint('[Auth] logout() start gen=$_authGeneration');
 
-    // Both fire together — state flip and navigation are independent branches.
+    // Set state unauthenticated — router redirect fires on next frame.
     _setUnauthenticated();
-    final ctx = rootNavigatorKey.currentContext;
-    if (ctx != null && ctx.mounted) {
-      ctx.go(AppRoutes.login);
-      debugPrint('[Auth] logout() navigated to /login');
-    }
-    isHandlingLogoutNav = false;
+    debugPrint('[Auth] logout() state set unauthenticated');
 
-    // Background cleanup — shell is already replaced with /login.
-    // All dependencies captured above so provider disposal can't block us.
+    // Background cleanup — providers captured above, safe after navigation.
     unawaited(_cleanupAfterLogout(accessToken, storage, api));
   }
+
+  // Not needed anymore — kept as false so router redirect code compiles.
+  bool isHandlingLogoutNav = false;
 
   Future<void> _cleanupAfterLogout(
     String? accessToken,

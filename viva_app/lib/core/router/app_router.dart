@@ -96,11 +96,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         case AuthStatus.loading:
           return isSplash ? null : AppRoutes.splash;
         case AuthStatus.unauthenticated:
-          // If AuthNotifier.logout() is handling navigation imperatively via
-          // rootNavigatorKey, suppress the redirect — two concurrent go()
-          // calls race each other and can leave the navigator in a bad state.
-          final notifier = ref.read(authProvider.notifier);
-          if (notifier.isHandlingLogoutNav) return null;
           if (isOnAuthRoute) return null;
           return AppRoutes.login;
         case AuthStatus.onboardingRequired:
@@ -229,14 +224,17 @@ class _AuthChangeNotifier extends ChangeNotifier {
   void notify() => notifyListeners();
 }
 
-/// Zero-duration page transition — used for auth/splash routes so there
-/// is no black-canvas window when the router replaces the shell with login.
+/// Near-instant page transition (1ms) — used for auth/splash routes and the
+/// shell so there is no black-canvas window when the router replaces the shell
+/// with login. Duration.zero causes a one-frame black flash on Impeller/Vulkan
+/// because the compositor doesn't get a frame to composite the new route before
+/// the old one is removed. 1ms is imperceptible but gives the compositor time.
 CustomTransitionPage<void> _instantPage(GoRouterState state, Widget child) {
   return CustomTransitionPage<void>(
     key: state.pageKey,
     child: child,
-    transitionDuration: Duration.zero,
-    reverseTransitionDuration: Duration.zero,
+    transitionDuration: const Duration(milliseconds: 1),
+    reverseTransitionDuration: const Duration(milliseconds: 1),
     transitionsBuilder: (_, __, ___, child) => child,
   );
 }
