@@ -39,10 +39,35 @@ class MyProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(myProfileProvider);
+    final l = AppLocalizations.of(context);
     return async.when(
-      loading: () => const _SkeletonScreen(),
+      loading: () => Scaffold(
+        backgroundColor: AppTheme.background,
+        // Keep the AppBar with logout visible even during loading so the
+        // user is never trapped on a skeleton with no way to sign out.
+        appBar: AppBar(
+          title: Text(l.myProfile),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout_rounded),
+              tooltip: l.logOut,
+              onPressed: () => _confirmLogout(context, ref, l),
+            ),
+          ],
+        ),
+        body: const _SkeletonBody(),
+      ),
       error: (e, _) => Scaffold(
-        appBar: AppBar(title: Text(AppLocalizations.of(context).myProfile)),
+        appBar: AppBar(
+          title: Text(l.myProfile),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout_rounded),
+              tooltip: l.logOut,
+              onPressed: () => _confirmLogout(context, ref, l),
+            ),
+          ],
+        ),
         body: ErrorView(
           message: 'Couldn\'t load your profile.',
           retryLabel: 'Try Again',
@@ -52,20 +77,44 @@ class MyProfileScreen extends ConsumerWidget {
       data: (data) => _ProfileBody(data: data),
     );
   }
+
+  Future<void> _confirmLogout(
+      BuildContext context, WidgetRef ref, AppLocalizations l) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.xl)),
+        title: const Text('Log Out?'),
+        content: const Text(
+            'You can log back in using your registered account credentials.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(l.cancel)),
+          ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(l.logOut)),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      // ignore: unawaited_futures
+      ref.read(authProvider.notifier).logout();
+    }
+  }
 }
 
-// ── Skeleton shown during initial load (avoids null-flash) ────────────────────
+// ── Skeleton shown during initial load ────────────────────────────────────────
 
-class _SkeletonScreen extends StatelessWidget {
-  const _SkeletonScreen();
+class _SkeletonBody extends StatelessWidget {
+  const _SkeletonBody();
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: Shimmer.fromColors(
-        baseColor: Colors.grey.shade200,
-        highlightColor: Colors.grey.shade100,
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade200,
+      highlightColor: Colors.grey.shade100,
         child: Column(
           children: [
             // Hero area
@@ -102,8 +151,7 @@ class _SkeletonScreen extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 }
 
