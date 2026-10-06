@@ -82,6 +82,11 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
         debugPrint('[Auth] stream event=$event session=${session?.user.id}');
 
         if (event == AuthChangeEvent.signedOut || session == null) {
+          // Session is definitively gone. Wipe local storage so stale
+          // Keystore entries don't survive an uninstall/reinstall.
+          // This covers: explicit logout, token expiry, server-side revocation.
+          try { await ref.read(secureStorageProvider).clearAppData(); } catch (_) {}
+          try { await CacheService.invalidateAll(); } catch (_) {}
           // Idempotent: logout() already set this, but the stream fires too.
           state = const AsyncValue.data(AuthState.unauthenticated());
           return;
@@ -105,14 +110,16 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
 
     final session = Supabase.instance.client.auth.currentSession;
     if (session == null) {
-      // No Supabase session — could be a fresh install or after logout.
-      // Wipe secure storage unconditionally: flutter_secure_storage keys
-      // survive app uninstall on Android (Keystore is tied to signing cert,
-      // not the install). A stale onboarding_completed=true from a previous
-      // install would route a brand-new user directly to /home.
-      try {
-        await ref.read(secureStorageProvider).clearAppData();
-      } catch (_) {}
+      // No session at cold start. Wait briefly for the SDK to restore a
+      // persisted session before deciding to wipe storage.
+      // supabase_flutter restores the session asynchronously; currentSession
+      // may be null for a short window even when a valid session exists.
+      // We wait for the first auth state event instead of acting immediately.
+      //
+      // Storage is wiped on confirmed signedOut event (see stream listener)
+      // and on explicit logout(). Wiping here unconditionally caused a
+      // regression: initialSession fires after build() returns null, so the
+      // wipe ran on every cold start with a valid session.
       return const AuthState.unauthenticated();
     }
     final generation = ++_authGeneration;
