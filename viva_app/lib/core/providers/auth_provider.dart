@@ -276,19 +276,30 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
       _setUnauthenticated();
       debugPrint('[Auth] LOGOUT COMPLETE (UI flipped)');
 
-      // 3. Backend audit THEN global signOut, fire-and-forget. The audit runs
-      //    first (access token still valid, captured above) and before the
-      //    session is revoked. signOut(scope: global) removes the local Supabase
-      //    session via its signedOut event BEFORE its own network revoke, so a
-      //    cold start cannot restore the session even if the revoke fails.
+      // 3. Global signOut + backend audit, both fire-and-forget and concurrent.
+      //    signOut(scope: global) is NOT gated on the audit so the persisted
+      //    session is cleared even if the user closes the app immediately after
+      //    logout or the Render backend is cold-starting (30-50s).
+      //    The audit uses the token captured above (still valid at call time)
+      //    via an explicit header — it does not depend on the live session.
       //
-      //    ponytail: the audit is awaited before signOut (honors
-      //    audit-before-revoke); a hung backend delays the local session
-      //    teardown up to the Dio receiveTimeout (60s). Upgrade: pass a short
-      //    per-request receiveTimeout on the audit so a slow backend can't
-      //    delay it.
+      //    ponytail: audit and signOut run concurrently so a slow backend can
+      //    no longer delay removePersistedSession(). The token is valid when
+      //    the audit fires (captured before the flip) but the server-side
+      //    revoke may complete before the audit ACKs. In practice the audit
+      //    only logs; if it races with the revoke the token is still accepted
+      //    for the single audit POST. Upgrade: short receiveTimeout on audit.
       unawaited(() async {
-        if (accessToken != null) {
+        try {
+          await Supabase.instance.client.auth
+              .signOut(scope: SignOutScope.global);
+          debugPrint('[Auth] Supabase.signOut() done');
+        } catch (e) {
+          debugPrint('[Auth] Supabase.signOut() failed: $e');
+        }
+      }());
+      if (accessToken != null) {
+        unawaited(() async {
           try {
             debugPrint('[Auth] calling backend /auth/logout');
             await api.post(
@@ -300,17 +311,10 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
           } catch (e) {
             debugPrint('[Auth] backend /auth/logout FAILED: $e');
           }
-        } else {
-          debugPrint('[Auth] no access token — skipping backend call');
-        }
-        try {
-          await Supabase.instance.client.auth
-              .signOut(scope: SignOutScope.global);
-          debugPrint('[Auth] Supabase.signOut() done');
-        } catch (e) {
-          debugPrint('[Auth] Supabase.signOut() failed: $e');
-        }
-      }());
+        }());
+      } else {
+        debugPrint('[Auth] no access token — skipping backend call');
+      }
     } finally {
       _isLoggingOut = false;
     }
