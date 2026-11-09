@@ -125,4 +125,5 @@ class AppRoutes {
   static const String whoViewedMe = '/profile/viewers';
   static const String mutualMatches = '/interests/mutual';
   static const String onboardingCommunity = '/onboarding/community';
+  static const String verifyEmail = '/auth/verify-email';
 }

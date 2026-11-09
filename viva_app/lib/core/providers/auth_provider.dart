@@ -1,6 +1,12 @@
+// DEPRECATED — do not use in new code.
+// Replaced by: lib/core/auth/firebase_auth_provider.dart (firebaseAuthProvider)
+// Will be deleted in Phase 8 after device verification.
+// All Supabase Auth calls in this file are removed in Phase 4.
+
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -191,18 +197,32 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
   }
 
   Future<AuthState> _stateFromSession(Session session) async {
-    final storage = ref.read(secureStorageProvider);
-    final onboardingDone = await storage.isOnboardingCompleted();
-    final memberId = await storage.getMemberId();
-    return AuthState(
-      status: onboardingDone
-          ? AuthStatus.authenticated
-          : AuthStatus.onboardingRequired,
-      userId: session.user.id,
-      email: session.user.email,
-      memberId: memberId,
-      onboardingCompleted: onboardingDone,
-    );
+    try {
+      final storage = ref.read(secureStorageProvider);
+      final onboardingDone = await storage.isOnboardingCompleted();
+      final memberId = await storage.getMemberId();
+      return AuthState(
+        status: onboardingDone
+            ? AuthStatus.authenticated
+            : AuthStatus.onboardingRequired,
+        userId: session.user.id,
+        email: session.user.email,
+        memberId: memberId,
+        onboardingCompleted: onboardingDone,
+      );
+    } catch (e, stack) {
+      // Belt-and-suspenders: SecureStorage catches its own errors, but any
+      // unexpected exception here must not leave the AsyncNotifier in AsyncError
+      // (which would strand the router). Return unauthenticated and let Crashlytics
+      // record it so we can diagnose without blocking the user.
+      debugPrint('[Auth] _stateFromSession error: $e');
+      try {
+        FirebaseCrashlytics.instance.recordError(
+          e, stack, reason: '_stateFromSession storage failure',
+        );
+      } catch (_) {}
+      return const AuthState.unauthenticated();
+    }
   }
 
   Future<void> onLoginSuccess({

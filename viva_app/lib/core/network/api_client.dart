@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../shared/constants/app_constants.dart';
 
@@ -26,7 +26,7 @@ class ApiClient {
     );
 
     _dio.interceptors.addAll([
-      _SupabaseAuthInterceptor(),
+      _FirebaseAuthInterceptor(),
       LogInterceptor(requestBody: false, responseBody: false, error: true),
     ]);
   }
@@ -81,19 +81,37 @@ class ApiClient {
       );
 }
 
-/// Injects the current Supabase access token into every request.
-/// If the session is null (logged out) the request proceeds without a token
-/// and the backend will return 401 — the router will catch it via auth state.
-class _SupabaseAuthInterceptor extends Interceptor {
+/// Injects the current Firebase ID token into every request.
+/// The Firebase SDK caches tokens and refreshes them automatically ~5 min
+/// before expiry — no manual refresh interceptor needed.
+/// If the user is signed out or the token fetch fails, the request proceeds
+/// without an Authorization header and the backend returns 401, which the
+/// auth state stream handles automatically.
+class _FirebaseAuthInterceptor extends Interceptor {
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    final session = Supabase.instance.client.auth.currentSession;
-    if (session != null) {
-      options.headers['Authorization'] = 'Bearer ${session.accessToken}';
+  Future<void> onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        final token = await user.getIdToken();
+        if (token != null) {
+          options.headers['Authorization'] = 'Bearer $token';
+        }
+      } catch (_) {
+        // Token fetch failed (offline, account deleted, etc.) —
+        // let the request proceed without a token; backend returns 401.
+      }
     }
     handler.next(options);
   }
 }
+
+// DEPRECATED _SupabaseAuthInterceptor — replaced by _FirebaseAuthInterceptor above.
+// Removed in Phase 3. The Supabase client no longer manages JWT tokens once
+// firebase_auth_provider.dart is active.
 
 /// Parses API errors into user-friendly messages.
 class ApiException implements Exception {

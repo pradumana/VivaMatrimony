@@ -49,11 +49,16 @@ class Settings(BaseSettings):
     supabase_service_role_key: str
 
     # -------------------------------------------------------------------------
-    # Supabase Auth JWT
-    # Found in: Supabase dashboard → Project Settings → API → JWT Secret
-    # Used to verify Supabase-issued access tokens on the backend.
+    # Firebase Auth (Phase 4: replaces Supabase JWT validation)
     # -------------------------------------------------------------------------
-    supabase_jwt_secret: str
+    firebase_project_id: str = "viva-analytics-135d4"
+
+    # -------------------------------------------------------------------------
+    # Supabase Auth JWT (DEPRECATED — kept for reference during migration)
+    # The backend no longer validates Supabase JWTs; Firebase RS256 is used.
+    # This field can be removed after Phase 8 cleanup.
+    # -------------------------------------------------------------------------
+    supabase_jwt_secret: str = ""  # Now optional — unused by auth_middleware
 
     # -------------------------------------------------------------------------
     # Admin JWT (separate from Supabase user tokens)
@@ -129,13 +134,6 @@ class Settings(BaseSettings):
     def jwt_key_length(cls, v: str) -> str:
         if len(v) < 32:
             raise ValueError("JWT_SECRET_KEY must be at least 32 characters")
-        return v
-
-    @field_validator("supabase_jwt_secret")
-    @classmethod
-    def supabase_jwt_not_empty(cls, v: str) -> str:
-        if not v.strip():
-            raise ValueError("SUPABASE_JWT_SECRET is required")
         return v
 
 

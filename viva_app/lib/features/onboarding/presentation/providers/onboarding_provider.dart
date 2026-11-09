@@ -2,8 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/network/api_client.dart';
-import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/storage/cache_service.dart';
+import '../../../../core/storage/secure_storage.dart';
 
 class OnboardingState {
   final bool isLoading;
@@ -105,8 +105,11 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
 
   /// Call this after navigating away from the onboarding flow so the router
   /// does not redirect /verification/select back to /home prematurely.
-  void markAuthenticatedAfterOnboarding() {
-    ref.read(authProvider.notifier).onOnboardingCompleted();
+  Future<void> markAuthenticatedAfterOnboarding() async {
+    // Write onboarding completion to secure storage. The firebaseAuthProvider
+    // stream will pick it up on the next idTokenChanges emission (e.g. token
+    // refresh or user reload). The router then transitions to AuthStatus.authenticated.
+    await ref.read(secureStorageProvider).setOnboardingCompleted(true);
   }
 
   Future<bool> _save(Future<void> Function() action) async {

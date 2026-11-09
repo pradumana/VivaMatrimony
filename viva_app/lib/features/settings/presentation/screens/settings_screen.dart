@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/network/api_client.dart';
-import '../../../../core/providers/auth_provider.dart';
+import '../../../../core/auth/logout_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/constants/app_constants.dart';
@@ -355,7 +355,7 @@ class _DeleteAccountDialogState
     if (!mounted) return;
     final nav = Navigator.of(context);
     nav.pop(); // Close confirmation dialog — must happen before logout() fires
-    await ref.read(authProvider.notifier).logout();
+    await ref.read(logoutServiceProvider).logout();
   }
 }
 

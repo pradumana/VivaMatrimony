@@ -180,6 +180,7 @@ async def get_profile(
         "photo_visibility": row.photo_visibility,
         "completion_percentage": row.completion_percentage,
         "is_verified": row.verification_status == "verified",
+        "verification_status": row.verification_status or "unverified",
         "last_active_at": row.last_active_at,
         # whatsapp_phone: only expose to own profile or after accepted interest.
         # For other users it is resolved by the social layer (get_whatsapp_contact).

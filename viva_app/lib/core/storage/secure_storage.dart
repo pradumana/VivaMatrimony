@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -13,8 +14,17 @@ class SecureStorage {
   Future<void> saveMemberId(String memberId) =>
       _storage.write(key: AppConstants.memberIdKey, value: memberId);
 
-  Future<String?> getMemberId() =>
-      _storage.read(key: AppConstants.memberIdKey);
+  Future<String?> getMemberId() async {
+    try {
+      return await _storage.read(key: AppConstants.memberIdKey);
+    } catch (e) {
+      // Keystore key destroyed (e.g. after clear-data on Android) — wipe and
+      // return null so the app cold-starts cleanly instead of throwing.
+      debugPrint('[SecureStorage] getMemberId read failed: $e — wiping');
+      await clearAppData().catchError((_) {});
+      return null;
+    }
+  }
 
   // ── Onboarding state ─────────────────────────────────────────────────────
   Future<void> setOnboardingCompleted(bool completed) =>
@@ -24,8 +34,16 @@ class SecureStorage {
       );
 
   Future<bool> isOnboardingCompleted() async {
-    final val = await _storage.read(key: AppConstants.onboardingCompletedKey);
-    return val == 'true';
+    try {
+      final val = await _storage.read(key: AppConstants.onboardingCompletedKey);
+      return val == 'true';
+    } catch (e) {
+      // Keystore key destroyed — wipe and default to false so the user lands
+      // on onboarding/login rather than crashing or freezing.
+      debugPrint('[SecureStorage] isOnboardingCompleted read failed: $e — wiping');
+      await clearAppData().catchError((_) {});
+      return false;
+    }
   }
 
   // ── Clear all app-level local data on logout ─────────────────────────────

@@ -50,7 +50,7 @@ async def register(
     try:
         result = await get_or_create_user(
             db=db,
-            user_id=current_user.user_id,
+            firebase_uid=current_user.firebase_uid,
             email=current_user.email or (body.email if body else None),
             privacy_policy_accepted=body.privacy_policy_accepted if body else False,
             terms_accepted=body.terms_accepted if body else False,

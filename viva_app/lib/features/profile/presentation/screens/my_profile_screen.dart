@@ -8,7 +8,8 @@ import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/network/api_client.dart';
-import '../../../../core/providers/auth_provider.dart';
+import '../../../../core/auth/firebase_auth_provider.dart';
+import '../../../../core/auth/logout_service.dart';
 import '../../../../core/providers/profile_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/generated/app_localizations.dart';
@@ -97,9 +98,14 @@ class MyProfileScreen extends ConsumerWidget {
 
   Future<void> _confirmLogout(
       BuildContext context, WidgetRef ref, AppLocalizations l) async {
+    // useRootNavigator: true pushes the dialog onto the root navigator,
+    // not the shell's nested navigator. Without this, closing the dialog
+    // pops the shell route instead of the dialog — crashing GoRouter with
+    // "no pages left" and leaving a black screen.
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      useRootNavigator: true,
+      builder: (dialogCtx) => AlertDialog(
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.xl)),
         title: const Text('Log Out?'),
@@ -107,17 +113,20 @@ class MyProfileScreen extends ConsumerWidget {
             'You can log back in using your registered account credentials.'),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context, false),
+              onPressed: () => Navigator.of(dialogCtx).pop(false),
               child: Text(l.cancel)),
           ElevatedButton(
-              onPressed: () => Navigator.pop(context, true),
+              onPressed: () => Navigator.of(dialogCtx).pop(true),
               child: Text(l.logOut)),
         ],
       ),
     );
-    if (confirm == true) {
-      await ref.read(authProvider.notifier).logout();
-    }
+    // confirm is null when dismissed via back button or tapping outside —
+    // treat that the same as Cancel.
+    if (confirm != true) return;
+    // Context may be stale after the async gap; use the root navigator key
+    // which is always valid while the app is running.
+    await ref.read(logoutServiceProvider).logout();
   }
 }
 
@@ -248,7 +257,7 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
     final l = AppLocalizations.of(context);
     final name = _str(profile['full_name']);
     final age = profile['age'] == null ? null : _int(profile['age']);
-    final memberId = ref.watch(authProvider).valueOrNull?.memberId;
+    final memberId = ref.watch(firebaseAuthProvider).valueOrNull?.memberId;
     final biodataAsync = ref.watch(_biodataStatusProvider);
 
     // issue #1: use the raw status string from the profile response;
@@ -675,33 +684,7 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                     child: VivaButton(
                       label: l.logOut,
                       isOutlined: true,
-                      onPressed: () async {
-                        final confirm = await showDialog<bool>(
-                          context: context,
-                          builder: (_) => AlertDialog(
-                            shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(AppRadius.xl)),
-                            // issue #7: corrected logout dialog message
-                            title: const Text('Log Out?'),
-                            content: const Text(
-                                'You can log back in using your registered account credentials.'),
-                            actions: [
-                              TextButton(
-                                  onPressed: () =>
-                                      Navigator.pop(context, false),
-                                  child: Text(l.cancel)),
-                              ElevatedButton(
-                                  onPressed: () =>
-                                      Navigator.pop(context, true),
-                                  child: Text(l.logOut)),
-                            ],
-                          ),
-                        );
-                        if (confirm == true) {
-                          await ref.read(authProvider.notifier).logout();
-                        }
-                      },
+                      onPressed: () => _confirmLogout(context, ref, l),
                     ),
                   ),
                   const SizedBox(height: 100),
@@ -712,6 +695,37 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
         ),
       ),
     );
+  }
+
+  // ── Logout ───────────────────────────────────────────────────────────────
+
+  Future<void> _confirmLogout(
+      BuildContext context, WidgetRef ref, AppLocalizations l) async {
+    // useRootNavigator: true pushes the dialog onto the root navigator,
+    // not the shell's nested navigator. Without this, closing the dialog
+    // pops the shell route instead — crashing GoRouter with "no pages left".
+    final confirm = await showDialog<bool>(
+      context: context,
+      useRootNavigator: true,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.xl)),
+        title: const Text('Log Out?'),
+        content: const Text(
+            'You can log back in using your registered account credentials.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.of(dialogCtx).pop(false),
+              child: Text(l.cancel)),
+          ElevatedButton(
+              onPressed: () => Navigator.of(dialogCtx).pop(true),
+              child: Text(l.logOut)),
+        ],
+      ),
+    );
+    // null = dismissed via back button or outside tap — treat as Cancel
+    if (confirm != true) return;
+    await ref.read(logoutServiceProvider).logout();
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────────
@@ -1125,3 +1139,5 @@ class _MemberIdBadge extends StatefulWidget {
   @override
   State<_MemberIdBadge> createState() => _MemberIdBadgeState();
 }
+
+

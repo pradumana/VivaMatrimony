@@ -4,9 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
-import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
+import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/welcome_screen.dart';
+import '../../features/auth/presentation/screens/email_verification_screen.dart';
 import '../../features/onboarding/presentation/screens/onboarding_basic_screen.dart';
 import '../../features/onboarding/presentation/screens/onboarding_bio_screen.dart';
 import '../../features/onboarding/presentation/screens/onboarding_education_screen.dart';
@@ -38,7 +39,7 @@ import '../../features/settings/presentation/screens/help_screen.dart';
 import '../../features/settings/presentation/screens/report_screen.dart';
 import '../../features/profile/presentation/screens/edit_profile_screen.dart';
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
-import '../providers/auth_provider.dart';
+import '../auth/firebase_auth_provider.dart';
 import '../../shared/constants/app_constants.dart';
 
 /// Root navigator key — used by AuthNotifier to force a synchronous
@@ -51,7 +52,9 @@ final rootNavigatorKey = GlobalKey<NavigatorState>();
 final routerProvider = Provider<GoRouter>((ref) {
   final notifier = _AuthChangeNotifier();
 
-  ref.listen<AsyncValue<AuthState>>(authProvider, (previous, next) {
+  // Phase 4: switch router to firebaseAuthProvider (Firebase-backed stream).
+  // Old authProvider (Supabase) is deprecated; this is now the single source.
+  ref.listen<AsyncValue<AuthState>>(firebaseAuthProvider, (previous, next) {
     final prevStatus = previous?.valueOrNull?.status;
     final nextStatus = next.valueOrNull?.status;
     final wasError = previous is AsyncError;
@@ -67,20 +70,17 @@ final routerProvider = Provider<GoRouter>((ref) {
     debugLogDiagnostics: true,
     refreshListenable: notifier,
     redirect: (context, state) {
-      final authAsync = ref.read(authProvider);
+      final authAsync = ref.read(firebaseAuthProvider);
       final auth = authAsync.valueOrNull;
 
       if (authAsync is AsyncError) return AppRoutes.login;
 
-      // AsyncLoading: auth state is not yet resolved.
-      // On first app start, go to splash. But if we're already past splash
-      // (e.g. a background token refresh briefly emits AsyncLoading), stay
-      // put — returning null prevents a flash to splash/black screen.
+      // AsyncLoading: auth state is not yet resolved (cold start or token refresh).
+      // Stay on current route — returning null prevents a flash to splash.
       if (authAsync is AsyncLoading || auth == null) {
         final loc = state.matchedLocation;
         debugPrint('[Router] AsyncLoading at loc=$loc');
-        if (loc == AppRoutes.splash) return null; // already on splash, stay
-        // Already on a real screen — don't interrupt with splash.
+        if (loc == AppRoutes.splash) return null;
         return null;
       }
 
@@ -100,14 +100,23 @@ final routerProvider = Provider<GoRouter>((ref) {
         case AuthStatus.unauthenticated:
           if (isOnAuthRoute) return null;
           return AppRoutes.login;
+        case AuthStatus.emailUnverified:
+          // Only allow the verify-email screen and auth routes while unverified.
+          if (loc == AppRoutes.verifyEmail) return null;
+          if (isOnAuthRoute) return null;
+          return AppRoutes.verifyEmail;
         case AuthStatus.onboardingRequired:
-          // Allow forgot-password while onboarding state is unclear
+          // Allow forgot-password while onboarding state is unclear.
           if (loc == AppRoutes.forgotPassword) return null;
           if (isOnOnboardingRoute) return null;
           return AppRoutes.onboardingBasic;
         case AuthStatus.authenticated:
-          if (isSplash || isOnAuthRoute) return AppRoutes.home;
+          if (isSplash || isOnAuthRoute || loc == AppRoutes.verifyEmail) {
+            return AppRoutes.home;
+          }
           return null;
+        case AuthStatus.error:
+          return AppRoutes.login;
       }
     },
     routes: [
@@ -257,6 +266,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: AppRoutes.whoViewedMe, pageBuilder: (_, s) => _instantPage(s, const WhoViewedMeScreen())),
       GoRoute(path: AppRoutes.mutualMatches, pageBuilder: (_, s) => _instantPage(s, const MutualMatchesScreen())),
+      // Phase 6: verifyEmail screen
+      GoRoute(
+        path: AppRoutes.verifyEmail,
+        pageBuilder: (_, s) => _instantPage(s, const EmailVerificationScreen()),
+      ),
     ],
     errorBuilder: (context, state) => Scaffold(
       body: Center(

@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/auth/firebase_auth_provider.dart';
 import '../../../../core/network/api_client.dart';
-import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/constants/app_constants.dart';
 import '../../../../shared/constants/community_constants.dart';
@@ -166,7 +166,7 @@ class _OnboardingBasicScreenState
       onNext: _next,
       showBack: true,
       onBack: () async {
-        await ref.read(authProvider.notifier).logout();
+        await ref.read(authRepositoryProvider).logout();
       },
       showSkip: false,
       child: Form(

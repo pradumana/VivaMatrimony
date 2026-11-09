@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/providers/auth_provider.dart';
+import '../../../../core/auth/firebase_auth_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/viva_logo.dart';
 
@@ -36,13 +37,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         curve: const Interval(0.5, 1.0, curve: Curves.easeIn));
     _controller.forward();
 
-    // Safety net: if auth state hasn't resolved in 8s, assume unauthenticated.
-    // Prevents permanent black/splash screen if Supabase SDK hangs.
+    // Safety net: if auth state hasn't resolved in 8s, force sign out.
+    // Prevents permanent black/splash screen if Firebase SDK hangs.
     Future.delayed(const Duration(seconds: 8), () {
       if (!mounted) return;
-      final auth = ref.read(authProvider);
+      final auth = ref.read(firebaseAuthProvider);
       if (auth is AsyncLoading || auth.valueOrNull?.status == AuthStatus.loading) {
-        ref.read(authProvider.notifier).forceUnauthenticated();
+        FirebaseAuth.instance.signOut().catchError((_) {});
       }
     });
   }
@@ -55,7 +56,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(authProvider, (_, next) {});
+    ref.listen(firebaseAuthProvider, (_, next) {});
 
     return Scaffold(
       body: Container(
