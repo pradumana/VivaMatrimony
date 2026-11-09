@@ -85,7 +85,7 @@ def create_app() -> FastAPI:
     # ---------------------------------------------------------------------------
     # Health check
     # ---------------------------------------------------------------------------
-    @app.get("/health", tags=["Health"])
+    @app.api_route("/health", methods=["GET", "HEAD"], tags=["Health"])
     async def health():
         return {
             "status": "ok",
